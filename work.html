@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Selected product work by Chris Kornblatt across AI, product architecture, complex data, and operational systems.">
+  <title>Work — Chris Kornblatt</title><link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header shell"><a class="wordmark" href="index.html">Chris Kornblatt</a><nav class="site-nav" aria-label="Main navigation"><a aria-current="page" href="work.html">Work</a><a href="projects.html">Projects</a><a href="field-notes.html">Field Notes</a><a href="about.html">About</a><a class="contact-link" href="about.html#contact">Say hello →</a></nav></header>
+  <main class="shell">
+    <header class="page-hero"><p class="eyebrow">Selected work</p><h1>Finding the system beneath the feature.</h1><p class="lede">I do my best work when the domain is complicated, the stakes are real, and the underlying model is still unsettled.</p></header>
+
+    <section class="section" id="document-hub">
+      <div class="content-grid"><div class="content-label">01 · AI Document Hub</div><article class="prose">
+        <h2>Turning shipping documents into trustworthy product data</h2>
+        <p>Shipping runs on documents. Bills of lading, arrival notices, invoices, delivery orders, and other records contain essential information—but it arrives in inconsistent formats, from sources that may overlap or disagree.</p>
+        <p>The obvious framing is an extraction problem: upload a document and ask AI to return fields. The more consequential problem is trust.</p>
+        <blockquote>Once AI produces a value, the product still has to explain what it means, where it came from, and what should happen next.</blockquote>
+        <h3>The underlying questions</h3>
+        <ul><li>What document and evidence support this value?</li><li>Which shipment, container, booking, bill of lading, or purchase order does it describe?</li><li>What happens when the terminal, carrier, document, and user disagree?</li><li>Has a person reviewed or corrected it?</li><li>Should the correction change the document, the operational record, or both?</li></ul>
+        <h3>The system</h3>
+        <p>I helped shape a Document Hub where customers can forward documents to a dedicated address or upload them directly. The system extracts relevant information, connects the document to operational records, and presents the result for review.</p>
+        <div class="principles"><div class="principle"><strong>Preserve the source</strong><p>Extracted information remains connected to the document and supporting evidence.</p></div><div class="principle"><strong>Expose relationships</strong><p>Documents connect explicitly to the operational objects they describe.</p></div><div class="principle"><strong>Distinguish judgment</strong><p>Machine inference and human correction remain visibly and historically different.</p></div><div class="principle"><strong>Define precedence</strong><p>Conflicting sources follow an understandable policy, not accidental last-write-wins behavior.</p></div></div>
+        <h3>What this reinforced</h3><p>AI features become products when their uncertainty, evidence, and relationship to human decisions are designed—not hidden.</p>
+      </article></div>
+    </section>
+
+    <section class="section" id="review-mode">
+      <div class="content-grid"><div class="content-label">02 · Review Mode</div><article class="prose">
+        <h2>Designing the human side of an AI system</h2>
+        <p>When AI extracts dozens of values from a document, showing the result as a completed form creates false certainty. Treating everything as an error queue makes the system exhausting.</p>
+        <blockquote>What does a person need to see to make a fast, informed judgment?</blockquote>
+        <p>The experience supports both scanning and investigation. A grid helps people review many fields efficiently; a full-page view creates room to understand the document, its relationships, and its history.</p>
+        <h3>Important interaction concepts</h3>
+        <ul><li>Visible links between documents and operational records</li><li>A clear distinction between AI-set and human-corrected values</li><li>History that preserves how information changed</li><li>Access to source evidence when a value is disputed</li><li>Exceptions made prominent without requiring people to re-check everything</li></ul>
+        <h3>The deeper lesson</h3><p>Human review is not a fallback added after the AI feature. It is part of the AI system’s architecture. Quality includes whether people can recognize errors, understand why a result appeared, correct it efficiently, and trust what happens next.</p>
+      </article></div>
+    </section>
+
+    <section class="section" id="shipment-model">
+      <div class="content-grid"><div class="content-label">03 · Domain model</div><article class="prose">
+        <h2>When one product object is secretly several concepts</h2>
+        <p>Software often begins with a useful simplification. Over time, that simplification accumulates responsibilities until the product can no longer represent reality cleanly.</p>
+        <p>In shipping software, “shipment” can become shorthand for a booking, a bill of lading, one or more containers, a commercial movement, or the object against which customer activity is organized. These concepts often travel together, so treating them as one object works—until it doesn’t.</p>
+        <p>Containers roll to later sailings. Documentation is reissued. A bill of lading describes multiple containers. Customer and billing relationships attach at different levels. Exceptions in the real world become exceptions throughout the product.</p>
+        <h3>My approach</h3>
+        <ol><li>Identify the real-world entities.</li><li>Define what makes each entity distinct.</li><li>Map their relationships and lifecycles.</li><li>Test the model against difficult cases.</li><li>Decide which complexity the product should expose and which it should absorb.</li></ol>
+        <p>The goal is not conceptual purity. A better model should reduce exceptions, clarify ownership, improve automation, and make future product decisions easier.</p>
+      </article></div>
+    </section>
+  </main>
+  <footer class="site-footer shell"><span>© 2026 Chris Kornblatt</span><div class="footer-links"><a href="index.html">Home</a><a href="about.html#contact">Contact</a></div></footer>
+</body></html>
