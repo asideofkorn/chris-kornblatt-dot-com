@@ -37,9 +37,8 @@ GitHub Actions**.
 
 ## Custom domain
 
-The domain is registered at Squarespace and points at GitHub Pages.
-
-DNS records at Squarespace (Domains → chriskornblatt.com → DNS Settings):
+The domain is registered at Squarespace and already points at GitHub Pages.
+These records are live — no DNS changes are needed.
 
 | Type  | Host  | Value                   |
 | ----- | ----- | ----------------------- |
@@ -47,11 +46,22 @@ DNS records at Squarespace (Domains → chriskornblatt.com → DNS Settings):
 | A     | @     | 185.199.109.153         |
 | A     | @     | 185.199.110.153         |
 | A     | @     | 185.199.111.153         |
-| CNAME | www   | asideofkorn.github.io.  |
+| CNAME | www   | asideofkorn.github.io   |
 
-Remove any Squarespace-supplied A/CNAME records for `@` and `www` first, or they
-will conflict.
+Squarespace also carries a `_domainconnect` CNAME (its own plumbing) and a
+`gv-*` CNAME for Google Workspace verification. Both are unrelated to this site
+and should be left in place.
 
-After DNS propagates, set the custom domain in **Settings → Pages** to
-`chriskornblatt.com` and enable **Enforce HTTPS** once the certificate is issued.
-The `CNAME` file in this repo keeps that setting in place across deployments.
+In **Settings → Pages**, set the custom domain to `chriskornblatt.com` and
+enable **Enforce HTTPS** once the certificate is issued. The `CNAME` file in
+this repo keeps that setting in place across deployments; deleting it unsets the
+domain on the next deploy.
+
+Optional, not currently configured:
+
+- AAAA records on the apex (`2606:50c0:8000::153` through `...8003::153`) for
+  IPv6 clients hitting the bare domain. `www` already resolves over IPv6 via the
+  CNAME.
+- Domain verification (**Settings → Pages → Verify domain**), which issues a
+  `_github-pages-challenge-asideofkorn` TXT record to add at Squarespace. It
+  prevents anyone else from claiming the domain for their own Pages site.
