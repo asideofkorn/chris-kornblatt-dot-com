@@ -10,7 +10,7 @@ GitHub Pages by GitHub Actions on every push to `main`.
 index.html        Home
 work.html         Selected work (#work-index, #document-hub, #review-mode, #shipment-model)
 projects.html     Independent projects (#projects-index, #tea, #desert, #mountains)
-field-notes.html  Notebook — not yet in the main nav (see below)
+field-notes.html  Notebook — parked, not linked from anywhere (see below)
 about.html        About + contact (#contact)
 404.html          Not-found page served by GitHub Pages
 styles.css        All styling
@@ -19,6 +19,18 @@ CNAME             Custom domain: chriskornblatt.com
 .nojekyll         Serve files as-is, skip Jekyll processing
 .github/workflows/pages.yml
 ```
+
+## Content still to write
+
+These notes used to sit in amber boxes on the live Projects page. They were
+visible to visitors, so they moved here. Each section is publishable prose
+already; this is what would make it land harder.
+
+- **`#tea` — tea business** — add the company name, dates, exact book context, what made the product distinctive, photographs, and what you learned when creation became operation.
+- **`#desert` — Burning Man** — select one project as the primary story and add your role, collaborators, constraints, design decisions, and photographs.
+- **`#mountains` — mountain objectives** — add a public or sanitized trip-planning artifact and one concrete objective as the case example.
+
+The Projects page has no images. That is the biggest gap on it.
 
 ## Editing notes
 
@@ -32,11 +44,18 @@ hands the address to the first scraper that reads the HTML. Profile links
 (GitHub, LinkedIn, X, Threads) are plain links in the footer of every page and
 in the contact block on `about.html`.
 
-**Field Notes is demoted until something is published.** The page exists and is
-linked from the homepage and every footer, but it is out of the main nav and the
-homepage shows a single line rather than a list of unwritten posts. Once a real
-note ships, add `<a href="field-notes.html">Field Notes</a>` back to the
-`.site-nav` on each page and expand the `.notebook-line` block on `index.html`.
+**Field Notes is parked and unlinked.** `field-notes.html` is still deployed and
+works by direct link, but nothing on the site points to it — it is out of the
+nav, out of every footer, and off the homepage. Its six entries are still marked
+"Forthcoming". Once a real note ships, add
+`<a href="field-notes.html">Field Notes</a>` to the nav and footer partials on
+every page.
+
+**The nav and footer are duplicated by hand on all six pages and must stay
+identical.** Nav: Work · Projects · About · Say hello → (the current page
+carries `aria-current="page"`, which is the only permitted difference). Footer:
+Work · Projects · About · Contact, then GitHub · LinkedIn · X · Threads.
+`404.html` carries the footer but no header nav.
 
 **Work and Projects are single pages with anchored sections.** Each has a
 `.page-index` table of contents at the top and `.case-nav` previous/next links at

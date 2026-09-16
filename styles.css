@@ -299,14 +299,6 @@ h3 { font-size: clamp(24px, 2.5vw, 31px); }
 .principle strong { display: block; margin-bottom: 8px; font-family: var(--serif); font-size: 22px; }
 .principle p { margin: 0; color: var(--muted); font-size: 15px; }
 
-.placeholder {
-  padding: 20px 24px;
-  border-left: 3px solid #b1842d;
-  background: #eee5cf;
-  color: #5a4b2a;
-  font-size: 14px;
-}
-
 .site-footer {
   display: flex;
   flex-wrap: wrap;
@@ -332,20 +324,6 @@ h3 { font-size: clamp(24px, 2.5vw, 31px); }
 .section-alt .section-heading { margin-bottom: 44px; }
 
 .section-alt .project-card { border-color: #c2bba9; background: rgba(255,253,248,.45); }
-
-.notebook-line {
-  display: grid;
-  grid-template-columns: 210px minmax(0, 1fr);
-  gap: 44px;
-  padding: clamp(42px, 5vw, 60px) 0;
-  border-top: 1px solid var(--line);
-}
-
-.notebook-line .eyebrow { margin: 0; }
-
-.notebook-line p { max-width: 650px; margin: 0; color: var(--muted); }
-
-.notebook-line .text-link { margin-top: 14px; }
 
 .page-index {
   margin-bottom: clamp(56px, 7vw, 84px);
@@ -408,85 +386,31 @@ h3 { font-size: clamp(24px, 2.5vw, 31px); }
 
 .case-nav .case-nav-end { color: var(--muted); }
 
-.contact-channel { margin-bottom: 34px; }
-
-.contact-channel-label {
-  margin: 0 0 10px;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-}
-
-.email {
-  color: var(--accent-dark);
-  font-family: var(--serif);
-  font-size: clamp(22px, 3vw, 29px);
-  text-decoration: none;
-  overflow-wrap: anywhere;
-}
-
-a.email:hover { text-decoration: underline; text-underline-offset: 5px; }
-
-.email-sep {
-  padding: 0 .16em;
-  color: var(--muted);
-  font-family: var(--sans);
-  font-size: .58em;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-}
-
-.email-copy {
-  margin-left: 14px;
-  padding: 7px 13px;
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--muted);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.email-copy[hidden] { display: none; }
-
-.email-copy:hover { border-color: var(--accent); color: var(--accent-dark); }
-
-.profile-list {
+.contact-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 12px;
-  margin: 0;
-  padding: 0;
+  gap: 4px 0;
+  margin: 26px 0 0;
   list-style: none;
 }
 
-.prose .profile-list { padding-left: 0; }
+.prose .contact-list { padding-left: 0; }
 
-.profile-list li { margin: 0; }
+.contact-list li { margin: 0; }
 
-.profile-list a {
-  display: inline-block;
-  padding: 10px 17px;
-  border: 1px solid var(--line);
-  background: rgba(255,253,248,.4);
-  font-size: 14px;
-  text-decoration: none;
-  transition: border-color .15s ease, background .15s ease;
+.contact-list li + li::before {
+  padding: 0 11px;
+  color: var(--line);
+  content: "\00b7";
 }
 
-.profile-list a:hover {
-  border-color: var(--accent);
-  background: var(--white);
-  color: var(--accent-dark);
-}
+.contact-list a { color: var(--accent-dark); text-decoration: none; }
 
-.profile-handle { color: var(--muted); }
+.contact-list a:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+.email { overflow-wrap: anywhere; }
+
+.email-sep { color: var(--muted); }
 
 .footer-social { display: flex; flex-wrap: wrap; gap: 20px; }
 
@@ -503,7 +427,7 @@ a.email:hover { text-decoration: underline; text-underline-offset: 5px; }
   .site-nav { flex-wrap: wrap; justify-content: flex-end; gap: 9px 17px; }
   .hero { grid-template-columns: 1fr; gap: 48px; }
   .hero-aside { max-width: 440px; }
-  .section-heading, .work-item, .note-item, .content-grid, .notebook-line { grid-template-columns: 1fr; gap: 14px; }
+  .section-heading, .work-item, .note-item, .content-grid { grid-template-columns: 1fr; gap: 14px; }
   .page-index a { grid-template-columns: 44px minmax(0, 1fr); }
   .page-index-meta { grid-column: 2; }
   .project-grid { grid-template-columns: 1fr; }
@@ -522,7 +446,6 @@ a.email:hover { text-decoration: underline; text-underline-offset: 5px; }
   .section-alt { padding-right: 20px; padding-left: 20px; }
   .site-footer { display: block; }
   .footer-links, .footer-social { margin-top: 12px; }
-  .email-copy { display: block; margin: 16px 0 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -5,24 +5,9 @@
   var links = document.querySelectorAll('a[data-email-user]');
 
   Array.prototype.forEach.call(links, function (link) {
-    var address =
+    link.setAttribute('href', 'mailto:' +
       link.getAttribute('data-email-user') + '@' +
       link.getAttribute('data-email-domain') + '.' +
-      link.getAttribute('data-email-tld');
-
-    link.setAttribute('href', 'mailto:' + address);
-
-    var copy = document.querySelector('[data-email-copy]');
-    if (!copy || !navigator.clipboard) return;
-
-    copy.hidden = false;
-    copy.addEventListener('click', function () {
-      navigator.clipboard.writeText(address).then(function () {
-        copy.textContent = 'Copied';
-        window.setTimeout(function () {
-          copy.textContent = 'Copy address';
-        }, 2000);
-      });
-    });
+      link.getAttribute('data-email-tld'));
   });
 })();
