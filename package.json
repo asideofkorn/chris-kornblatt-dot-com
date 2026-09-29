@@ -1,0 +1,19 @@
+{
+  "name": "chriskornblatt-com",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . && html-validate 'dist/**/*.html'",
+    "test": "node --test",
+    "preview": "node scripts/serve.mjs"
+  },
+  "devDependencies": {
+    "eslint": "9.39.5",
+    "html-validate": "9.7.1",
+    "linkedom": "0.18.13",
+    "prettier": "3.9.9"
+  }
+}

@@ -1,110 +1,59 @@
 # chriskornblatt.com
 
-Personal website for Chris Kornblatt. A hand-written static site — no build step,
-no dependencies. Six pages, a stylesheet, and one small script, deployed to
-GitHub Pages by GitHub Actions on every push to `main`.
+Chris Kornblatt's personal website. Home, Work, and Projects, with three work
+pages and two project pages. Static HTML and CSS, with a small email enhancement.
+No browser framework or runtime dependencies.
 
-## Structure
+## Develop and verify
 
-```
-index.html        Home
-work.html         Selected work (#work-index, #document-hub, #review-mode, #shipment-model)
-projects.html     Independent projects (#projects-index, #tea, #desert, #mountains)
-field-notes.html  Notebook — parked, not linked from anywhere (see below)
-about.html        About + contact (#contact)
-404.html          Not-found page served by GitHub Pages
-styles.css        All styling
-contact.js        Assembles the email address at runtime (about.html only)
-CNAME             Custom domain: chriskornblatt.com
-.nojekyll         Serve files as-is, skip Jekyll processing
-.github/workflows/pages.yml
+Requires Node.js 22 or later.
+
+```sh
+npm ci
+npm run format
+npm run build
+npm run format:check
+npm run lint
+npm test
+npm run preview
 ```
 
-## Content still to write
+Preview: http://127.0.0.1:4173. Rebuild after editing source files.
 
-These notes used to sit in amber boxes on the live Projects page. They were
-visible to visitors, so they moved here. Each section is publishable prose
-already; this is what would make it land harder.
+- `src/content.mjs`: approved public copy and profile/project links.
+- `src/render.mjs`: shared page shell, page layouts, metadata, and legacy redirects.
+- `public/`: responsive stylesheet, email enhancement, icons, social image, domain.
+- `scripts/build.mjs`: dependency-free static build to `dist/`.
+- `tests/`: generated-site checks for navigation, metadata, links, retired content,
+  confidentiality, and email/redirect behavior.
 
-- **`#tea` — tea business** — add the company name, dates, exact book context, what made the product distinctive, photographs, and what you learned when creation became operation.
-- **`#desert` — Burning Man** — select one project as the primary story and add your role, collaborators, constraints, design decisions, and photographs.
-- **`#mountains` — mountain objectives** — add a public or sanitized trip-planning artifact and one concrete objective as the case example.
+The design retains the previous site's warm paper, green accent, content grids,
+responsive shell, and understated link treatment. Shared templates keep navigation
+and footer consistent. Long-form copy uses a narrow reading column and system fonts.
 
-The Projects page has no images. That is the biggest gap on it.
+## Copy and links
 
-## Editing notes
+The Career conversation's full specification supplies page copy. Its later voice
+revisions supersede the original Home, How I Work, Terminal49 opening, Wayproof
+opening, and Quantitea copy. Other copy retains the specification's wording, with
+em dashes replaced by sentence structure or punctuation. The displayed Wayproof
+lineage comes from its public README.
 
-**The email address is deliberately never written out in the source.** On
-`about.html` the contact link carries the address in three pieces
-(`data-email-user`, `data-email-domain`, `data-email-tld`) and `contact.js`
-joins them into a `mailto:` href on load. The visible text reads
-`chris.kornblatt at gmail dot com`, so the address is still usable with
-JavaScript disabled. Don't "tidy" this by inlining a plain `mailto:` — that
-hands the address to the first scraper that reads the HTML. Profile links
-(GitHub, LinkedIn, X, Threads) are plain links in the footer of every page and
-in the contact block on `about.html`.
+Only approved aggregate Terminal49 details belong here. Do not add customer names,
+customer revenue or contract figures, staffing plans, billing discrepancies, internal
+links, screenshots, source documents, or non-public implementation details.
 
-**Field Notes is parked and unlinked.** `field-notes.html` is still deployed and
-works by direct link, but nothing on the site points to it — it is out of the
-nav, out of every footer, and off the homepage. Its six entries are still marked
-"Forthcoming". Once a real note ships, add
-`<a href="field-notes.html">Field Notes</a>` to the nav and footer partials on
-every page.
+No public resume artifact was selected, so no resume link is rendered. There are no
+About or Field Notes content pages. Existing `.html` URLs redirect to their relevant
+new pages; legacy Terminal49 section links and the tea link retain useful destinations.
 
-**The nav and footer are duplicated by hand on all six pages and must stay
-identical.** Nav: Work · Projects · About · Say hello → (the current page
-carries `aria-current="page"`, which is the only permitted difference). Footer:
-Work · Projects · About · Contact, then GitHub · LinkedIn · X · Threads.
-`404.html` carries the footer but no header nav.
-
-**Work and Projects are single pages with anchored sections.** Each has a
-`.page-index` table of contents at the top and `.case-nav` previous/next links at
-the foot of every section. If either grows past roughly five entries, that's the
-signal to split the sections into their own pages.
-
-## Local preview
-
-```bash
-python3 -m http.server 8000
-# open http://localhost:8000
-```
+The email remains split across data attributes, as in the existing site. JavaScript
+creates the mail link; with JavaScript disabled, Email leads to a readable address.
+This is a convenience, not a guarantee against scraping.
 
 ## Deployment
 
-`.github/workflows/pages.yml` runs on every push to `main` (and on manual
-`workflow_dispatch`). It uploads the repository root as a Pages artifact and
-deploys it with `actions/deploy-pages`. Nothing is built or compiled.
-
-One-time repository setup: **Settings → Pages → Build and deployment → Source:
-GitHub Actions**.
-
-## Custom domain
-
-The domain is registered at Squarespace and already points at GitHub Pages.
-These records are live — no DNS changes are needed.
-
-| Type  | Host  | Value                   |
-| ----- | ----- | ----------------------- |
-| A     | @     | 185.199.108.153         |
-| A     | @     | 185.199.109.153         |
-| A     | @     | 185.199.110.153         |
-| A     | @     | 185.199.111.153         |
-| CNAME | www   | asideofkorn.github.io   |
-
-Squarespace also carries a `_domainconnect` CNAME (its own plumbing) and a
-`gv-*` CNAME for Google Workspace verification. Both are unrelated to this site
-and should be left in place.
-
-In **Settings → Pages**, set the custom domain to `chriskornblatt.com` and
-enable **Enforce HTTPS** once the certificate is issued. The `CNAME` file in
-this repo keeps that setting in place across deployments; deleting it unsets the
-domain on the next deploy.
-
-Optional, not currently configured:
-
-- AAAA records on the apex (`2606:50c0:8000::153` through `...8003::153`) for
-  IPv6 clients hitting the bare domain. `www` already resolves over IPv6 via the
-  CNAME.
-- Domain verification (**Settings → Pages → Verify domain**), which issues a
-  `_github-pages-challenge-asideofkorn` TXT record to add at Squarespace. It
-  prevents anyone else from claiming the domain for their own Pages site.
+The existing GitHub Pages/custom-domain setup is retained. Pull requests run formatting,
+HTML/JavaScript linting, tests, and a production build. Pushes to `main` publish only
+`dist/`, excluding source, tests, dependencies, and repository files. `public/CNAME`
+retains chriskornblatt.com. No DNS changes are required.
