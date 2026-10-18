@@ -23,6 +23,15 @@ function latestSplits() {
   for (const l of lines) { try { const j = JSON.parse(l); if (j.ok && j.list) return j.list; } catch {} }
   return [];
 }
+// IRONMAN's estimates as they stood when each mat first appeared (RTRT later rewrites them on every row).
+function firstSeen() {
+  const out = {};
+  if (!existsSync(SPLITS)) return out;
+  for (const l of readFileSync(SPLITS, "utf8").trim().split("\n")) {
+    try { const j = JSON.parse(l); for (const r of j.list || []) if (!out[r.point]) out[r.point] = { seen: j.t, next: r.etnp || null, finish: r.etfp || null }; } catch {}
+  }
+  return out;
+}
 function done() {
   if (!existsSync(OUT)) return new Set();
   return new Set(readFileSync(OUT, "utf8").trim().split("\n").filter(Boolean).map((l) => { try { return JSON.parse(l).mat; } catch { return null; } }));
@@ -65,7 +74,7 @@ async function snapshot(browser, list, idx) {
     };
   });
   await ctx.close();
-  return { at: new Date().toISOString(), mat: mat.point, label: mat.label, matTime: new Date(matT).toISOString(), netTime: mat.netTime, mode: live ? "live" : "reconstructed", ironman: { next: mat.etnp || null, finish: mat.etfp || null }, ...snap };
+  return { at: new Date().toISOString(), mat: mat.point, label: mat.label, matTime: new Date(matT).toISOString(), netTime: mat.netTime, mode: live ? "live" : "reconstructed", ironman: firstSeen()[mat.point] || null, ...snap };
 }
 
 function push() {
