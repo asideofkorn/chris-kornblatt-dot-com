@@ -1,0 +1,887 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Bradley · Bib 1999</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+/* Layout: one column, sticky bib header, bottom tab bar; a time-scaled course ribbon is the signature element. */
+:root {
+  --bg: #f2f3ef;
+  --surface: #ffffff;
+  --ink: #14171b;
+  --muted: #5d656e;
+  --line: #d8dbd4;
+  --wash: #e7e9e3;
+  --swim: #1f84d0;
+  --bike: #3f9a33;
+  --run: #d3362c;
+  --me: #7a3ff2;
+  --go: #13804a;
+  --tight: #b86e00;
+  --miss: #b3261e;
+  --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "Barlow", "Helvetica Neue", Arial, system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1114; --surface: #171b20; --ink: #eef1f4; --muted: #9aa3ad; --line: #2a3038; --wash: #20262d;
+    --swim: #4aa8ee; --bike: #6cc35e; --run: #ef5f55; --me: #a685ff; --go: #3fc07d; --tight: #f0a530; --miss: #f0675e;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1114; --surface: #171b20; --ink: #eef1f4; --muted: #9aa3ad; --line: #2a3038; --wash: #20262d;
+  --swim: #4aa8ee; --bike: #6cc35e; --run: #ef5f55; --me: #a685ff; --go: #3fc07d; --tight: #f0a530; --miss: #f0675e;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink);
+  font: 16px/1.4 var(--body);
+  font-variant-numeric: tabular-nums;
+  padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  -webkit-text-size-adjust: 100%;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--bg); }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--me); outline-offset: 2px; }
+.wrap { max-width: 640px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* Header */
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--bg); border-bottom: 1px solid var(--line); }
+header.top .wrap { display: flex; align-items: center; gap: 12px; padding-block: 10px; }
+.who { flex: 1; min-width: 0; }
+.who h1 { margin: 0; font: 800 28px/1 var(--display); letter-spacing: .01em; text-transform: uppercase; }
+.who p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+.bib {
+  position: relative; background: #fff; color: #111; border: 1.5px solid #111; border-radius: 4px;
+  padding: 2px 14px 0; text-align: center; min-width: 88px;
+}
+.bib::before, .bib::after { content: ""; position: absolute; top: 5px; width: 6px; height: 6px; border-radius: 50%; border: 1.5px solid #111; background: transparent; }
+.bib::before { left: 5px; } .bib::after { right: 5px; }
+.bib b { display: block; font: 800 30px/1 var(--display); letter-spacing: .02em; }
+.bib span { display: block; font: 700 9px/1.3 var(--body); letter-spacing: .14em; text-transform: uppercase; border-top: 3px solid var(--run); margin: 1px -14px 0; padding: 2px 0 3px; }
+
+/* Tabs */
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+nav.tabs .row { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); }
+nav.tabs button { background: none; border: 0; padding: 10px 0 12px; font: 700 15px/1 var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border-top: 3px solid transparent; }
+nav.tabs button[aria-selected="true"] { color: var(--ink); border-top-color: var(--ink); }
+
+main section { padding-block: 16px 24px; display: grid; gap: 16px; }
+h2 { margin: 0; font: 700 22px/1.1 var(--display); text-transform: uppercase; letter-spacing: .03em; }
+h3 { margin: 0; font: 700 18px/1.1 var(--display); text-transform: uppercase; letter-spacing: .03em; }
+.label { font: 700 12px/1.2 var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.ap { font-size: .6em; margin-left: 1px; letter-spacing: .02em; }
+
+/* Hero status */
+.status { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px; }
+.status .where { font: 800 46px/0.95 var(--display); text-transform: uppercase; letter-spacing: .005em; }
+.status .where .leg { display: block; font-size: 22px; letter-spacing: .06em; }
+.status .range { font-size: 15px; }
+.legdot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: 1px; }
+.kv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.kv div { min-width: 0; }
+.kv b { display: block; font: 700 24px/1.1 var(--display); }
+
+/* Ribbon */
+.ribbon svg { display: block; width: 100%; height: 44px; }
+.ribbon .legs { display: flex; font: 700 11px/1 var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+.ribbon .legs span { overflow: hidden; white-space: nowrap; }
+
+/* Pass cards */
+.passes { display: grid; gap: 10px; }
+.pass { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 8px; }
+.pass .head { display: flex; align-items: baseline; gap: 10px; justify-content: space-between; }
+.pass .name { font: 700 19px/1.15 var(--display); text-transform: uppercase; letter-spacing: .02em; min-width: 0; }
+.pass .eta { font: 800 32px/1 var(--display); white-space: nowrap; }
+.pass .sub { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 14px; color: var(--muted); }
+.pass .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font: 700 13px/1 var(--body); letter-spacing: .06em; text-transform: uppercase; padding: 6px 9px; border-radius: 999px; border: 1.5px solid currentColor; }
+.chip.go { color: var(--go); } .chip.tight { color: var(--tight); } .chip.miss { color: var(--miss); } .chip.na { color: var(--muted); } .chip.done { color: var(--muted); }
+.verdict { font-size: 15px; }
+.verdict b { font-weight: 700; }
+
+.btn { border: 1.5px solid var(--ink); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 9px 14px; font-weight: 600; min-height: 42px; }
+.btn.primary { background: var(--ink); color: var(--bg); }
+.btn.slim { padding: 6px 11px; min-height: 36px; font-size: 14px; }
+.btn.ghost { border-color: var(--line); }
+.btn[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.btn:disabled { opacity: .45; cursor: default; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 12px; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field input, .field select { width: 100%; min-height: 42px; padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--bg); }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.seg { display: inline-flex; border: 1.5px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: none; padding: 8px 12px; font-weight: 600; font-size: 14px; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+
+.planrow { display: grid; grid-template-columns: 64px repeat(3, minmax(0, 1fr)); gap: 8px; align-items: center; }
+.planrow .lg { font: 700 17px/1 var(--display); text-transform: uppercase; }
+.planrow input { width: 100%; min-height: 40px; padding: 6px 8px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--bg); text-align: center; }
+.planhead { font: 700 11px/1 var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); text-align: center; }
+
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font: 700 11px/1 var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+td.num, th.num { text-align: right; }
+
+.loglist { display: grid; gap: 8px; }
+.logitem { display: flex; gap: 10px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.logitem .t { font: 700 22px/1 var(--display); min-width: 64px; }
+.logitem .d { flex: 1; min-width: 0; }
+.logitem .d small { color: var(--muted); display: block; }
+.x { border: 0; background: none; color: var(--muted); font-size: 22px; line-height: 1; padding: 6px 8px; }
+
+#map { height: 62vh; min-height: 320px; border-radius: 10px; border: 1px solid var(--line); z-index: 1; }
+.leaflet-container { font: inherit; background: var(--wash); }
+.pin { width: 28px; height: 28px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--ink); border: 2px solid var(--surface); display: grid; place-items: center; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+.pin span { transform: rotate(45deg); color: var(--bg); font: 800 14px/1 var(--display); }
+.medot { width: 16px; height: 16px; border-radius: 50%; background: var(--me); border: 3px solid #fff; box-shadow: 0 0 0 6px color-mix(in srgb, var(--me) 25%, transparent); }
+
+.empty { border: 1.5px dashed var(--line); border-radius: 10px; padding: 16px; color: var(--muted); }
+.banner { background: var(--ink); color: var(--bg); border-radius: 10px; padding: 12px 14px; display: grid; gap: 8px; }
+.banner .btn { border-color: var(--bg); }
+
+.sheet { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.45); display: flex; align-items: flex-end; justify-content: center; }
+.sheet .card { background: var(--bg); width: 100%; max-width: 640px; max-height: 88vh; overflow-y: auto; border-radius: 14px 14px 0 0; padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); display: grid; gap: 14px; }
+.passrow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 8px; align-items: end; }
+
+#toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(86px + env(safe-area-inset-bottom, 0px)); z-index: 50; background: var(--ink); color: var(--bg); padding: 12px 16px; border-radius: 10px; font-weight: 600; max-width: calc(100% - 32px); box-shadow: 0 4px 18px rgba(0,0,0,.3); }
+@media (prefers-reduced-motion: no-preference) { #toast { transition: opacity .2s; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="who">
+      <h1>Bradley</h1>
+      <p>IRONMAN California · Sacramento · <span id="nowclock"></span></p>
+    </div>
+    <div class="bib" aria-label="Bib number 1999"><b>1999</b><span>IM California</span></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="importBanner" hidden></div>
+  <section id="tab-now" data-tab="now"></section>
+  <section id="tab-spots" data-tab="spots" hidden></section>
+  <section id="tab-map" data-tab="map" hidden>
+    <div class="row" style="justify-content:space-between">
+      <h2>Map</h2>
+      <button class="btn slim" id="mapLocate" type="button">Show me</button>
+    </div>
+    <p class="small muted" id="mapHint">Tap the map to add a spot. The course isn't drawn here. Each spot knows its course mile instead.</p>
+    <div id="map"></div>
+  </section>
+  <section id="tab-log" data-tab="log" hidden></section>
+  <section id="tab-plan" data-tab="plan" hidden></section>
+</main>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="row" role="tablist">
+    <button role="tab" data-go="now" aria-selected="true">Now</button>
+    <button role="tab" data-go="spots" aria-selected="false">Spots</button>
+    <button role="tab" data-go="map" aria-selected="false">Map</button>
+    <button role="tab" data-go="log" aria-selected="false">Log</button>
+    <button role="tab" data-go="plan" aria-selected="false">Plan</button>
+  </div>
+</nav>
+<div id="sheet" class="sheet" hidden></div>
+<div id="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+"use strict";
+const RACE_DATE = "2026-10-18";
+const KEY = "bradley-imca-2026-v1";
+const LEGS = [
+  { k: "swim", name: "Swim", dist: 2.4, color: "var(--swim)" },
+  { k: "t1", name: "T1", dist: 0, color: "var(--muted)" },
+  { k: "bike", name: "Bike", dist: 112, color: "var(--bike)" },
+  { k: "t2", name: "T2", dist: 0, color: "var(--muted)" },
+  { k: "run", name: "Run", dist: 26.2, color: "var(--run)" },
+];
+// Bike loop length read off the official app: mile markers 14 and 46 sit on the same road.
+const LAP = { bike: 32, run: 13.1 };
+const SPEED = { walk: 3.0, run: 6.0, ride: 10.0 }; // mph
+const MODE_NAME = { walk: "walk", run: "jog", ride: "scooter/bike" };
+const DETOUR = 1.3; // straight-line to street distance
+
+const uid = () => Math.random().toString(36).slice(2, 9);
+const DEFAULTS = () => ({
+  v: 1,
+  plan: {
+    start: { f: "07:00", x: "07:10", s: "07:20" },
+    swim: { f: 60, x: 70, s: 80 },
+    t1: { f: 5, x: 8, s: 12 },
+    bike: { f: 20, x: 18, s: 16 },
+    t2: { f: 3, x: 5, s: 8 },
+    run: { f: "9:30", x: "10:30", s: "12:00" },
+    fade: 6,
+  },
+  obs: [],
+  spots: [
+    { id: uid(), name: "Swim exit / T1", lat: null, lng: null, passes: [{ leg: "swim", mile: 2.4 }] },
+    { id: uid(), name: "Bike out", lat: null, lng: null, passes: [{ leg: "bike", mile: 0 }] },
+    { id: uid(), name: "Bike in / T2", lat: null, lng: null, passes: [{ leg: "bike", mile: 112 }] },
+    { id: uid(), name: "Run halfway", lat: null, lng: null, passes: [{ leg: "run", mile: 13.1 }] },
+    { id: uid(), name: "Finish · State Capitol", lat: 38.5767, lng: -121.4934, passes: [{ leg: "run", mile: 26.2 }] },
+  ],
+  mode: "walk",
+  alerts: {},
+  fired: {},
+  tab: "now",
+});
+
+let S = load();
+let ME = null; // {lat,lng,acc,t}
+let watchId = null;
+
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) { const d = JSON.parse(raw); if (d && d.v === 1) return Object.assign(DEFAULTS(), d); }
+  } catch (e) {}
+  return DEFAULTS();
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+/* ---------- helpers ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const legIdx = (k) => LEGS.findIndex((L) => L.k === k);
+function clockToMs(hhmm) {
+  const p = String(hhmm || "0:0").split(":").map(Number);
+  const d = new Date(RACE_DATE + "T00:00:00");
+  d.setHours(p[0] || 0, p[1] || 0, p[2] || 0, 0);
+  return d.getTime();
+}
+function paceMin(str) { // "10:30" -> 10.5
+  const s = String(str).trim();
+  if (s.includes(":")) { const [m, sec] = s.split(":").map(Number); return (m || 0) + (sec || 0) / 60; }
+  return Number(s) || 0;
+}
+function hm(ms) { const d = new Date(ms); let h = d.getHours(); const m = d.getMinutes(); const ap = h >= 12 ? "pm" : "am"; h = h % 12 || 12; return { t: h + ":" + String(m).padStart(2, "0"), ap }; }
+const clockHtml = (ms) => { const x = hm(ms); return x.t + '<span class="ap">' + x.ap + "</span>"; };
+const clockTxt = (ms) => { const x = hm(ms); return x.t + " " + x.ap; };
+function dur(sec) {
+  const neg = sec < 0; sec = Math.abs(sec);
+  const m = Math.round(sec / 60);
+  const s = m < 60 ? m + " min" : Math.floor(m / 60) + "h " + String(m % 60).padStart(2, "0") + "m";
+  return neg ? "−" + s : s;
+}
+function hms(sec) { sec = Math.round(sec); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60; return h + ":" + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0"); }
+function posLabel(leg, mile) {
+  if (leg === "start") return "Swim start";
+  const L = LEGS[legIdx(leg)];
+  if (!L.dist) return L.name;
+  return L.name + " mi " + (+mile).toFixed(1).replace(/\.0$/, "");
+}
+function havMi(a, b) {
+  const R = 3958.8, toR = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * toR, dLng = (b.lng - a.lng) * toR;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * toR) * Math.cos(b.lat * toR) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+/* ---------- prediction model ---------- */
+function legDurations(p) {
+  const tri = (a, b, c) => { const v = [a, b, c].map((n) => Math.max(0, n || 0)); const so = [...v].sort((m, n) => m - n); return { f: so[0], x: v[1], s: so[2] }; };
+  const fix = (o) => { o.x = clamp(o.x, o.f, o.s); return o; };
+  return [
+    fix(tri(p.swim.f * 60, p.swim.x * 60, p.swim.s * 60)),
+    fix(tri(p.t1.f * 60, p.t1.x * 60, p.t1.s * 60)),
+    fix(tri(112 / (+p.bike.f || 1) * 3600, 112 / (+p.bike.x || 1) * 3600, 112 / (+p.bike.s || 1) * 3600)),
+    fix(tri(p.t2.f * 60, p.t2.x * 60, p.t2.s * 60)),
+    fix(tri(paceMin(p.run.f) * 26.2 * 60, paceMin(p.run.x) * 26.2 * 60, paceMin(p.run.s) * 26.2 * 60)),
+  ];
+}
+
+function buildModel() {
+  const D = legDurations(S.plan);
+  const U0 = []; let acc = 0;
+  D.forEach((d, i) => { U0[i] = acc; acc += d.x; });
+  const UT = acc;
+  const fade = clamp(+S.plan.fade || 0, 0, 30) / 100;
+  const a = 1 - fade / 2, b = 1 + fade / 2;
+
+  function frac(i, m) {
+    const L = LEGS[i]; if (!L.dist) return 0;
+    m = clamp(+m || 0, 0, L.dist);
+    if (L.k === "run") { const h = L.dist / 2; return m <= h ? a * m / L.dist : a * h / L.dist + b * (m - h) / L.dist; }
+    return m / L.dist;
+  }
+  function fracInv(i, f) {
+    const L = LEGS[i]; if (!L.dist) return 0;
+    if (L.k === "run") { const h = L.dist / 2, fh = a * h / L.dist; return f <= fh ? f * L.dist / a : h + (f - fh) * L.dist / b; }
+    return f * L.dist;
+  }
+  const posToU = (leg, mile) => { if (leg === "start") return 0; const i = legIdx(leg); return U0[i] + D[i].x * frac(i, mile); };
+  function legAt(u) { for (let i = 0; i < LEGS.length; i++) if (u < U0[i] + D[i].x) return i; return LEGS.length - 1; }
+  function uToPos(u) { u = clamp(u, 0, UT); const i = legAt(u); const f = D[i].x ? (u - U0[i]) / D[i].x : 0; return { i, leg: LEGS[i].k, mile: fracInv(i, clamp(f, 0, 1)) }; }
+
+  const obs = S.obs.map((o) => ({ ...o, u: posToU(o.leg, o.mile) })).sort((p, q) => p.u - q.u || p.t - q.t);
+  const segs = [], bad = [];
+  for (let k = 1; k < obs.length; k++) {
+    const p = obs[k - 1], q = obs[k], du = q.u - p.u;
+    if (du < 60) continue;
+    const r = (q.t - p.t) / 1000 / du;
+    if (!(r > 0.5 && r < 2)) { bad.push(q.id); continue; }
+    segs.push({ i: legAt(q.u - 1), r, w: du });
+  }
+  const sw = segs.reduce((s, g) => s + g.w, 0);
+  const rAll = sw ? segs.reduce((s, g) => s + g.w * g.r, 0) / sw : 1;
+  const rForm = clamp(1 + 0.5 * (rAll - 1), 0.92, 1.08);
+  const W0 = 1200;
+  const R = LEGS.map((_, i) => {
+    const ss = segs.filter((g) => g.i === i);
+    const w = ss.reduce((s, g) => s + g.w, 0);
+    return (ss.reduce((s, g) => s + g.w * g.r, 0) + W0 * rForm) / (w + W0);
+  });
+
+  const anchor = obs.length ? obs[obs.length - 1] : null;
+  const st = S.plan.start;
+  const ta = anchor ? anchor.t : clockToMs(st.x);
+  const ua = anchor ? anchor.u : 0;
+  const sL = anchor ? 0 : Math.max(0, clockToMs(st.x) - clockToMs(st.f)) / 1000;
+  const sU = anchor ? 0 : Math.max(0, clockToMs(st.s) - clockToMs(st.x)) / 1000;
+
+  function predict(u) {
+    if (u >= ua) {
+      let sum = 0, vL = sL * sL, vU = sU * sU;
+      for (let i = 0; i < LEGS.length; i++) {
+        const o = Math.min(u, U0[i] + D[i].x) - Math.max(ua, U0[i]);
+        if (o <= 0 || !D[i].x) continue;
+        const fr = o / D[i].x, r = R[i];
+        sum += o * r;
+        vL += ((D[i].x - D[i].f) * fr * r) ** 2;
+        vU += ((D[i].s - D[i].x) * fr * r) ** 2;
+      }
+      const x = ta + sum * 1000;
+      return { x, e: x - Math.sqrt(vL) * 1000, l: x + Math.sqrt(vU) * 1000, past: false };
+    }
+    let prv = null, nxt = null;
+    for (const o of obs) { if (o.u <= u) prv = o; else if (!nxt) nxt = o; }
+    let t;
+    if (prv && nxt) t = prv.t + (nxt.t - prv.t) * (u - prv.u) / Math.max(1, nxt.u - prv.u);
+    else t = nxt.t - (nxt.u - u) * 1000 * R[legAt(u)];
+    return { x: t, e: t, l: t, past: true };
+  }
+  // Find u in [ua, UT] where predict(u)[key] reaches the target time.
+  function solve(key, target) {
+    if (predict(ua)[key] >= target) return ua;
+    if (predict(UT)[key] <= target) return UT;
+    let lo = ua, hi = UT;
+    for (let n = 0; n < 50; n++) { const mid = (lo + hi) / 2; if (predict(mid)[key] < target) lo = mid; else hi = mid; }
+    return (lo + hi) / 2;
+  }
+  const actualStart = (() => { const s = obs.find((o) => o.leg === "start"); if (s) return s.t; if (anchor) return predict(0).x; return clockToMs(st.x); })();
+  return { D, U0, UT, posToU, uToPos, legAt, predict, solve, obs, R, rAll, anchor, bad, actualStart, segs };
+}
+
+/* ---------- travel & verdicts ---------- */
+function passInfo(M, spot, pass, now) {
+  const u = M.posToU(pass.leg, pass.mile);
+  const p = M.predict(u);
+  const passed = p.past;
+  const likelyPassed = !p.past && now > p.l;
+  let travel = null, dist = null;
+  if (ME && spot.lat != null) {
+    dist = havMi(ME, spot) * DETOUR;
+    travel = dist / SPEED[S.mode] * 3600 * 1000;
+  }
+  let verdict = "na", leaveBy = null, text = "";
+  const buffer = 3 * 60000;
+  if (passed) { verdict = "done"; text = "Passed at " + clockTxt(p.x); }
+  else if (likelyPassed) { verdict = "done"; text = "Probably passed already"; }
+  else if (travel == null) {
+    verdict = "na";
+    text = spot.lat == null ? "Set this spot's location to see travel time" : "Turn on your location to see travel time";
+  } else {
+    const arrive = now + travel;
+    leaveBy = p.e - travel - buffer;
+    if (arrive <= p.e - buffer) { verdict = "go"; text = "<b>Leave by " + clockHtml(leaveBy) + "</b> · " + dur((leaveBy - now) / 1000) + " to spare"; }
+    else if (arrive <= p.x) { verdict = "tight"; text = "<b>Go now.</b> You'd arrive " + clockHtml(arrive) + ", near his likely time"; }
+    else if (arrive <= p.l) { verdict = "tight"; text = "<b>Long shot.</b> You'd arrive " + clockHtml(arrive) + ", only if he's slow"; }
+    else { verdict = "miss"; text = "You'd arrive " + clockHtml(arrive) + ", after his latest time"; }
+  }
+  return { u, p, passed: passed || likelyPassed, travel, dist, verdict, leaveBy, text };
+}
+const VERDICT_LABEL = { go: "Go", tight: "Tight", miss: "Miss", na: "ETA", done: "Passed" };
+
+function allPasses(M, now) {
+  const out = [];
+  S.spots.forEach((spot) => spot.passes.forEach((pass, k) => {
+    out.push({ spot, pass, k, key: spot.id + ":" + k, info: passInfo(M, spot, pass, now) });
+  }));
+  return out.sort((a, b) => a.info.u - b.info.u);
+}
+function passName(item) {
+  const n = item.spot.passes.length;
+  return n > 1 ? "Pass " + (item.k + 1) + " of " + n : "";
+}
+
+/* ---------- rendering ---------- */
+function ribbon(M, cur) {
+  const W = 1000;
+  const xs = (u) => (u / M.UT) * W;
+  let svg = "";
+  LEGS.forEach((L, i) => {
+    if (!M.D[i].x) return;
+    svg += `<rect x="${xs(M.U0[i]).toFixed(1)}" y="16" width="${Math.max(1, xs(M.D[i].x) - 1).toFixed(1)}" height="12" fill="${L.color}" opacity="${L.dist ? 0.9 : 0.35}"/>`;
+  });
+  if (cur && cur.uFar > cur.uNear) svg += `<rect x="${xs(cur.uNear).toFixed(1)}" y="8" width="${Math.max(3, xs(cur.uFar - cur.uNear)).toFixed(1)}" height="28" fill="var(--ink)" opacity="0.18" rx="3"/>`;
+  S.spots.forEach((sp) => sp.passes.forEach((p) => { const x = xs(M.posToU(p.leg, p.mile)); svg += `<path d="M${(x - 5).toFixed(1)} 44 L${x.toFixed(1)} 34 L${(x + 5).toFixed(1)} 44 Z" fill="var(--muted)"/>`; }));
+  M.obs.forEach((o) => { svg += `<circle cx="${xs(o.u).toFixed(1)}" cy="22" r="4" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/>`; });
+  if (cur) svg += `<rect x="${(xs(cur.u) - 2.5).toFixed(1)}" y="4" width="5" height="36" fill="var(--ink)" rx="2"/>`;
+  const legs = LEGS.map((L, i) => L.dist ? `<span style="width:${(M.D[i].x / M.UT * 100).toFixed(2)}%">${L.name}</span>` : `<span style="width:${(M.D[i].x / M.UT * 100).toFixed(2)}%"></span>`).join("");
+  return `<div class="ribbon" aria-hidden="true"><svg viewBox="0 0 1000 44" preserveAspectRatio="none">${svg}</svg><div class="legs">${legs}</div></div>`;
+}
+
+function currentState(M, now) {
+  const st = S.plan.start;
+  if (!M.anchor && now < clockToMs(st.x)) return { pre: true };
+  const u = M.solve("x", now), uFar = M.solve("e", now), uNear = M.solve("l", now);
+  return { u, uFar, uNear, pos: M.uToPos(u), far: M.uToPos(uFar), near: M.uToPos(uNear), done: M.predict(M.UT).x <= now };
+}
+
+function passCard(item, now, compact) {
+  const { spot, info } = item;
+  const p = info.p;
+  const L = LEGS[legIdx(item.pass.leg)];
+  const bell = S.alerts[item.key];
+  const timeHtml = info.passed ? clockHtml(p.x) : clockHtml(p.x);
+  const rangeTxt = info.passed ? (p.past ? "logged" : "") : clockTxt(p.e) + " – " + clockTxt(p.l);
+  const inTxt = !info.passed ? "in " + dur((p.x - now) / 1000) : "";
+  return `<article class="pass">
+    <div class="head"><div class="name">${esc(spot.name)}</div><div class="eta">${timeHtml}</div></div>
+    <div class="sub"><span><i class="legdot" style="background:${L.color}"></i>${posLabel(item.pass.leg, item.pass.mile)}${passName(item) ? " · " + passName(item) : ""}</span>${rangeTxt ? `<span>${rangeTxt}</span>` : ""}${inTxt ? `<span>${inTxt}</span>` : ""}</div>
+    <div class="row"><span class="chip ${info.verdict}">${VERDICT_LABEL[info.verdict]}</span>${info.dist != null && !info.passed ? `<span class="small muted">${info.dist.toFixed(1)} mi · ${dur(info.travel / 1000)} ${MODE_NAME[S.mode]}</span>` : ""}</div>
+    <div class="verdict">${info.text}</div>
+    ${compact === "past" ? "" : `<div class="acts">
+      ${!info.passed || !p.past ? `<button class="btn slim primary" data-seen="${item.key}" type="button">Saw him here now</button>` : ""}
+      ${!info.passed ? `<button class="btn slim" data-bell="${item.key}" aria-pressed="${bell ? "true" : "false"}" type="button">${bell ? "Alert on" : "Alert me"}</button>` : ""}
+      ${compact ? "" : `<button class="btn slim ghost" data-edit="${spot.id}" type="button">Edit spot</button>`}
+    </div>`}
+  </article>`;
+}
+
+function renderNow(M, now) {
+  const cur = currentState(M, now);
+  const st = S.plan.start;
+  let hero = "";
+  if (cur.pre) {
+    hero = `<div class="label">Not started</div>
+      <div class="where">Starts in ${dur((clockToMs(st.x) - now) / 1000)}</div>
+      <div class="range">Rolling swim start. He'll likely enter the water between <b>${clockHtml(clockToMs(st.f))}</b> and <b>${clockHtml(clockToMs(st.s))}</b>. Tap "He's in the water" when he starts.</div>
+      <div class="row"><button class="btn primary" id="startNow" type="button">He's in the water now</button></div>`;
+  } else if (cur.done) {
+    hero = `<div class="label">Projected</div><div class="where">Finished</div><div class="range">Estimated finish ${clockHtml(M.predict(M.UT).x)}. Log his official finish on the Log tab.</div>`;
+  } else {
+    const L = LEGS[cur.pos.i];
+    const big = L.dist ? "Mile " + cur.pos.mile.toFixed(1) : "In " + L.name;
+    const range = L.dist ? `Somewhere between <b>${posLabel(cur.near.leg, cur.near.mile)}</b> and <b>${posLabel(cur.far.leg, cur.far.mile)}</b>` : "Transition";
+    hero = `<div class="label"><i class="legdot" style="background:${L.color}"></i>Estimated now</div>
+      <div class="where"><span class="leg">${L.dist ? "On the " + L.name : ""}</span>${big}</div>
+      <div class="range">${range}</div>`;
+  }
+  const a = M.anchor;
+  const basis = a ? `Based on <b>${posLabel(a.leg, a.mile)}</b> at ${clockHtml(a.t)} (${dur((now - a.t) / 1000)} ago)${M.obs.length > 1 ? ` and ${M.obs.length - 1} earlier point${M.obs.length > 2 ? "s" : ""}` : ""}.` : "Based on the pace plan only. Log a split or sighting to sharpen this.";
+  const fin = M.predict(M.UT);
+  const planFin = M.actualStart + M.UT * 1000;
+  const delta = (fin.x - planFin) / 1000;
+  const deltaTxt = M.obs.length > 1 ? (Math.abs(delta) < 90 ? "On plan" : dur(Math.abs(delta)) + (delta > 0 ? " behind plan" : " ahead of plan")) : "Plan pace";
+  const items = allPasses(M, now).filter((it) => !it.info.passed).sort((p, q) => p.info.p.x - q.info.p.x);
+  const next = items.slice(0, 4);
+  const el = $("#tab-now");
+  el.innerHTML = `
+    <div class="status">${hero}${ribbon(M, cur.pre ? null : cur)}
+      <div class="kv">
+        <div><span class="label">Finish</span><b>${clockHtml(fin.x)}</b><span class="small muted">${clockTxt(fin.e)}–${clockTxt(fin.l)}</span></div>
+        <div><span class="label">Race time</span><b>${hms((fin.x - M.actualStart) / 1000).slice(0, -3)}</b><span class="small muted">h:mm</span></div>
+        <div><span class="label">Vs plan</span><b style="font-size:19px">${deltaTxt}</b></div>
+      </div>
+      <div class="small muted">${basis}</div>
+    </div>
+    <div class="row" style="justify-content:space-between"><h2>Next places to see him</h2>${modeSeg()}</div>
+    ${ME ? "" : `<div class="row"><button class="btn" data-locate type="button">Use my location for travel times</button></div>`}
+    <div class="passes">${next.length ? next.map((it) => passCard(it, now, true)).join("") : `<div class="empty">No upcoming spots. Add one on the Spots or Map tab.</div>`}</div>
+    <div class="row"><button class="btn" data-go="log" type="button">Log a split from the app</button><button class="btn ghost" data-go="spots" type="button">All spots</button></div>`;
+}
+
+function modeSeg() {
+  return `<div class="seg" role="group" aria-label="How you're getting around">${Object.keys(SPEED).map((m) => `<button type="button" data-mode="${m}" aria-pressed="${S.mode === m}">${m === "ride" ? "Ride" : m === "run" ? "Jog" : "Walk"}</button>`).join("")}</div>`;
+}
+
+function renderSpots(M, now) {
+  const items = allPasses(M, now);
+  const upcoming = items.filter((i) => !i.info.passed).sort((p, q) => p.info.p.x - q.info.p.x);
+  const past = items.filter((i) => i.info.passed).sort((p, q) => q.info.p.x - p.info.p.x);
+  $("#tab-spots").innerHTML = `
+    <div class="row" style="justify-content:space-between"><h2>Spots</h2><button class="btn primary slim" data-newspot type="button">Add spot</button></div>
+    <div class="row">${modeSeg()}<button class="btn slim" data-locate type="button">${ME ? "Location on · ±" + Math.round(ME.acc) + " m" : "Use my location"}</button></div>
+    <p class="small muted">Times show when he passes each spot, from the earliest to the latest likely time. Travel assumes streets add about 30% to the straight-line distance, plus a 3 minute buffer.</p>
+    <div class="passes">${upcoming.map((it) => passCard(it, now, false)).join("") || `<div class="empty">Nothing upcoming.</div>`}</div>
+    ${past.length ? `<h3>Already passed</h3><div class="passes">${past.map((it) => passCard(it, now, "past")).join("")}</div>` : ""}`;
+}
+
+function renderLog(M) {
+  const list = [...S.obs].sort((a, b) => b.t - a.t);
+  const now = new Date();
+  const tv = String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
+  $("#tab-log").innerHTML = `
+    <h2>Log a split or sighting</h2>
+    <form class="panel" id="logForm" autocomplete="off">
+      <div class="grid2">
+        <label class="field"><span class="label">Where</span>
+          <select id="lgLeg"><option value="start">Swim start (entered water)</option><option value="swim">Swim</option><option value="bike" selected>Bike</option><option value="run">Run</option></select></label>
+        <label class="field" id="lgMileWrap"><span class="label">Mile (on that leg)</span><input id="lgMile" inputmode="decimal" placeholder="e.g. 28.6"></label>
+      </div>
+      <div class="grid2">
+        <label class="field"><span class="label">Time type</span>
+          <select id="lgKind"><option value="clock">Time of day</option><option value="race">Race time since his start</option></select></label>
+        <label class="field"><span class="label" id="lgTimeLbl">Time of day</span><input id="lgTime" value="${tv}" inputmode="numeric" placeholder="9:42 or 1:08:23"></label>
+      </div>
+      <label class="field"><span class="label">Source</span>
+        <select id="lgSrc"><option value="split">Official split (IRONMAN app)</option><option value="seen">I saw him</option><option value="friend">A friend saw him</option></select></label>
+      <div class="row"><button class="btn primary" type="submit">Add to log</button><span class="small muted">Use 24-hour time or add pm, e.g. 13:05 or 1:05 pm.</span></div>
+      <p class="small muted" id="lgMsg" role="status"></p>
+    </form>
+    <h3>Log</h3>
+    <div class="loglist">${list.length ? list.map((o) => `<div class="logitem"><div class="t">${clockHtml(o.t)}</div><div class="d"><b>${posLabel(o.leg, o.mile)}</b><small>${{ split: "Official split", seen: "Seen by me", friend: "Seen by a friend", start: "Start" }[o.src] || o.src}${o.note ? " · " + esc(o.note) : ""}${M.bad.includes(o.id) ? " · ⚠ doesn't fit the other points, check the time" : ""}</small></div><button class="x" data-del="${o.id}" aria-label="Remove">×</button></div>`).join("") : `<div class="empty">Nothing logged yet. Start with his swim start time or swim split from the IRONMAN app.</div>`}</div>
+    <div class="panel">
+      <h3>Share with friends</h3>
+      <p class="small muted">Copies a link with the plan, spots and log. Whoever opens it gets a copy of this data.</p>
+      <div class="row"><button class="btn" id="shareBtn" type="button">Copy share link</button><button class="btn ghost" id="resetBtn" type="button">Reset everything</button></div>
+      <input id="shareOut" class="field" hidden readonly style="width:100%;padding:8px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg)">
+    </div>`;
+  const kind = $("#lgKind"), leg = $("#lgLeg");
+  const sync = () => {
+    $("#lgMileWrap").hidden = leg.value === "start";
+    $("#lgTimeLbl").textContent = kind.value === "race" ? "Race time (h:mm:ss)" : "Time of day";
+    $("#lgTime").placeholder = kind.value === "race" ? "1:08:23" : "9:42";
+  };
+  leg.onchange = () => { if (leg.value === "swim" && !$("#lgMile").value) $("#lgMile").value = "2.4"; sync(); };
+  kind.onchange = sync; sync();
+  $("#logForm").onsubmit = (e) => {
+    e.preventDefault();
+    const lg = leg.value;
+    const L = lg === "start" ? null : LEGS[legIdx(lg)];
+    let mile = lg === "start" ? 0 : parseFloat($("#lgMile").value);
+    const msg = $("#lgMsg");
+    if (L && !(mile >= 0 && mile <= L.dist)) { msg.textContent = "Enter a mile between 0 and " + L.dist + " for the " + L.name.toLowerCase() + "."; return; }
+    const raw = $("#lgTime").value.trim();
+    let t = null;
+    if (kind.value === "race") {
+      const parts = raw.split(":").map(Number);
+      if (parts.some(isNaN) || parts.length < 2) { msg.textContent = "Enter race time like 1:08:23."; return; }
+      const sec = parts.length === 3 ? parts[0] * 3600 + parts[1] * 60 + parts[2] : parts[0] * 60 + parts[1];
+      t = buildModel().actualStart + sec * 1000;
+    } else {
+      const m = raw.toLowerCase().match(/^(\d{1,2})[:.]?(\d{2})?(?::(\d{2}))?\s*(am|pm|a|p)?$/);
+      if (!m) { msg.textContent = "Enter a time like 9:42 or 13:05."; return; }
+      let h = +m[1]; const mi = +(m[2] || 0), s = +(m[3] || 0);
+      if (m[4] && m[4][0] === "p" && h < 12) h += 12;
+      if (m[4] && m[4][0] === "a" && h === 12) h = 0;
+      if (!m[4] && h >= 1 && h <= 5) h += 12; // a bare 1:00–5:59 on race day is afternoon
+      t = clockToMs(h + ":" + mi + ":" + s);
+    }
+    addObs({ leg: lg, mile: mile || 0, t, src: $("#lgSrc").value });
+    toast("Logged " + posLabel(lg, mile) + " at " + clockTxt(t));
+  };
+  $("#shareBtn").onclick = () => {
+    const data = { v: 1, plan: S.plan, obs: S.obs, spots: S.spots };
+    const url = location.href.split("#")[0] + "#d=" + btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+    const out = $("#shareOut");
+    out.hidden = false; out.value = url;
+    navigator.clipboard?.writeText(url).then(() => toast("Link copied"), () => { out.select(); toast("Copy the link below"); }) ?? (out.select(), toast("Copy the link below"));
+  };
+  $("#resetBtn").onclick = () => openConfirm("Reset everything?", "This clears the log, spots and plan on this phone.", () => { const tab = S.tab; S = DEFAULTS(); S.tab = tab; save(); renderPlanForm(); renderAll(); });
+}
+
+function renderPlanForm() {
+  const p = S.plan;
+  const row = (k, lbl, unit, kind = "text") => `<div class="planrow"><div class="lg">${lbl}<div class="small muted" style="font:500 11px var(--body);text-transform:none">${unit}</div></div>
+    ${["f", "x", "s"].map((w) => `<input id="pl-${k}-${w}" data-k="${k}" data-w="${w}" value="${esc(p[k][w])}" inputmode="${kind === "num" ? "decimal" : "text"}" aria-label="${lbl} ${{ f: "fast", x: "expected", s: "slow" }[w]}">`).join("")}</div>`;
+  $("#tab-plan").innerHTML = `
+    <h2>Pace plan</h2>
+    <div class="panel">
+      <div class="planrow"><span></span><span class="planhead">Fast</span><span class="planhead">Expected</span><span class="planhead">Slow</span></div>
+      ${row("start", "Start", "in water")}
+      ${row("swim", "Swim", "minutes", "num")}
+      ${row("t1", "T1", "minutes", "num")}
+      ${row("bike", "Bike", "mph", "num")}
+      ${row("t2", "T2", "minutes", "num")}
+      ${row("run", "Run", "min / mi")}
+      <label class="field"><span class="label">Run fade · second half slower by %</span><input id="pl-fade" value="${esc(p.fade)}" inputmode="decimal"></label>
+      <p class="small muted">Fast and slow set the range shown for each time. When you log a split, the leg he's on adjusts to his real pace, and later legs move about half as much.</p>
+    </div>
+    <div id="planProj"></div>`;
+  $("#tab-plan").querySelectorAll("input[data-k]").forEach((inp) => inp.addEventListener("input", () => {
+    const k = inp.dataset.k, w = inp.dataset.w;
+    const numeric = ["swim", "t1", "bike", "t2"].includes(k);
+    S.plan[k][w] = numeric ? parseFloat(inp.value) || 0 : inp.value;
+    save(); renderAll(true);
+  }));
+  $("#pl-fade").addEventListener("input", (e) => { S.plan.fade = parseFloat(e.target.value) || 0; save(); renderAll(true); });
+}
+
+function renderPlanProj(M) {
+  const rows = [];
+  let u = 0;
+  LEGS.forEach((L, i) => {
+    u = M.U0[i] + M.D[i].x;
+    const p = M.predict(u);
+    rows.push(`<tr><td><i class="legdot" style="background:${L.color}"></i>${L.name} done</td><td class="num">${hms(M.D[i].x * M.R[i]).slice(0, -3)}</td><td class="num"><b>${clockHtml(p.x)}</b></td><td class="num muted">${p.past ? "done" : clockTxt(p.e) + " – " + clockTxt(p.l)}</td></tr>`);
+  });
+  const st = M.actualStart;
+  const cut = [
+    ["Swim cutoff", 2 * 3600 + 20 * 60, M.U0[0] + M.D[0].x],
+    ["Bike cutoff", 10.5 * 3600, M.U0[2] + M.D[2].x],
+    ["Finish cutoff", 17 * 3600, M.UT],
+  ].map(([n, sec, uu]) => { const p = M.predict(uu); const margin = (st + sec * 1000 - p.l) / 1000; return `<tr><td>${n}</td><td class="num">${hms(sec).slice(0, -3)}</td><td class="num" style="color:${margin > 1800 ? "var(--go)" : margin > 0 ? "var(--tight)" : "var(--miss)"}">${dur(margin)} spare</td></tr>`; }).join("");
+  $("#planProj").innerHTML = `
+    <div class="panel"><h3>Projected splits</h3>
+      <div class="tablewrap"><table><thead><tr><th>Point</th><th class="num">Leg</th><th class="num">Likely</th><th class="num">Range</th></tr></thead><tbody>${rows.join("")}</tbody></table></div>
+      <p class="small muted">Leg times include any adjustment from logged splits.</p>
+    </div>
+    <div class="panel"><h3>Cutoffs</h3>
+      <div class="tablewrap"><table><thead><tr><th>Cutoff</th><th class="num">From his start</th><th class="num">At slow pace</th></tr></thead><tbody>${cut}</tbody></table></div>
+      <p class="small muted">These are standard IRONMAN limits counted from his own start. Check the 2026 athlete guide for the exact times.</p>
+    </div>`;
+}
+
+/* ---------- map ---------- */
+let map = null, spotLayer = null, meMarker = null, pickFor = null;
+function darkMode() {
+  const t = document.documentElement.dataset.theme;
+  return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+}
+function initMap() {
+  if (map || !window.L) return;
+  map = L.map("map", { zoomControl: true }).setView([38.58, -121.505], 12);
+  const url = darkMode() ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+  L.tileLayer(url, { maxZoom: 19, attribution: "© OpenStreetMap © CARTO" }).addTo(map);
+  spotLayer = L.layerGroup().addTo(map);
+  map.on("click", (e) => {
+    if (pickFor) {
+      const sp = S.spots.find((s) => s.id === pickFor.id) || pickFor;
+      sp.lat = +e.latlng.lat.toFixed(5); sp.lng = +e.latlng.lng.toFixed(5);
+      const draft = pickFor; pickFor = null; $("#mapHint").textContent = "Tap the map to add a spot.";
+      openSpot(draft);
+      return;
+    }
+    openSpot({ id: null, name: "", lat: +e.latlng.lat.toFixed(5), lng: +e.latlng.lng.toFixed(5), passes: [{ leg: "run", mile: "" }] });
+  });
+  renderMap();
+}
+function renderMap() {
+  if (!map) return;
+  spotLayer.clearLayers();
+  const M = buildModel(), now = Date.now();
+  const pts = [];
+  S.spots.forEach((sp, n) => {
+    if (sp.lat == null) return;
+    pts.push([sp.lat, sp.lng]);
+    const next = sp.passes.map((p, k) => passInfo(M, sp, p, now)).filter((i) => !i.passed).sort((a, b) => a.p.x - b.p.x)[0];
+    const icon = L.divIcon({ className: "", html: `<div class="pin"><span>${n + 1}</span></div>`, iconSize: [28, 28], iconAnchor: [4, 30] });
+    L.marker([sp.lat, sp.lng], { icon }).addTo(spotLayer)
+      .bindPopup(`<b>${esc(sp.name)}</b><br>${next ? "Next pass " + clockTxt(next.p.x) + " (" + clockTxt(next.p.e) + "–" + clockTxt(next.p.l) + ")" + (next.travel ? "<br>" + dur(next.travel / 1000) + " " + MODE_NAME[S.mode] : "") : "All passes done"}<br><a href="#" data-edit="${sp.id}">Edit</a>`);
+  });
+  if (ME) {
+    if (!meMarker) meMarker = L.marker([ME.lat, ME.lng], { icon: L.divIcon({ className: "", html: '<div class="medot"></div>', iconSize: [16, 16], iconAnchor: [8, 8] }), interactive: false }).addTo(map);
+    else meMarker.setLatLng([ME.lat, ME.lng]);
+  }
+}
+
+/* ---------- spot editor sheet ---------- */
+function openSpot(spot) {
+  const draft = JSON.parse(JSON.stringify(spot));
+  const sheet = $("#sheet");
+  const legOpts = (v) => ["swim", "bike", "run"].map((k) => `<option value="${k}" ${v === k ? "selected" : ""}>${LEGS[legIdx(k)].name}</option>`).join("");
+  const draw = () => {
+    sheet.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-label="Spot">
+      <div class="row" style="justify-content:space-between"><h2>${draft.id ? "Edit spot" : "New spot"}</h2><button class="x" data-close aria-label="Close">×</button></div>
+      <label class="field"><span class="label">Name</span><input id="spName" value="${esc(draft.name)}" placeholder="e.g. Tower Bridge"></label>
+      <div class="field"><span class="label">Location</span>
+        <div class="row"><span class="small ${draft.lat == null ? "muted" : ""}">${draft.lat == null ? "Not set" : draft.lat.toFixed(4) + ", " + draft.lng.toFixed(4)}</span>
+        <button class="btn slim" data-here type="button">Use where I am</button><button class="btn slim ghost" data-pick type="button">Pick on map</button></div></div>
+      <div class="field"><span class="label">Where it sits on the course</span>
+        <p class="small muted" style="margin:0">Use the mile markers from the IRONMAN app. A spot can be passed more than once on a lap course, so add each pass.</p>
+        ${draft.passes.map((p, k) => `<div class="passrow">
+          <label class="field"><span class="label">Leg</span><select data-pl="${k}">${legOpts(p.leg)}</select></label>
+          <label class="field"><span class="label">Mile</span><input data-pm="${k}" value="${esc(p.mile)}" inputmode="decimal" placeholder="mile"></label>
+          <button class="x" data-prm="${k}" aria-label="Remove pass" type="button">×</button></div>`).join("")}
+        <div class="row"><button class="btn slim" data-addpass type="button">Add pass</button><button class="btn slim ghost" data-lap type="button">Add next lap (bike +32, run +13.1)</button></div>
+      </div>
+      <p class="small muted" id="spMsg" role="status"></p>
+      <div class="row"><button class="btn primary" data-savespot type="button">Save spot</button>${draft.id ? `<button class="btn ghost" data-delspot type="button">Delete</button>` : ""}</div>
+    </div>`;
+  };
+  const pull = () => {
+    draft.name = $("#spName", sheet).value.trim();
+    draft.passes.forEach((p, k) => { p.leg = $(`[data-pl="${k}"]`, sheet).value; p.mile = $(`[data-pm="${k}"]`, sheet).value; });
+  };
+  draw();
+  sheet.hidden = false;
+  sheet.onclick = (e) => {
+    const t = e.target;
+    if (t === sheet || t.closest("[data-close]")) { sheet.hidden = true; return; }
+    if (t.closest("[data-addpass]")) { pull(); draft.passes.push({ leg: draft.passes.at(-1)?.leg || "run", mile: "" }); draw(); }
+    else if (t.closest("[data-lap]")) {
+      pull(); const last = draft.passes.at(-1); const m = parseFloat(last?.mile);
+      if (last && LAP[last.leg] && m >= 0) { const nm = +(m + LAP[last.leg]).toFixed(1); if (nm <= LEGS[legIdx(last.leg)].dist) { draft.passes.push({ leg: last.leg, mile: nm }); draw(); } else $("#spMsg").textContent = "The next lap would be past the end of the " + last.leg + "."; }
+      else $("#spMsg").textContent = "Enter a bike or run mile first.";
+    }
+    else if (t.closest("[data-prm]")) { pull(); draft.passes.splice(+t.closest("[data-prm]").dataset.prm, 1); draw(); }
+    else if (t.closest("[data-here]")) {
+      pull();
+      locate(true, () => { if (ME) { draft.lat = +ME.lat.toFixed(5); draft.lng = +ME.lng.toFixed(5); draw(); } });
+    }
+    else if (t.closest("[data-pick]")) { pull(); pickFor = draft; sheet.hidden = true; go("map"); $("#mapHint").textContent = "Tap the map where this spot is."; }
+    else if (t.closest("[data-savespot]")) {
+      pull();
+      const passes = draft.passes.map((p) => ({ leg: p.leg, mile: parseFloat(p.mile) })).filter((p) => p.mile >= 0 && p.mile <= LEGS[legIdx(p.leg)].dist);
+      if (!draft.name) { $("#spMsg").textContent = "Give the spot a name."; return; }
+      if (!passes.length) { $("#spMsg").textContent = "Add at least one pass with a valid mile."; return; }
+      draft.passes = passes;
+      if (!draft.id) { draft.id = uid(); S.spots.push(draft); }
+      else { const i = S.spots.findIndex((s) => s.id === draft.id); if (i >= 0) S.spots[i] = draft; else S.spots.push(draft); }
+      save(); sheet.hidden = true; renderAll(); toast("Saved " + draft.name);
+    }
+    else if (t.closest("[data-delspot]")) { S.spots = S.spots.filter((s) => s.id !== draft.id); save(); sheet.hidden = true; renderAll(); }
+  };
+}
+
+function openConfirm(title, body, yes) {
+  const sheet = $("#sheet");
+  sheet.innerHTML = `<div class="card" role="dialog" aria-modal="true"><h2>${esc(title)}</h2><p>${esc(body)}</p><div class="row"><button class="btn primary" data-yes type="button">Yes</button><button class="btn ghost" data-close type="button">Cancel</button></div></div>`;
+  sheet.hidden = false;
+  sheet.onclick = (e) => {
+    if (e.target.closest("[data-yes]")) { sheet.hidden = true; yes(); }
+    else if (e.target === sheet || e.target.closest("[data-close]")) sheet.hidden = true;
+  };
+}
+
+/* ---------- actions ---------- */
+function addObs(o) {
+  S.obs.push({ id: uid(), leg: o.leg, mile: +o.mile || 0, t: o.t, src: o.src, note: o.note || "" });
+  save(); renderAll();
+}
+function locate(prompted, cb) {
+  if (!("geolocation" in navigator)) { toast("Location isn't available in this browser"); return; }
+  const ok = (p) => { ME = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy, t: Date.now() }; renderAll(); if (cb) { cb(); cb = null; } };
+  const err = (e) => { if (prompted) toast(e.code === 1 ? "Location blocked. Allow it in your browser settings." : "Couldn't get your location"); };
+  if (watchId == null) watchId = navigator.geolocation.watchPosition(ok, err, { enableHighAccuracy: true, maximumAge: 15000, timeout: 20000 });
+  else navigator.geolocation.getCurrentPosition(ok, err, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+}
+let toastTimer = null;
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 3200);
+}
+function go(tab) {
+  S.tab = tab; save();
+  document.querySelectorAll("main section[data-tab]").forEach((s) => (s.hidden = s.dataset.tab !== tab));
+  document.querySelectorAll("nav.tabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.go === tab));
+  if (tab === "map") { initMap(); setTimeout(() => map && map.invalidateSize(), 50); }
+  window.scrollTo(0, 0);
+}
+
+document.addEventListener("click", (e) => {
+  const t = e.target;
+  const g = t.closest("[data-go]"); if (g) { go(g.dataset.go); return; }
+  if (t.closest("#startNow")) { addObs({ leg: "start", mile: 0, t: Date.now(), src: "start" }); toast("Start logged at " + clockTxt(Date.now())); return; }
+  const md = t.closest("[data-mode]"); if (md) { S.mode = md.dataset.mode; save(); renderAll(); return; }
+  if (t.closest("[data-locate]") || t.closest("#mapLocate")) {
+    locate(true, () => { if (map && ME) map.setView([ME.lat, ME.lng], 15); });
+    if (map && ME) map.setView([ME.lat, ME.lng], 15);
+    return;
+  }
+  if (t.closest("[data-newspot]")) { openSpot({ id: null, name: "", lat: null, lng: null, passes: [{ leg: "run", mile: "" }] }); return; }
+  const ed = t.closest("[data-edit]"); if (ed) { e.preventDefault(); const sp = S.spots.find((s) => s.id === ed.dataset.edit); if (sp) openSpot(sp); return; }
+  const del = t.closest("[data-del]"); if (del) { S.obs = S.obs.filter((o) => o.id !== del.dataset.del); save(); renderAll(); return; }
+  const seen = t.closest("[data-seen]");
+  if (seen) {
+    const [sid, k] = seen.dataset.seen.split(":");
+    const sp = S.spots.find((s) => s.id === sid); const p = sp && sp.passes[+k];
+    if (p) { addObs({ leg: p.leg, mile: p.mile, t: Date.now(), src: "seen", note: sp.name }); toast("Logged: seen at " + sp.name); }
+    return;
+  }
+  const bell = t.closest("[data-bell]");
+  if (bell) {
+    const k = bell.dataset.bell;
+    S.alerts[k] = !S.alerts[k]; delete S.fired[k]; save(); renderAll();
+    if (S.alerts[k] && "Notification" in window && Notification.permission === "default") Notification.requestPermission().catch(() => {});
+    if (S.alerts[k]) toast(ME ? "You'll get an alert when it's time to leave" : "You'll get an alert 10 min before his earliest time");
+  }
+});
+
+/* ---------- alerts ---------- */
+function checkAlerts(M, now) {
+  allPasses(M, now).forEach((it) => {
+    if (!S.alerts[it.key] || S.fired[it.key] || it.info.passed) return;
+    const trigger = it.info.leaveBy != null ? it.info.leaveBy - 60000 : it.info.p.e - 10 * 60000;
+    if (now >= trigger) {
+      S.fired[it.key] = true; save();
+      const msg = it.info.leaveBy != null ? `Leave now for ${it.spot.name}. Bradley is due ${clockTxt(it.info.p.e)}–${clockTxt(it.info.p.l)}.` : `Bradley is due at ${it.spot.name} from ${clockTxt(it.info.p.e)}.`;
+      toast(msg);
+      try { navigator.vibrate && navigator.vibrate([300, 150, 300]); } catch (e) {}
+      try { if ("Notification" in window && Notification.permission === "granted") new Notification("Bradley · bib 1999", { body: msg }); } catch (e) {}
+    }
+  });
+}
+
+/* ---------- main loop ---------- */
+function renderAll(skipPlanForm) {
+  const M = buildModel(), now = Date.now();
+  $("#nowclock").innerHTML = clockHtml(now);
+  renderNow(M, now);
+  renderSpots(M, now);
+  if (!document.activeElement || !$("#tab-log").contains(document.activeElement)) renderLog(M);
+  renderPlanProj(M);
+  renderMap();
+  checkAlerts(M, now);
+}
+
+function importFromHash() {
+  const m = location.hash.match(/^#d=(.+)$/);
+  if (!m) return;
+  let data = null;
+  try { data = JSON.parse(decodeURIComponent(escape(atob(m[1])))); } catch (e) {}
+  history.replaceState(null, "", location.pathname + location.search);
+  if (!data || data.v !== 1) return;
+  const b = $("#importBanner");
+  b.hidden = false;
+  b.innerHTML = `<div class="banner" style="margin-top:16px"><b>Someone shared their tracker with you.</b><span class="small">${(data.obs || []).length} logged points, ${(data.spots || []).length} spots.</span><div class="row"><button class="btn slim" id="impYes" type="button">Use shared data</button><button class="btn slim" id="impNo" type="button">Keep mine</button></div></div>`;
+  $("#impYes").onclick = () => { S.plan = data.plan; S.obs = data.obs || []; S.spots = data.spots || []; save(); b.hidden = true; renderPlanForm(); renderAll(); toast("Loaded shared data"); };
+  $("#impNo").onclick = () => (b.hidden = true);
+}
+
+renderPlanForm();
+importFromHash();
+go(S.tab || "now");
+renderAll();
+setInterval(() => { if ($("#sheet").hidden) renderAll(true); }, 15000);
+try { navigator.permissions?.query({ name: "geolocation" }).then((p) => { if (p.state === "granted") locate(false); }).catch(() => {}); } catch (e) {}
+</script>
+</body>
+</html>
