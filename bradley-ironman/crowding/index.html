@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Course Crowding · IRONMAN California 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one column. A heatmap with the same axes as the race timetable (time across, course down);
+   one sequential hue, light to dark, for athlete count. Bradley's path is the only other color. */
+:root {
+  --bg: #f2f3ef; --surface: #ffffff; --ink: #14171b; --muted: #5d656e; --line: #d8dbd4; --grid: #e6e8e3;
+  --heat: 29, 78, 216; --me: #7a3ff2; --band: #f6f7f4;
+  --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "Barlow", "Helvetica Neue", Arial, system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #0e1114; --surface: #171b20; --ink: #eef1f4; --muted: #9aa3ad; --line: #2a3038; --grid: #222830; --heat: 125, 170, 255; --me: #b394ff; --band: #1a1f25; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #0e1114; --surface: #171b20; --ink: #eef1f4; --muted: #9aa3ad; --line: #2a3038; --grid: #222830; --heat: 125, 170, 255; --me: #b394ff; --band: #1a1f25; color-scheme: dark; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.45 var(--body); font-variant-numeric: tabular-nums; }
+.wrap { max-width: 980px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; display: grid; gap: 18px; }
+h1 { margin: 0; font: 800 clamp(34px, 7vw, 56px)/0.95 var(--display); text-transform: uppercase; letter-spacing: .01em; }
+h2 { margin: 0; font: 700 22px/1.1 var(--display); text-transform: uppercase; letter-spacing: .03em; }
+.eyebrow { font: 700 12px/1.2 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.lede { margin: 6px 0 0; max-width: 62ch; color: var(--muted); }
+.muted { color: var(--muted); } .small { font-size: 13px; }
+a { color: inherit; }
+.fig { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 10px; margin: 0; position: relative; }
+.fig p { margin: 0; color: var(--muted); font-size: 14px; max-width: 70ch; }
+canvas { display: block; width: 100%; }
+.scale { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+.scale .ramp { width: 160px; height: 10px; border-radius: 3px; background: linear-gradient(90deg, rgba(var(--heat), .06), rgba(var(--heat), 1)); }
+.scale i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; background: var(--me); vertical-align: middle; margin-right: 6px; }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 13px; padding: 6px 9px; border-radius: 6px; white-space: nowrap; z-index: 5; transform: translate(-50%, calc(-100% - 10px)); }
+.busy { display: grid; gap: 8px; }
+.busy div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: baseline; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.busy b { font: 800 22px/1 var(--display); }
+.empty { border: 1.5px dashed var(--line); border-radius: 10px; padding: 16px; color: var(--muted); }
+.notes { margin: 0; padding-left: 18px; color: var(--muted); font-size: 14px; display: grid; gap: 4px; max-width: 70ch; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <p style="margin:0 0 10px"><a href="../" class="small" style="font-weight:600">← Bradley's tracker</a> · <a href="../race/" class="small" style="font-weight:600">Race timetable</a> · <a href="../place/" class="small" style="font-weight:600">Bradley's place</a></p>
+    <div class="eyebrow">IRONMAN California · Sacramento · Oct 18, 2026</div>
+    <h1>Course crowding</h1>
+    <p class="lede">How many athletes were on each stretch of course at each time of day. Stronger color means busier. It's the race timetable seen as density, with Bradley's day drawn on top. <span id="asof"></span></p>
+  </header>
+
+  <figure class="fig" id="f-heat">
+    <h2>Athletes on course</h2>
+    <div class="scale"><span>Fewer</span><span class="ramp"></span><span>More (<span id="maxN">—</span>+ in one cell)</span><span><i></i>Bradley</span></div>
+    <canvas id="heat" role="img" aria-label="Heatmap of athlete counts by course position and time of day"></canvas>
+    <p>Each cell is a 5-minute window on a stretch of course (0.2 mi on the swim, 2 mi on the bike, 1 mi on the run). Positions between timing mats are estimated assuming steady pace between them.</p>
+  </figure>
+
+  <section class="fig">
+    <h2>Busiest stretches</h2>
+    <p>The most crowded windows on each sport.</p>
+    <div class="busy" id="busy"></div>
+  </section>
+
+  <section>
+    <h2>Reading the data</h2>
+    <ul class="notes">
+      <li>Athletes are counted from their start until their last timing mat, so anyone between mats when the data was pulled isn't counted past their last mat.</li>
+      <li>The bike is two out-and-back laps and the run is two laps, so a stretch of road appears more than once down the chart.</li>
+      <li>Source: official timing-mat crossings (RTRT.me). Athletes are anonymous; only Bradley is identified.</li>
+    </ul>
+  </section>
+</main>
+<script>
+"use strict";
+const $ = (s) => document.querySelector(s);
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmtClock = (sec) => { const d = new Date(sec * 1000); let h = d.getHours(); const m = d.getMinutes(); const ap = h >= 12 ? "pm" : "am"; h = h % 12 || 12; return h + (m ? ":" + String(m).padStart(2, "0") : "") + " " + ap; };
+const BANDS = [
+  { leg: "swim", from: 0, to: 2.4, y0: 0, y1: 0.07, step: 0.2, label: "Swim" },
+  { leg: "t1", from: 2.4, to: 2.76, y0: 0.07, y1: 0.09, step: 0.36, label: "T1" },
+  { leg: "bike", from: 2.76, to: 114.8, y0: 0.09, y1: 0.585, step: 2, label: "Bike" },
+  { leg: "t2", from: 114.8, to: 114.96, y0: 0.585, y1: 0.605, step: 0.16, label: "T2" },
+  { leg: "run", from: 114.96, to: 141.04, y0: 0.605, y1: 1, step: 1, label: "Run" },
+];
+const yFrac = (cum) => { for (const b of BANDS) if (cum <= b.to) return b.y0 + (b.y1 - b.y0) * Math.max(0, cum - b.from) / (b.to - b.from); return 1; };
+// Position bins: fixed-length stretches within each sport.
+const BINS = [];
+BANDS.forEach((b) => { for (let a = b.from; a < b.to - 1e-6; a += b.step) BINS.push({ leg: b.leg, from: a, to: Math.min(b.to, a + b.step) }); });
+const binOf = (cum) => { for (let i = 0; i < BINS.length; i++) if (cum < BINS[i].to) return i; return BINS.length - 1; };
+const STEP = 300; // seconds per time window
+const legMile = (b) => b.leg === "bike" ? `Bike mi ${Math.round(b.from - 2.76)}–${Math.round(b.to - 2.76)}` : b.leg === "run" ? `Run mi ${Math.round(b.from - 114.96)}–${Math.round(b.to - 114.96)}` : b.leg === "swim" ? `Swim mi ${(b.from).toFixed(1)}–${b.to.toFixed(1)}` : b.leg.toUpperCase();
+
+let D = null, G = null;
+
+function build(d) {
+  const ends = d.athletes.map((a) => a[1] + a[a.length - 1]);
+  const t0 = Math.floor((Math.min(...d.athletes.map((a) => a[1])) - 600) / 1800) * 1800;
+  const t1 = Math.min(d.courseClose + 1800, Math.ceil((Math.max(...ends, d.asOf) + 600) / 1800) * 1800);
+  const nT = Math.ceil((t1 - t0) / STEP);
+  const grid = new Uint16Array(nT * BINS.length);
+  for (const a of d.athletes) {
+    const pts = []; for (let k = 2; k < a.length; k += 2) pts.push([a[1] + a[k + 1], d.mats[a[k]].cum]);
+    if (pts.length < 2) continue;
+    let j = 0;
+    for (let ti = Math.ceil((pts[0][0] - t0) / STEP); ti < nT; ti++) {
+      const t = t0 + ti * STEP;
+      if (t > pts[pts.length - 1][0]) break;
+      while (j < pts.length - 2 && pts[j + 1][0] < t) j++;
+      const [ta, ca] = pts[j], [tb, cb] = pts[j + 1];
+      const cum = tb > ta ? ca + (cb - ca) * (t - ta) / (tb - ta) : cb;
+      grid[ti * BINS.length + binOf(cum)]++;
+    }
+  }
+  // Scale colors by the course itself: transitions hold everyone in one spot and would wash out the rest.
+  let max = 0; for (let ti = 0; ti < nT; ti++) BINS.forEach((b, bi) => { if (!b.leg.startsWith("t")) max = Math.max(max, grid[ti * BINS.length + bi]); });
+  max = max || 1;
+  return { t0, t1, nT, grid, max };
+}
+
+function draw() {
+  const cv = $("#heat"), W = cv.parentElement.clientWidth - 28, H = Math.round(Math.max(640, Math.min(1200, W * 1.3)));
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + "px";
+  const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const pad = { l: 50, r: 8, t: 26, b: 8 }, pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
+  const X = (t) => pad.l + (t - G.t0) / (G.t1 - G.t0) * pw, Y = (cum) => pad.t + yFrac(cum) * ph;
+  const heat = css("--heat");
+  g.clearRect(0, 0, W, H);
+  g.fillStyle = css("--band"); g.fillRect(pad.l, pad.t, pw, ph);
+  // cells: alpha on one hue = monotonic light-to-dark ramp in both themes; sqrt so mid-range counts stay visible
+  const cw = pw / G.nT;
+  for (let ti = 0; ti < G.nT; ti++) for (let bi = 0; bi < BINS.length; bi++) {
+    const v = G.grid[ti * BINS.length + bi]; if (!v) continue;
+    g.fillStyle = `rgba(${heat}, ${(0.06 + 0.94 * Math.sqrt(Math.min(1, v / G.max))).toFixed(3)})`;
+    const y = Y(BINS[bi].from), y2 = Y(BINS[bi].to);
+    g.fillRect(pad.l + ti * cw, y, Math.ceil(cw), Math.max(1, y2 - y));
+  }
+  // sport labels and separators
+  g.font = `700 13px ${css("--display")}`; g.textAlign = "right"; g.textBaseline = "middle";
+  BANDS.forEach((b) => {
+    g.fillStyle = b.leg.startsWith("t") ? css("--muted") : css("--ink");
+    if (!b.leg.startsWith("t") || W > 520) g.fillText(b.label.toUpperCase(), pad.l - 6, (Y(b.from) + Y(b.to)) / 2);
+    g.strokeStyle = css("--line"); g.beginPath(); g.moveTo(pad.l, Y(b.to)); g.lineTo(pad.l + pw, Y(b.to)); g.stroke();
+  });
+  // time axis
+  g.font = `500 11px ${css("--body")}`; g.fillStyle = css("--muted"); g.textAlign = "center"; g.textBaseline = "alphabetic";
+  const step = (G.t1 - G.t0) / 3600 > 10 ? (W < 520 ? 14400 : 7200) : 3600;
+  for (let t = Math.ceil(G.t0 / step) * step; t <= G.t1; t += step) { g.fillText(fmtClock(t), X(t), pad.t - 8); g.strokeStyle = css("--grid"); g.globalAlpha = .5; g.beginPath(); g.moveTo(X(t), pad.t); g.lineTo(X(t), pad.t + ph); g.stroke(); g.globalAlpha = 1; }
+  // Bradley
+  const a = D.athletes[D.bradley];
+  if (a && a.length > 4) {
+    g.strokeStyle = css("--surface"); g.lineWidth = 5; g.lineJoin = "round"; g.beginPath();
+    for (let k = 2; k < a.length; k += 2) { const x = X(a[1] + a[k + 1]), y = Y(D.mats[a[k]].cum); k === 2 ? g.moveTo(x, y) : g.lineTo(x, y); }
+    g.stroke(); g.strokeStyle = css("--me"); g.lineWidth = 2.5; g.stroke();
+    const lx = X(a[1] + a[a.length - 1]), ly = Y(D.mats[a[a.length - 2]].cum);
+    g.fillStyle = css("--me"); g.font = `800 13px ${css("--display")}`; g.textAlign = lx > pad.l + pw - 70 ? "right" : "left"; g.textBaseline = "middle";
+    g.fillText("BRADLEY", lx + (g.textAlign === "left" ? 7 : -7), ly);
+  }
+  cv._geom = { pad, pw, ph, cw, X, Y };
+}
+
+function busiest() {
+  // Top window per sport, then the next-busiest at least 30 min or 6 mi away from those already listed.
+  const out = [];
+  for (const leg of ["swim", "bike", "run"]) {
+    const cells = [];
+    BINS.forEach((b, bi) => { if (b.leg !== leg) return; for (let ti = 0; ti < G.nT; ti++) { const v = G.grid[ti * BINS.length + bi]; if (v) cells.push({ v, ti, bi }); } });
+    cells.sort((p, q) => q.v - p.v);
+    const picked = [];
+    for (const c of cells) { if (picked.length >= (leg === "swim" ? 1 : 2)) break; if (picked.some((p) => Math.abs(p.ti - c.ti) < 6 && Math.abs(BINS[p.bi].from - BINS[c.bi].from) < 6)) continue; picked.push(c); }
+    out.push(...picked.map((c) => ({ ...c, leg })));
+  }
+  $("#busy").innerHTML = out.length ? out.map((c) => `<div><span>${legMile(BINS[c.bi])} · ${fmtClock(G.t0 + c.ti * STEP)}–${fmtClock(G.t0 + (c.ti + 1) * STEP)}</span><b>${c.v}</b></div>`).join("") : `<div class="empty">Not enough data yet.</div>`;
+}
+
+function hover(e) {
+  const cv = $("#heat"), geo = cv._geom; if (!geo) return;
+  const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  let tip = $("#f-heat .tip"); if (!tip) { tip = document.createElement("div"); tip.className = "tip"; $("#f-heat").appendChild(tip); }
+  const ti = Math.floor((x - geo.pad.l) / geo.cw);
+  if (ti < 0 || ti >= G.nT || y < geo.pad.t || y > geo.pad.t + geo.ph) { tip.hidden = true; return; }
+  let bi = BINS.findIndex((b) => y >= geo.Y(b.from) && y < geo.Y(b.to)); if (bi < 0) { tip.hidden = true; return; }
+  const v = G.grid[ti * BINS.length + bi];
+  const fr = $("#f-heat").getBoundingClientRect();
+  tip.innerHTML = `${legMile(BINS[bi])} · ${fmtClock(G.t0 + ti * STEP)}<br><b>${v}</b> athlete${v === 1 ? "" : "s"}`;
+  tip.style.left = (r.left - fr.left + x) + "px"; tip.style.top = (r.top - fr.top + y) + "px"; tip.hidden = false;
+}
+
+function render() {
+  G = build(D);
+  $("#maxN").textContent = G.max.toLocaleString();
+  $("#asof").textContent = D.asOf < D.courseClose ? `Data from ${fmtClock(D.asOf)}; it refreshes hourly during the race.` : "Final data.";
+  draw(); busiest();
+}
+
+$("#heat").addEventListener("pointermove", hover);
+$("#heat").addEventListener("pointerleave", () => { const t = $("#f-heat .tip"); if (t) t.hidden = true; });
+let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => D && draw(), 150); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => D && draw());
+fetch("../race/marey.json", { cache: "no-cache" }).then((r) => r.json()).then((d) => { D = d; render(); })
+  .catch(() => { $("#busy").innerHTML = `<p class="muted">The race data isn't available yet.</p>`; });
+</script>
+</body>
+</html>
