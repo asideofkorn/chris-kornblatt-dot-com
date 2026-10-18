@@ -1080,7 +1080,7 @@ function initMap() {
           const near = labels.find((x) => Math.abs(mi - x.mi[0] - LAP.run) < 0.5 && havMi({ lat: x.ll[0], lng: x.ll[1] }, { lat: ll[0], lng: ll[1] }) < 0.15);
           if (near) near.mi.push(mi); else labels.push({ ll, mi: [mi] });
         }
-        labels.forEach((x) => L.marker(x.ll, { keyboard: false, interactive: false, icon: L.divIcon({ className: "", iconSize: null, html: `<div class="milelbl">${x.mi.join(" · ")}</div>` }) }).addTo(courseGroups.run));
+        labels.forEach((x) => L.marker(x.ll, { keyboard: false, interactive: false, icon: L.divIcon({ className: "", iconSize: null, html: `<div class="milelbl">mi ${x.mi.join(" · ")}</div>` }) }).addTo(courseGroups.run));
       } else line.addTo(courseGroups[groupOf[k]]);
       courseBounds[groupOf[k]] = courseBounds[groupOf[k]] ? courseBounds[groupOf[k]].extend(line.getBounds()) : line.getBounds();
       // Direction arrows, nudged to the right of travel so out-and-back roads show both directions side by side.
