@@ -175,10 +175,10 @@ td.num, th.num { text-align: right; }
 .crs { fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .crs-casing { stroke: var(--surface); opacity: 1; }
 .milelbl { transform: translate(-50%, -50%); white-space: nowrap; padding: 1px 5px; border-radius: 999px; background: var(--surface); color: var(--ink); border: 1.5px solid var(--run); font: 700 11px/1.3 var(--body); }
-.endmark { transform: translate(-50%, -130%); white-space: nowrap; padding: 3px 8px; border-radius: 6px; font: 800 12px/1.2 var(--body); box-shadow: 0 1px 6px rgba(0,0,0,.35); border: 2px solid #fff; }
-.endmark.go { background: #15803d; color: #fff; }
-.endmark.stop { background: var(--ink); color: var(--surface); }
-.endmark.fin { background: #111; color: #fff; }
+.endmark { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; border: 2px solid #fff; box-shadow: 0 1px 5px rgba(0,0,0,.4); box-sizing: border-box; }
+.endmark svg { display: block; }
+.endmark.go { background: #15803d; } .endmark.go svg { margin-left: 1px; }
+.endmark.fin { background: #111; }
 .crs-swim { stroke: var(--swim); } .crs-bike { stroke: var(--bike); } .crs-run { stroke: var(--run); } .crs-t1, .crs-t2 { stroke: var(--muted); }
 .brange { stroke: var(--ink); stroke-opacity: .35; fill: none; stroke-linecap: round; }
 .mat { stroke: var(--ink); fill: var(--surface); }
@@ -1109,15 +1109,21 @@ function initMap() {
     // Start and finish of each sport, marked differently so the order is clear where the course overlaps.
     // With all sports showing, only the race's own start and finish are marked; one sport shows its own ends.
     ["all", "swim", "bike", "run"].forEach((k) => (endGroups[k] = L.layerGroup()));
-    const endMark = (ll, cls, text, grp) => L.marker(ll, { zIndexOffset: 500, keyboard: false, icon: L.divIcon({ className: "", iconSize: null, html: `<div class="endmark ${cls}">${text}</div>` }) }).bindPopup(`<b>${text.replace(/<[^>]+>/g, "")}</b>`).addTo(endGroups[grp]);
+    // Small round markers: green play button for a start, black flag for a finish. dx nudges a finish that shares a start's spot.
+    const ICON = {
+      go: '<svg viewBox="0 0 16 16" width="10" height="10"><path d="M4 2.5v11l9.5-5.5z" fill="#fff"/></svg>',
+      fin: '<svg viewBox="0 0 16 16" width="11" height="11"><path d="M3 1.5v13" stroke="#fff" stroke-width="1.8"/><path d="M4 2h9l-2 3 2 3H4z" fill="#fff"/></svg>',
+    };
+    const endMark = (ll, cls, text, grp, dx = 0) => L.marker(ll, { zIndexOffset: 500, keyboard: false, title: text, icon: L.divIcon({ className: "", iconSize: [22, 22], iconAnchor: [11 - dx, 11], html: `<div class="endmark ${cls}" aria-label="${text}">${ICON[cls]}</div>` }) }).bindPopup(`<b>${text}</b>`).addTo(endGroups[grp]);
     const first = (k) => COURSE.legs[k].c[0], last = (k) => COURSE.legs[k].c[COURSE.legs[k].c.length - 1];
-    endMark(first("swim"), "go", "▶ Swim start", "swim");
-    endMark(last("swim"), "stop", "Swim exit", "swim");
-    endMark(first("bike"), "go", "▶ Bike start · finish", "bike");
-    endMark(first("run"), "go", "▶ Run start", "run");
-    endMark(last("run"), "fin", "🏁 Finish", "run");
-    endMark(first("swim"), "go", "▶ Race start", "all");
-    endMark(last("run"), "fin", "🏁 Finish", "all");
+    endMark(first("swim"), "go", "Swim start", "swim");
+    endMark(last("swim"), "fin", "Swim exit", "swim");
+    endMark(first("bike"), "go", "Bike start", "bike", -12);
+    endMark(last("bike"), "fin", "Bike finish", "bike", 12);
+    endMark(first("run"), "go", "Run start", "run");
+    endMark(last("run"), "fin", "Race finish", "run");
+    endMark(first("swim"), "go", "Race start", "all");
+    endMark(last("run"), "fin", "Race finish", "all");
     map.on("zoomend", showFineArrows);
     applyMapFilter(false);
   }
