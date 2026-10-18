@@ -293,16 +293,17 @@ const DEFAULTS = () => ({
   v: 1,
   plan: {
     start: { f: "07:00", x: "07:10", s: "07:20" },
-    swim: { f: 60, x: 70, s: 80 },
-    // T1/T2 and run defaults come from 2023–25 athletes with a similar swim and bike (long T1 here).
+    // Bradley's own targets: ~1:30 swim in still water, ~1:10 with the river current; 18–19 mph bike; 9:15/mi run (his strongest leg).
+    swim: { f: 60, x: 70, s: 85 },
+    // T1/T2 come from 2023–25 athletes with a similar swim and bike (T1 is long here).
     t1: { f: 9, x: 13, s: 17 },
-    bike: { f: 20, x: 18, s: 16 },
+    bike: { f: 19.5, x: 18.5, s: 17 },
     t2: { f: 6, x: 9, s: 12 },
-    run: { f: "10:15", x: "12:15", s: "15:00" },
-    fade: 12,
+    run: { f: "8:45", x: "9:15", s: "10:30" },
+    fade: 8,
     bikeFade: 5,
   },
-  planV: 2,
+  planV: 3,
   obs: [],
   spots: defaultSpots(),
   mode: "walk",
@@ -324,8 +325,16 @@ function defaultSpots() {
     mk("Finish line", 38.578466, -121.500018, [{ leg: "run", mile: 26.08 }]),
   ];
 }
+// v3: Bradley sent his own paces, so they replace whatever swim/bike/run numbers were saved.
+function toV3(d) {
+  const nd = DEFAULTS().plan;
+  Object.assign(d.plan, { swim: nd.swim, bike: nd.bike, run: nd.run, fade: nd.fade });
+  d.planV = 3;
+  return d;
+}
 function migrate(d) {
-  if (d.planV === 2) return d;
+  if (d.planV === 3) return d;
+  if (d.planV === 2) return toV3(d);
   const p = d.plan || {};
   const same = (o, f, x, s) => o && String(o.f) === String(f) && String(o.x) === String(x) && String(o.s) === String(s);
   const nd = DEFAULTS();
@@ -335,8 +344,7 @@ function migrate(d) {
   if (+p.fade === 6) p.fade = nd.plan.fade;
   if (p.bikeFade == null) p.bikeFade = nd.plan.bikeFade;
   d.spots = nd.spots.concat((d.spots || []).filter((s) => !OLD_DEFAULT_SPOTS.includes(s.name)));
-  d.planV = 2;
-  return d;
+  return toV3(d);
 }
 
 let S = load();
@@ -798,7 +806,7 @@ function renderPlanForm() {
         <label class="field"><span class="label">Bike lap 2 slower by %</span><input id="pl-bikeFade" value="${esc(p.bikeFade)}" inputmode="decimal"></label>
         <label class="field"><span class="label">Run 2nd half slower by %</span><input id="pl-fade" value="${esc(p.fade)}" inputmode="decimal"></label>
       </div>
-      <p class="small muted">Fast and slow set the range shown for each time. T1, T2 and the run start from 2023–25 athletes with a similar swim and bike; change them if Bradley expects otherwise. Official splits adjust the leg he's on, and later legs move about half as much.</p>
+      <p class="small muted">Fast and slow set the range shown for each time. Swim, bike and run are Bradley's own targets; T1 and T2 come from 2023–25 athletes like him. Official splits adjust the leg he's on, and later legs move about half as much.</p>
     </div>
     <div id="planProj"></div>`;
   $("#tab-plan").querySelectorAll("input[data-k]").forEach((inp) => inp.addEventListener("input", () => {
