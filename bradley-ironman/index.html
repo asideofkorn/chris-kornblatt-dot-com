@@ -179,6 +179,11 @@ td.num, th.num { text-align: right; }
 .endmark svg { display: block; }
 .endmark.go { background: #15803d; } .endmark.go svg { margin-left: 1px; }
 .endmark.fin { background: #111; }
+.endmark.go { cursor: pointer; animation: pulse 2s ease-out 3; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(21,128,61,.6); } 100% { box-shadow: 0 0 0 10px rgba(21,128,61,0); } }
+.route-trail { stroke: #fde047; opacity: .95; }
+.route-ball { stroke: #fff; fill: #dc2626; fill-opacity: 1; }
+.route-tip { font: 700 12px/1.2 var(--body); padding: 2px 6px; }
 .crs-swim { stroke: var(--swim); } .crs-bike { stroke: var(--bike); } .crs-run { stroke: var(--run); } .crs-t1, .crs-t2 { stroke: var(--muted); }
 .brange { stroke: var(--ink); stroke-opacity: .35; fill: none; stroke-linecap: round; }
 .mat { stroke: var(--ink); fill: var(--surface); }
@@ -238,6 +243,7 @@ td.num, th.num { text-align: right; }
       <button type="button" data-mapleg="all" aria-pressed="true">All</button><button type="button" data-mapleg="swim" aria-pressed="false">Swim</button><button type="button" data-mapleg="bike" aria-pressed="false">Bike</button><button type="button" data-mapleg="run" aria-pressed="false">Run</button>
     </div>
     <div class="seg" role="group" aria-label="Which estimate"><button type="button" data-est="ours" aria-pressed="false">Ours</button><button type="button" data-est="app" aria-pressed="false">IRONMAN</button><button type="button" data-est="both" aria-pressed="true">Both</button></div>
+    <p class="small muted" style="margin:0">Tap a green <span aria-hidden="true">▶</span> on the map to play that route.</p>
     <p class="small" id="estNote" hidden>The IRONMAN estimate shows up after his first timed split past the start (swim exit). The timing feed doesn't send one before that.</p>
     <div class="mapwrap">
       <div id="map"></div>
@@ -1025,6 +1031,34 @@ function headingAt(leg, mile) {
   if (!dx && !dy) return null;
   return { ll: posToLatLng(leg, mile), deg: (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360 };
 }
+// A red ball runs the route once, quickly, leaving a bright trail, so the order of an overlapping course is easy to see.
+let routeAnim = null;
+function playRoute(which) {
+  if (!map || !COURSE) return;
+  if (routeAnim) routeAnim.stop();
+  const legs = which === "all" ? ["swim", "t1", "bike", "t2", "run"] : [which];
+  const parts = legs.filter((k) => COURSE.legs[k]).map((k) => ({ k, end: COURSE.legs[k].m[COURSE.legs[k].m.length - 1] }));
+  const total = parts.reduce((s, p) => s + p.end, 0); if (!total) return;
+  const DUR = { swim: 5000, bike: 9000, run: 9000, all: 14000 }[which] || 9000;
+  const b = courseBounds[which === "all" ? "bike" : which];
+  if (which === "all") { const bb = L.latLngBounds([]); Object.values(courseBounds).forEach((x) => bb.extend(x)); map.fitBounds(bb, { padding: [20, 20] }); }
+  else if (b) map.fitBounds(b, { padding: [20, 20] });
+  const trail = L.polyline([], { className: "crs route-trail", weight: 4, interactive: false }).addTo(map);
+  const ball = L.circleMarker(posToLatLng(parts[0].k, 0), { radius: 7, weight: 2, className: "route-ball", interactive: false }).addTo(map);
+  const label = L.tooltip({ permanent: true, direction: "right", offset: [10, 0], className: "route-tip" });
+  ball.bindTooltip(label).openTooltip();
+  let t0 = null, raf = 0;
+  const posAt = (d) => { for (const p of parts) { if (d <= p.end) return [p.k, d]; d -= p.end; } const l = parts[parts.length - 1]; return [l.k, l.end]; };
+  const step = (ts) => {
+    t0 ??= ts;
+    const f = Math.min(1, (ts - t0) / DUR), [k, mi] = posAt(f * total), ll = posToLatLng(k, mi);
+    ball.setLatLng(ll); trail.addLatLng(ll);
+    ball.setTooltipContent(LEGS[legIdx(k)].dist ? `${LEGS[legIdx(k)].name} mi ${mi.toFixed(1)}` : k.toUpperCase());
+    if (f < 1) raf = requestAnimationFrame(step); else setTimeout(() => routeAnim && routeAnim.stop(), 1500);
+  };
+  routeAnim = { stop() { cancelAnimationFrame(raf); map.removeLayer(trail); map.removeLayer(ball); routeAnim = null; } };
+  raf = requestAnimationFrame(step);
+}
 function showFineArrows() {
   const f = S.mapLeg || "all", z = map.getZoom() >= FINE_ZOOM;
   Object.entries(fineGroups).forEach(([k, g]) => { if (z && (f === "all" || f === k)) g.addTo(map); else map.removeLayer(g); });
@@ -1114,7 +1148,11 @@ function initMap() {
       go: '<svg viewBox="0 0 16 16" width="10" height="10"><path d="M4 2.5v11l9.5-5.5z" fill="#fff"/></svg>',
       fin: '<svg viewBox="0 0 16 16" width="11" height="11"><path d="M3 1.5v13" stroke="#fff" stroke-width="1.8"/><path d="M4 2h9l-2 3 2 3H4z" fill="#fff"/></svg>',
     };
-    const endMark = (ll, cls, text, grp, dx = 0) => L.marker(ll, { zIndexOffset: 500, keyboard: false, title: text, icon: L.divIcon({ className: "", iconSize: [22, 22], iconAnchor: [11 - dx, 11], html: `<div class="endmark ${cls}" aria-label="${text}">${ICON[cls]}</div>` }) }).bindPopup(`<b>${text}</b>`).addTo(endGroups[grp]);
+    // Tapping a start plays a quick run-through of that route; a finish just names itself.
+    const endMark = (ll, cls, text, grp, dx = 0) => {
+      const m = L.marker(ll, { zIndexOffset: 500, keyboard: false, title: cls === "go" ? text + ": tap to play the route" : text, icon: L.divIcon({ className: "", iconSize: [22, 22], iconAnchor: [11 - dx, 11], html: `<div class="endmark ${cls}" aria-label="${text}">${ICON[cls]}</div>` }) }).addTo(endGroups[grp]);
+      if (cls === "go") m.on("click", () => playRoute(grp)); else m.bindPopup(`<b>${text}</b>`);
+    };
     const first = (k) => COURSE.legs[k].c[0], last = (k) => COURSE.legs[k].c[COURSE.legs[k].c.length - 1];
     endMark(first("swim"), "go", "Swim start", "swim");
     endMark(last("swim"), "fin", "Swim exit", "swim");
