@@ -746,6 +746,11 @@ function renderLog(M) {
     <h3>Log</h3>
     <div class="loglist">${list.length ? list.map((o) => `<div class="logitem"><div class="t">${clockHtml(o.t)}</div><div class="d"><b>${posLabel(o.leg, o.mile)}</b><small>${{ split: "Official split", auto: "Official · live timing", seen: "Seen by me", friend: "Seen by a friend", start: "Start" }[o.src] || o.src}${o.note ? " · " + esc(o.note) : ""}${M.bad.includes(o.id) ? " · ⚠ doesn't fit the other points, check the time" : ""}</small></div><button class="x" data-del="${o.id}" aria-label="Remove">×</button></div>`).join("") : `<div class="empty">Nothing logged yet. Start with his swim start time or swim split from the IRONMAN app.</div>`}</div>
     <div class="panel">
+      <h3>Race replay data</h3>
+      <p class="small muted" style="margin:0">Every 2 minutes during the race this phone saves where we estimate Bradley is, where the IRONMAN app puts him, the finish estimate, and your location when it's on. Official times and sightings are in the log above. <b>${loadHistory().length}</b> snapshots so far.</p>
+      <div class="row"><button class="btn" id="exportBtn" type="button">Download race data</button></div>
+    </div>
+    <div class="panel">
       <h3>Share with friends</h3>
       <p class="small muted">Copies a link with the plan, spots and log. Whoever opens it gets a copy of this data.</p>
       <div class="row"><button class="btn" id="shareBtn" type="button">Copy share link</button><button class="btn ghost" id="resetBtn" type="button">Reset everything</button></div>
@@ -784,6 +789,14 @@ function renderLog(M) {
     }
     addObs({ leg: lg, mile: mile || 0, t, src: $("#lgSrc").value });
     toast("Logged " + posLabel(lg, mile) + " at " + clockTxt(t));
+  };
+  $("#exportBtn").onclick = () => {
+    const data = { exportedAt: new Date().toISOString(), event: RT.ev, athlete: { name: "Bradley", bib: "1999", rtrtPid: RT.pid }, plan: S.plan, obs: S.obs, spots: S.spots, appEst: S.appEst || null, field: S.field || null, history: loadHistory() };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 1)], { type: "application/json" }));
+    const a = document.createElement("a"); a.href = url; a.download = "bradley-ironman-2026.json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    toast("Race data downloaded");
   };
   $("#shareBtn").onclick = () => {
     const data = { v: 1, plan: S.plan, obs: S.obs, spots: S.spots };
@@ -1225,6 +1238,26 @@ document.addEventListener("click", (e) => {
 });
 
 /* ---------- alerts ---------- */
+/* ---------- replay history ---------- */
+// Kept apart from the main state so share links stay short. About 60 KB for a full race.
+const HIST_KEY = "bradley-imca-2026-history";
+function loadHistory() { try { return JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch (e) { return []; } }
+function recordHistory(M, now) {
+  if (now < clockToMs("06:30") || now > clockToMs("23:59")) return;
+  const h = loadHistory();
+  if (h.length && now - h[h.length - 1].t < 115000) return;
+  const r2 = (n) => Math.round(n * 100) / 100;
+  const cur = currentState(M, now), ap = appPosition(now), fin = M.predict(M.UT);
+  h.push({
+    t: now,
+    ours: cur.pre ? null : { leg: cur.pos.leg, mile: r2(cur.pos.mile), near: [cur.near.leg, r2(cur.near.mile)], far: [cur.far.leg, r2(cur.far.mile)] },
+    app: ap ? { leg: ap.leg, mile: r2(ap.mile) } : null,
+    finish: { e: Math.round(fin.e), x: Math.round(fin.x), l: Math.round(fin.l) },
+    me: ME ? { lat: +ME.lat.toFixed(5), lng: +ME.lng.toFixed(5), acc: Math.round(ME.acc) } : null,
+  });
+  try { localStorage.setItem(HIST_KEY, JSON.stringify(h)); } catch (e) {}
+}
+
 function checkAlerts(M, now) {
   allPasses(M, now).forEach((it) => {
     if (!S.alerts[it.key] || S.fired[it.key] || it.info.passed) return;
@@ -1392,6 +1425,7 @@ function renderAll(skipPlanForm) {
   renderPlanProj(M);
   renderMap();
   checkAlerts(M, now);
+  recordHistory(M, now);
 }
 
 function importFromHash() {
