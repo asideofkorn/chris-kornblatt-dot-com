@@ -17,10 +17,17 @@ const MATS = {
   BIKE3: ["bike", 19.92], BIKE4: ["bike", 25.57], BIKE5: ["bike", 28.03], BIKE6: ["bike", 30.48], BIKE7: ["bike", 36.12], BIKE8: ["bike", 41.07],
   BIKE9: ["bike", 48.42], BIKE10: ["bike", 56.03], BIKE11: ["bike", 56.03], BIKE12: ["bike", 63.64], BIKE13: ["bike", 71.0], BIKE14: ["bike", 75.94],
   BIKE15: ["bike", 81.58], BIKE16: ["bike", 84.04], BIKE17: ["bike", 86.49], BIKE18: ["bike", 92.13], BIKE19: ["bike", 97.07], BIKE20: ["bike", 104.44],
-  BIKE21: ["bike", 104.44], BIKE: ["bike", 112.04], T2: ["run", 0], RUN1: ["run", 0.58], RUN2: ["run", 2.34], RUN3: ["run", 4.1], RUN4: ["run", 4.1],
-  RUN5: ["run", 7.45], RUN6: ["run", 11.44], RUN7: ["run", 13.81], RUN8: ["run", 13.81], RUN9: ["run", 13.81], RUN10: ["run", 13.81], RUN11: ["run", 13.81],
-  RUN12: ["run", 13.81], RUN13: ["run", 15.99], RUN14: ["run", 19.34], RUN15: ["run", 23.33], RUN16: ["run", 25.7], FINISH: ["run", 26.08],
+  BIKE21: ["bike", 111.95], BIKE: ["bike", 112.04], T2: ["run", 0], RUN1: ["run", 0.58], RUN2: ["run", 2.34], RUN3: ["run", 4.1], RUN4: ["run", 4.86],
+  RUN5: ["run", 6.2], RUN6: ["run", 7.45], RUN7: ["run", 8.7], RUN8: ["run", 10.04], RUN9: ["run", 11.44], RUN10: ["run", 13.81], RUN11: ["run", 15.42],
+  RUN12: ["run", 16], RUN13: ["run", 16.76], RUN14: ["run", 18.1], RUN15: ["run", 19.35], RUN16: ["run", 20.61], RUN17: ["run", 21.95], RUN18: ["run", 23.34],
+  RUN19: ["run", 25.71], FINISH: ["run", 26.08],
 };
+// IRONMAN redefined the run mats mid-race, so the pull's own mat list wins over the table above.
+for (const p of Array.isArray(d.points) ? d.points : Object.values(d.points || {})) {
+  if (!p || !p.name || p.miles == null || (p.course && p.course !== COURSE) || p.name === "START" || p.name === "ANNOUNCER") continue;
+  const m = +p.miles;
+  MATS[p.name] = m <= 2.45 ? ["swim", +m.toFixed(2)] : m < 114.9 ? ["bike", +Math.max(0, m - 2.76).toFixed(2)] : ["run", +Math.max(0, m - 114.96).toFixed(2)];
+}
 const cumOf = (name) => { const m = MATS[name]; return m ? +(LEG_START[m[0]] + m[1]).toFixed(2) : null; };
 
 // One mat per course position, in race order.

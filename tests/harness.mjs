@@ -7,7 +7,9 @@ import { dirname, join } from "node:path";
 
 const here = dirname(fileURLToPath(import.meta.url));
 export const PAGE = "file://" + join(here, "..", "bradley-ironman", "index.html");
-export const FIELD = JSON.parse(readFileSync(join(here, "fixtures", "field-1536.json"), "utf8"));
+// Anonymized field data at 4:36 pm (mats placed by the race-day definitions).
+export const FIELD = JSON.parse(readFileSync(join(here, "fixtures", "field-1636.json"), "utf8"));
+export const FEED_POINTS = JSON.parse(readFileSync(join(here, "fixtures", "points-raceday.json"), "utf8")).list;
 export const PROFILE_FROZEN = JSON.parse(readFileSync(join(here, "fixtures", "profile-frozen-1311.json"), "utf8")).list;
 export const PID = "RL78MBN2";
 
@@ -71,6 +73,7 @@ export async function openAt(browser, opts) {
     const u = new URL(r.request().url());
     let body;
     if (u.pathname === "/register") body = { token: "TEST" };
+    else if (/\/events\/[^/]+\/points$/.test(u.pathname)) body = { list: opts.points || FEED_POINTS };
     else if (u.pathname.includes("/profiles/")) body = { list: (opts.profile || PROFILE_FROZEN).filter((x) => +x.epochTime <= cut) };
     else {
       const m = u.pathname.match(/points\/(\w+)\/splits/), st = +(u.searchParams.get("start") || 1), mx = +(u.searchParams.get("max") || 1000);

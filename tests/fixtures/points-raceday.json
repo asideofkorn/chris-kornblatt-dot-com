@@ -1,0 +1,485 @@
+{
+ "note": "The timing feed's mat definitions on race day (after IRONMAN renamed the run mats). miles is cumulative race distance.",
+ "list": [
+  {
+   "name": "START",
+   "label": "Race Start",
+   "miles": 0,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.601561",
+    "lng": "-121.486259"
+   }
+  },
+  {
+   "name": "SWIM",
+   "label": "Swim",
+   "miles": 2.4,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.582608",
+    "lng": "-121.508244"
+   }
+  },
+  {
+   "name": "T1",
+   "label": "Bike Start",
+   "miles": 2.7863,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.579654",
+    "lng": "-121.51179"
+   }
+  },
+  {
+   "name": "BIKE0",
+   "label": "Bike 100m",
+   "miles": 2.854,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.578752",
+    "lng": "-121.512264"
+   }
+  },
+  {
+   "name": "BIKE1",
+   "label": "Bike 7.6mi | 12.3km",
+   "miles": 10.38,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.495619",
+    "lng": "-121.559437"
+   }
+  },
+  {
+   "name": "BIKE2",
+   "label": "Bike 14.9mi | 24.1km",
+   "miles": 17.71,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.407371",
+    "lng": "-121.582796"
+   }
+  },
+  {
+   "name": "BIKE3",
+   "label": "Bike 19.9mi | 32.1km",
+   "miles": 22.68,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.344073",
+    "lng": "-121.594062"
+   }
+  },
+  {
+   "name": "BIKE4",
+   "label": "Bike 25.6mi | 41.1km",
+   "miles": 28.33,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.291292",
+    "lng": "-121.630891"
+   }
+  },
+  {
+   "name": "BIKE5",
+   "label": "Bike 28.1mi | 45.1km",
+   "miles": 30.79,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.273266",
+    "lng": "-121.603576"
+   }
+  },
+  {
+   "name": "BIKE6",
+   "label": "Bike 30.5mi | 49.1km",
+   "miles": 33.24,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.291282",
+    "lng": "-121.630857"
+   }
+  },
+  {
+   "name": "BIKE7",
+   "label": "Bike 36.1mi | 58.1km",
+   "miles": 38.88,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.344077",
+    "lng": "-121.594285"
+   }
+  },
+  {
+   "name": "BIKE8",
+   "label": "Bike 41.1mi | 66.1km",
+   "miles": 43.83,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.406918",
+    "lng": "-121.582795"
+   }
+  },
+  {
+   "name": "BIKE9",
+   "label": "Bike 48.4mi | 77.9km",
+   "miles": 51.18,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.49547",
+    "lng": "-121.559352"
+   }
+  },
+  {
+   "name": "BIKE10",
+   "label": "Bike 56mi | 90.2km",
+   "miles": 58.7072,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.578757",
+    "lng": "-121.512261"
+   }
+  },
+  {
+   "name": "BIKE11",
+   "label": "Bike 56mi | 90.2km",
+   "miles": 58.8668,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.578743",
+    "lng": "-121.512269"
+   }
+  },
+  {
+   "name": "BIKE12",
+   "label": "Bike 63.6mi | 102km",
+   "miles": 66.4,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.495513",
+    "lng": "-121.559379"
+   }
+  },
+  {
+   "name": "BIKE13",
+   "label": "Bike 71mi | 114.3km",
+   "miles": 73.76,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.40683",
+    "lng": "-121.582794"
+   }
+  },
+  {
+   "name": "BIKE14",
+   "label": "Bike 75.9mi | 122km",
+   "miles": 78.7,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.344076",
+    "lng": "-121.594209"
+   }
+  },
+  {
+   "name": "BIKE15",
+   "label": "Bike 81.6mi | 131km",
+   "miles": 84.34,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.291303",
+    "lng": "-121.630925"
+   }
+  },
+  {
+   "name": "BIKE16",
+   "label": "Bike 84.1mi | 135km",
+   "miles": 86.8,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.273321",
+    "lng": "-121.603544"
+   }
+  },
+  {
+   "name": "BIKE17",
+   "label": "Bike 86.5mi | 139km",
+   "miles": 89.25,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.291304",
+    "lng": "-121.630932"
+   }
+  },
+  {
+   "name": "BIKE18",
+   "label": "Bike 92.1mi | 148km",
+   "miles": 94.89,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.344076",
+    "lng": "-121.594212"
+   }
+  },
+  {
+   "name": "BIKE19",
+   "label": "Bike 97.1mi | 156km",
+   "miles": 99.83,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.406846",
+    "lng": "-121.582794"
+   }
+  },
+  {
+   "name": "BIKE20",
+   "label": "Bike 104mi | 168km",
+   "miles": 107.2,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.495651",
+    "lng": "-121.559454"
+   }
+  },
+  {
+   "name": "BIKE21",
+   "label": "Bike 180km",
+   "miles": 114.7131,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.578755",
+    "lng": "-121.512262"
+   }
+  },
+  {
+   "name": "BIKE",
+   "label": "Bike Finish",
+   "miles": 114.7816,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.579681",
+    "lng": "-121.511787"
+   }
+  },
+  {
+   "name": "T2",
+   "label": "Run Start",
+   "miles": 114.9558,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.580612",
+    "lng": "-121.510003"
+   }
+  },
+  {
+   "name": "RUN1",
+   "label": "Run 0.6mi | 0.9km",
+   "miles": 115.5392,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.573505",
+    "lng": "-121.515456"
+   }
+  },
+  {
+   "name": "RUN2",
+   "label": "Run 2.3mi | 3.8km",
+   "miles": 117.3,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.556213",
+    "lng": "-121.516589"
+   }
+  },
+  {
+   "name": "RUN3",
+   "label": "Run 4.1mi | 6.6km",
+   "miles": 119.0581,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.5735",
+    "lng": "-121.515466"
+   }
+  },
+  {
+   "name": "RUN4",
+   "label": "Run 4.9mi | 7.8km",
+   "miles": 119.8155,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.582697",
+    "lng": "-121.508943"
+   }
+  },
+  {
+   "name": "RUN5",
+   "label": "Run 6.2mi | 10km",
+   "miles": 121.1558,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.600066",
+    "lng": "-121.514177"
+   }
+  },
+  {
+   "name": "RUN6",
+   "label": "Run 7.5mi | 12km",
+   "miles": 122.4097,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.601316",
+    "lng": "-121.536221"
+   }
+  },
+  {
+   "name": "RUN7",
+   "label": "Run 8.7mi | 14km",
+   "miles": 123.6636,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.600068",
+    "lng": "-121.514172"
+   }
+  },
+  {
+   "name": "RUN8",
+   "label": "Run 10mi | 16.2km",
+   "miles": 125.0041,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.582706",
+    "lng": "-121.508939"
+   }
+  },
+  {
+   "name": "RUN9",
+   "label": "Run 11.4mi | 18.4km",
+   "miles": 126.4006,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.592365",
+    "lng": "-121.505857"
+   }
+  },
+  {
+   "name": "RUN10",
+   "label": "Run 13.8mi | 22.2km",
+   "miles": 128.7662,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.577299",
+    "lng": "-121.496479"
+   }
+  },
+  {
+   "name": "RUN11",
+   "label": "Run 15.4mi | 24.8km",
+   "miles": 130.3762,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.58062",
+    "lng": "-121.510015"
+   }
+  },
+  {
+   "name": "RUN12",
+   "label": "Run 16mi | 25.8km",
+   "miles": 130.9607,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.573501",
+    "lng": "-121.515464"
+   }
+  },
+  {
+   "name": "RUN13",
+   "label": "Run 16.8mi | 27km",
+   "miles": 131.7181,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.582708",
+    "lng": "-121.508938"
+   }
+  },
+  {
+   "name": "RUN14",
+   "label": "Run 18.1mi | 29.1km",
+   "miles": 133.0579,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.600055",
+    "lng": "-121.514168"
+   }
+  },
+  {
+   "name": "RUN15",
+   "label": "Run 19.4mi | 31.2km",
+   "miles": 134.3119,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.601315",
+    "lng": "-121.536224"
+   }
+  },
+  {
+   "name": "RUN16",
+   "label": "Run 20.6mi | 33.2km",
+   "miles": 135.5654,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.60007",
+    "lng": "-121.514174"
+   }
+  },
+  {
+   "name": "RUN17",
+   "label": "Run 22mi | 35.3km",
+   "miles": 136.9064,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.582702",
+    "lng": "-121.508941"
+   }
+  },
+  {
+   "name": "RUN18",
+   "label": "Run 23.3mi | 37.6km",
+   "miles": 138.3028,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.592354",
+    "lng": "-121.505853"
+   }
+  },
+  {
+   "name": "RUN19",
+   "label": "Run 25.7mi | 41.4km",
+   "miles": 140.6684,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.577302",
+    "lng": "-121.496493"
+   }
+  },
+  {
+   "name": "ANNOUNCER",
+   "label": "Announcer",
+   "miles": 141.003,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.578289",
+    "lng": "-121.499345"
+   }
+  },
+  {
+   "name": "FINISH",
+   "label": "Race Finish",
+   "miles": 141.041,
+   "course": "ironman",
+   "coords": {
+    "lat": "38.578466",
+    "lng": "-121.500018"
+   }
+  }
+ ]
+}

@@ -328,13 +328,16 @@ const POINTS = {
   BIKE1: ["bike", 7.62], BIKE2: ["bike", 14.95], BIKE3: ["bike", 19.92], BIKE4: ["bike", 25.57], BIKE5: ["bike", 28.03],
   BIKE6: ["bike", 30.48], BIKE7: ["bike", 36.12], BIKE8: ["bike", 41.07], BIKE9: ["bike", 48.42], BIKE10: ["bike", 56.03], BIKE11: ["bike", 56.03],
   BIKE12: ["bike", 63.64], BIKE13: ["bike", 71.0], BIKE14: ["bike", 75.94], BIKE15: ["bike", 81.58], BIKE16: ["bike", 84.04],
-  BIKE17: ["bike", 86.49], BIKE18: ["bike", 92.13], BIKE19: ["bike", 97.07], BIKE20: ["bike", 104.44], BIKE21: ["bike", 104.44], BIKE: ["bike", 112.04],
-  T2: ["run", 0], RUN1: ["run", 0.58], RUN2: ["run", 2.34], RUN3: ["run", 4.1], RUN4: ["run", 4.1], RUN5: ["run", 7.45], RUN6: ["run", 11.44],
-  RUN7: ["run", 13.81], RUN8: ["run", 13.81], RUN9: ["run", 13.81], RUN10: ["run", 13.81], RUN11: ["run", 13.81], RUN12: ["run", 13.81],
-  RUN13: ["run", 15.99], RUN14: ["run", 19.34], RUN15: ["run", 23.33], RUN16: ["run", 25.7], ANNOUNCER: ["run", 26.04], FINISH: ["run", 26.08],
+  BIKE17: ["bike", 86.49], BIKE18: ["bike", 92.13], BIKE19: ["bike", 97.07], BIKE20: ["bike", 104.44], BIKE21: ["bike", 111.95], BIKE: ["bike", 112.04],
+  // IRONMAN renamed the run mats during the race (RUN5 was 7.5 mi before the start, 6.2 mi after). These are the
+  // race-day definitions; loadPoints() replaces them with whatever the timing feed says when the page opens.
+  T2: ["run", 0], RUN1: ["run", 0.58], RUN2: ["run", 2.34], RUN3: ["run", 4.1], RUN4: ["run", 4.86], RUN5: ["run", 6.2], RUN6: ["run", 7.45],
+  RUN7: ["run", 8.7], RUN8: ["run", 10.04], RUN9: ["run", 11.44], RUN10: ["run", 13.81], RUN11: ["run", 15.42], RUN12: ["run", 16],
+  RUN13: ["run", 16.76], RUN14: ["run", 18.1], RUN15: ["run", 19.35], RUN16: ["run", 20.61], RUN17: ["run", 21.95], RUN18: ["run", 23.34],
+  RUN19: ["run", 25.71], ANNOUNCER: ["run", 26.04], FINISH: ["run", 26.08],
 };
 // One mat per course position, in race order, for field lookups.
-const FIELD_ORDER = ["SWIM", "T1", "BIKE1", "BIKE2", "BIKE3", "BIKE4", "BIKE5", "BIKE6", "BIKE7", "BIKE8", "BIKE9", "BIKE10", "BIKE12", "BIKE13", "BIKE14", "BIKE15", "BIKE16", "BIKE17", "BIKE18", "BIKE19", "BIKE20", "BIKE", "T2", "RUN1", "RUN2", "RUN3", "RUN5", "RUN6", "RUN10", "RUN13", "RUN14", "RUN15", "RUN16", "FINISH"];
+const FIELD_ORDER = ["SWIM", "T1", "BIKE1", "BIKE2", "BIKE3", "BIKE4", "BIKE5", "BIKE6", "BIKE7", "BIKE8", "BIKE9", "BIKE10", "BIKE12", "BIKE13", "BIKE14", "BIKE15", "BIKE16", "BIKE17", "BIKE18", "BIKE19", "BIKE20", "BIKE", "T2", "RUN1", "RUN2", "RUN3", "RUN4", "RUN5", "RUN6", "RUN7", "RUN8", "RUN9", "RUN10", "RUN11", "RUN12", "RUN13", "RUN14", "RUN15", "RUN16", "RUN17", "RUN18", "RUN19", "FINISH"];
 const OLD_DEFAULT_SPOTS = ["Swim exit / T1", "Bike out", "Bike in / T2", "Run halfway", "Finish · State Capitol"];
 const SPEED = { walk: 3.0, run: 6.0, ride: 10.0 }; // mph
 const MODE_NAME = { walk: "walk", run: "jog", ride: "scooter/bike" };
@@ -1667,7 +1670,9 @@ async function approxAppEst(lr) {
     const rows = await fetchField(next);
     if (rows.length < 5) return;
     const fromNet = parseNet(lr.netTime) || 0;
-    const legs = rows.map((r) => r.net - fromNet).filter((v) => v > 0);
+    // Drop stray reads (impossibly quick from his mat to the next).
+    const minSec = minHours(toCum(...def), toCum(...POINTS[next])) * 3600;
+    const legs = rows.map((r) => r.net - fromNet).filter((v) => v > minSec);
     if (legs.length < 5) return;
     const fromT = parseFloat(lr.epochTime) * 1000;
     S.appEst = { from: lr.point, fromT, to: next, toT: fromT + quantile(legs, 0.5) * 1000, label: "", approx: true, n: legs.length };
@@ -1692,6 +1697,9 @@ async function refreshField() {
     for (let x = 0.01; x <= 0.1 + 1e-9 && peers.length < 15; x += 0.005) peers = others.filter((r) => Math.abs(r.net - P.net) <= P.net * x);
     const nearby = others.filter((r) => Math.abs(r.t - P.t) <= 60000).length;
     const qs = [];
+    // Always look at the next few mats (that's also how his own crossings are found when his feed is stuck, and
+    // he can miss a mat); only the comparison with peers stops at the first mat too few of them have reached.
+    let qsOk = true;
     for (const name of FIELD_ORDER.slice(idx + 1, idx + 4)) {
       await sleep(400);
       const byPid = new Map((await fetchField(name)).map((r) => [r.pid, r.net]));
@@ -1700,7 +1708,7 @@ async function refreshField() {
       // and only use a mat most of his peers have reached: the early arrivals alone are the fast ones.
       const minSec = minHours(toCum(P.leg, P.mile), toCum(leg, mile)) * 3600;
       const deltas = peers.filter((p) => byPid.has(p.pid)).map((p) => byPid.get(p.pid) - p.net).filter((d) => d > minSec);
-      if (deltas.length < 8 || deltas.length < peers.length * 0.6) break;
+      if (!qsOk || deltas.length < 8 || deltas.length < peers.length * 0.6) { qsOk = false; continue; }
       qs.push({ point: name, leg, mile, n: deltas.length, p10: P.t + quantile(deltas, 0.1) * 1000, p50: P.t + quantile(deltas, 0.5) * 1000, p90: P.t + quantile(deltas, 0.9) * 1000 });
     }
     // Place by net time among everyone through this mat so far (later starters can still slot in ahead).
@@ -1744,6 +1752,34 @@ function importFromHash() {
   $("#impNo").onclick = () => (b.hidden = true);
 }
 
+// Mats are identified by name; if a mat's mile changes (IRONMAN redefined the run mats mid-race), move the
+// official times already saved to where that mat really is.
+function remapObs() {
+  const seen = new Set();
+  S.obs = S.obs.sort((a, b) => a.t - b.t).filter((o) => {
+    if (o.src !== "auto" || !o.point || !POINTS[o.point]) return true;
+    const [leg, mile] = POINTS[o.point];
+    o.leg = leg; o.mile = mile; o.id = "rt:" + leg + ":" + mile;
+    if (seen.has(o.id)) return false; seen.add(o.id); return true;
+  });
+}
+// The timing feed's own mat list is the source of truth for where each mat is.
+async function loadPoints() {
+  try {
+    const j = await rt(`/events/${RT.ev}/points`);
+    const list = (j.list || []).filter((p) => p.name && p.miles != null && (!p.course || p.course === "ironman"));
+    if (list.length < 20) return;
+    for (const p of list) {
+      const m = +p.miles;
+      POINTS[p.name] = p.name === "START" ? ["start", 0] : m <= 2.45 ? ["swim", +m.toFixed(2)] : m < 114.9 ? ["bike", +Math.max(0, m - 2.76).toFixed(2)] : ["run", +Math.max(0, m - 114.96).toFixed(2)];
+    }
+    const order = list.filter((p) => !["START", "ANNOUNCER", "BIKE0", "BIKE21"].includes(p.name)).sort((a, b) => a.miles - b.miles);
+    FIELD_ORDER.length = 0;
+    for (const p of order) if (!FIELD_ORDER.length || p.miles - list.find((q) => q.name === FIELD_ORDER[FIELD_ORDER.length - 1]).miles > 0.3) FIELD_ORDER.push(p.name);
+    remapObs(); save(); renderAll();
+  } catch (e) {}
+}
+remapObs();
 // Drop stray chip reads saved before the plausibility check existed (oldest first, so good times stay).
 S.obs = S.obs.sort((a, b) => a.t - b.t).reduce((keep, o) => (o.src !== "auto" || o.leg === "start" || plausible(o.leg, o.mile, o.t, keep) ? keep.concat(o) : keep), []);
 renderPlanForm();
@@ -1752,7 +1788,7 @@ importFromHash();
 go(TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "now");
 renderAll();
 setInterval(() => { if ($("#sheet").hidden) renderAll(true); }, 15000);
-pollBradley();
+loadPoints().then(pollBradley);
 loadStarted(); setInterval(loadStarted, 30 * 60000);
 setInterval(() => { if (!document.hidden) pollBradley(); }, 75000);
 setInterval(() => { if (!document.hidden) refreshField(); }, 4 * 60000);
