@@ -977,7 +977,7 @@ function renderPlanProj(M) {
 // IRONMAN-style "M-dot" badge for the app's estimate.
 const IM_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="5" r="2.6" fill="#fff"/><path d="M3.5 21V9.5h3.6l4.9 6.2 4.9-6.2h3.6V21h-3.6v-6.3L12 19.8l-4.9-5.1V21z" fill="#fff"/></svg>';
 let map = null, spotLayer = null, bLayer = null, meMarker = null, pickFor = null;
-const courseGroups = {}, courseBounds = {}, spotMarkers = {}, endGroups = {};
+const courseGroups = {}, courseBounds = {}, spotMarkers = {}, endGroups = {}, fineGroups = {};
 let mapActive = false, mapFull = false;
 // Full screen is a fixed overlay rather than the Fullscreen API, which iPhone Safari doesn't support for pages.
 function setMapFull(on) {
@@ -998,6 +998,22 @@ function setMapActive(on) {
   if (lock) lock.hidden = !on;
 }
 const ARROW_STEP = { swim: 0.3, bike: 2, run: 0.6 }; // miles between direction arrows
+const ARROW_FINE = { swim: 0.1, bike: 0.5, run: 0.15 }; // when zoomed in to street level
+const FINE_ZOOM = 15;
+// Tapping the course lists every time he passes that spot, in order, with direction and time.
+function courseTap(e) {
+  if (pickFor) return;
+  const { lat, lng } = e.latlng;
+  const passes = snapPasses(lat, lng, 40); if (!passes.length) return;
+  const M = buildModel(), now = Date.now();
+  const dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+  const rows = passes.map((ps) => {
+    const h = headingAt(ps.leg, ps.mile), q = M.predict(M.posToU(ps.leg, ps.mile));
+    const when = q.past ? `passed ${clockTxt(q.x)}` : `~${clockTxt(q.x)}`;
+    return `<div>${posLabel(ps.leg, ps.mile)}${h ? `, heading ${dirs[Math.round(h.deg / 45) % 8]}` : ""} · <b>${when}</b></div>`;
+  });
+  L.popup().setLatLng(e.latlng).setContent(`<b>${passes.length > 1 ? `He passes here ${passes.length} times` : "He passes here once"}</b>${rows.join("")}`).openOn(map);
+}
 // Compass heading (degrees clockwise from north) of the course at a leg mile, plus the point itself.
 function headingAt(leg, mile) {
   const Lg = COURSE && COURSE.legs[leg]; if (!Lg) return null;
@@ -1009,11 +1025,16 @@ function headingAt(leg, mile) {
   if (!dx && !dy) return null;
   return { ll: posToLatLng(leg, mile), deg: (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360 };
 }
+function showFineArrows() {
+  const f = S.mapLeg || "all", z = map.getZoom() >= FINE_ZOOM;
+  Object.entries(fineGroups).forEach(([k, g]) => { if (z && (f === "all" || f === k)) g.addTo(map); else map.removeLayer(g); });
+}
 function applyMapFilter(fit) {
   if (!map) return;
   const f = S.mapLeg || "all";
   Object.entries(courseGroups).forEach(([k, g]) => { if (f === "all" || f === k) g.addTo(map); else map.removeLayer(g); });
   Object.entries(endGroups).forEach(([k, g]) => { if (f === k) g.addTo(map); else map.removeLayer(g); });
+  showFineArrows();
   document.querySelectorAll("[data-mapleg]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.mapleg === f));
   if (fit) {
     const bnd = L.latLngBounds([]);
@@ -1040,7 +1061,7 @@ function initMap() {
     ["swim", "bike", "run"].forEach((k) => (courseGroups[k] = L.layerGroup()));
     ["bike", "t1", "t2", "swim", "run"].forEach((k) => {
       const Lg = COURSE.legs[k]; if (!Lg) return;
-      const line = L.polyline(Lg.c, { className: "crs crs-" + k, weight: k === "bike" ? 4 : 5, opacity: 0.85, interactive: false });
+      const line = L.polyline(Lg.c, { className: "crs crs-" + k, weight: k === "bike" ? 4 : 5, opacity: 0.85 }).on("click", courseTap);
       if (k === "run") {
         // The run crosses itself, so draw it in mile order in short pieces, each over a casing: where paths cross,
         // the later pass visibly goes over the earlier one.
@@ -1050,7 +1071,7 @@ function initMap() {
           // The casing starts a little in so it doesn't nick the end of the previous piece on a straight road.
           const cas = subline("run", m + 0.04, Math.min(end, m + STEP));
           if (cas.length > 1) L.polyline(cas, { className: "crs crs-casing", weight: 10, interactive: false }).addTo(courseGroups.run);
-          L.polyline(pts, { className: "crs crs-run", weight: 5, opacity: 0.95, interactive: false }).addTo(courseGroups.run);
+          L.polyline(pts, { className: "crs crs-run", weight: 5, opacity: 0.95 }).on("click", courseTap).addTo(courseGroups.run);
         }
         // Mile numbers every 2 miles; where the second lap passes the same spot they share one label ("6 · 18").
         const labels = [];
@@ -1063,15 +1084,18 @@ function initMap() {
       } else line.addTo(courseGroups[groupOf[k]]);
       courseBounds[groupOf[k]] = courseBounds[groupOf[k]] ? courseBounds[groupOf[k]].extend(line.getBounds()) : line.getBounds();
       // Direction arrows, nudged to the right of travel so out-and-back roads show both directions side by side.
-      const step = ARROW_STEP[k]; if (!step) return;
+      // A denser set appears when zoomed in, so the direction is readable on any stretch of road.
+      if (!ARROW_STEP[k]) return;
       const end = Lg.m[Lg.m.length - 1];
+      fineGroups[groupOf[k]] ||= L.layerGroup();
+      for (const [step, grp] of [[ARROW_STEP[k], courseGroups[groupOf[k]]], [ARROW_FINE[k], fineGroups[groupOf[k]]]])
       for (let mi = step / 2; mi < end; mi += step) {
         const h = headingAt(k, mi); if (!h) continue;
         const rad = h.deg * Math.PI / 180, ox = Math.cos(rad) * 9, oy = Math.sin(rad) * 9;
         L.marker(h.ll, { icon: L.divIcon({ className: "", iconSize: [18, 18], iconAnchor: [9, 9],
           html: `<svg class="arrow arrow-${k}" viewBox="0 0 18 18" width="18" height="18" style="transform:translate(${ox.toFixed(1)}px,${oy.toFixed(1)}px) rotate(${h.deg.toFixed(0)}deg)"><path d="M9 2 L15 14 L9 11 L3 14 Z"/></svg>` }),
           keyboard: false, title: `${LEGS[legIdx(k)].name} mile ${mi.toFixed(1)}, heading this way` })
-          .bindPopup(`<b>${LEGS[legIdx(k)].name} mile ${mi.toFixed(1)}</b><br>Arrow shows direction of travel`).addTo(courseGroups[groupOf[k]]);
+          .bindPopup(`<b>${LEGS[legIdx(k)].name} mile ${mi.toFixed(1)}</b><br>Arrow shows direction of travel`).addTo(grp);
       }
     });
     const seen = new Set();
@@ -1094,6 +1118,7 @@ function initMap() {
     endMark(last("run"), "fin", "🏁 Finish", "run");
     endMark(first("swim"), "go", "▶ Race start", "all");
     endMark(last("run"), "fin", "🏁 Finish", "all");
+    map.on("zoomend", showFineArrows);
     applyMapFilter(false);
   }
   bLayer = L.layerGroup().addTo(map);
