@@ -609,7 +609,8 @@ function passCard(item, now, compact) {
     ${compact === "past" ? "" : `<div class="acts">
       ${!info.passed || !p.past ? `<button class="btn slim primary" data-seen="${item.key}" type="button">Saw him here now</button>` : ""}
       ${!info.passed ? `<button class="btn slim" data-bell="${item.key}" aria-pressed="${bell ? "true" : "false"}" type="button">${bell ? "Alert on" : "Alert me"}</button>` : ""}
-      ${compact ? "" : `<button class="btn slim ghost" data-edit="${spot.id}" type="button">Edit spot</button>`}
+      ${spot.lat != null ? `<button class="btn slim" data-showspot="${spot.id}" type="button">Map</button><button class="btn slim" data-directions="${spot.id}" type="button">Directions</button>` : ""}
+      ${compact ? "" : `<button class="btn slim ghost" data-edit="${spot.id}" type="button">Edit</button>`}
     </div>`}
   </article>`;
 }
@@ -621,10 +622,7 @@ function renderNow(M, now) {
   if (cur.pre) {
     hero = `<div class="label">Not started</div>
       <div class="where">Starts in ${dur((clockToMs(st.x) - now) / 1000)}</div>
-      <div class="range">Rolling swim start. He'll likely enter the water between <b>${clockHtml(clockToMs(st.f))}</b> and <b>${clockHtml(clockToMs(st.s))}</b>. Tap "He's in the water" when he starts.</div>
-      ${now >= clockToMs(st.f) - 30 * 60000
-        ? `<div class="row"><button class="btn primary" id="startNow" type="button">${startArmed ? "Tap again to confirm" : "He's in the water now"}</button>${startArmed ? `<button class="btn ghost" id="startCancel" type="button">Cancel</button>` : ""}</div>`
-        : `<div class="small muted">The start button appears at ${clockTxt(clockToMs(st.f) - 30 * 60000)}.</div>`}`;
+      <div class="range">Rolling swim start. He'll likely enter the water between <b>${clockHtml(clockToMs(st.f))}</b> and <b>${clockHtml(clockToMs(st.s))}</b>. His official start time comes in automatically from live timing.</div>`;
   } else if (cur.done) {
     hero = `<div class="label">Projected</div><div class="where">Finished</div><div class="range">Estimated finish ${clockHtml(M.predict(M.UT).x)}. Log his official finish on the Log tab.</div>`;
   } else {
@@ -819,7 +817,7 @@ function renderPlanProj(M) {
 /* ---------- map ---------- */
 let map = null, spotLayer = null, bLayer = null, meMarker = null, pickFor = null;
 const MAP_HINT = "Tap the course to add a spot. It works out every time he passes there.";
-const courseGroups = {}, courseBounds = {};
+const courseGroups = {}, courseBounds = {}, spotMarkers = {};
 const ARROW_STEP = { swim: 0.3, bike: 2, run: 0.6 }; // miles between direction arrows
 // Compass heading (degrees clockwise from north) of the course at a leg mile, plus the point itself.
 function headingAt(leg, mile) {
@@ -913,8 +911,8 @@ function renderMap() {
     pts.push([sp.lat, sp.lng]);
     const next = sp.passes.map((p, k) => passInfo(M, sp, p, now)).filter((i) => !i.passed).sort((a, b) => a.p.x - b.p.x)[0];
     const icon = L.divIcon({ className: "", html: `<div class="pin"><span>${n + 1}</span></div>`, iconSize: [28, 28], iconAnchor: [4, 30] });
-    L.marker([sp.lat, sp.lng], { icon }).addTo(spotLayer)
-      .bindPopup(`<b>${esc(sp.name)}</b><br>${next ? "Next pass " + clockTxt(next.p.x) + " (" + clockTxt(next.p.e) + "–" + clockTxt(next.p.l) + ")" + (next.travel ? "<br>" + dur(next.travel / 1000) + " " + MODE_NAME[S.mode] : "") : "All passes done"}<br><a href="#" data-edit="${sp.id}">Edit</a>`);
+    spotMarkers[sp.id] = L.marker([sp.lat, sp.lng], { icon }).addTo(spotLayer)
+      .bindPopup(`<b>${esc(sp.name)}</b><br>${next ? "Next pass " + clockTxt(next.p.x) + " (" + clockTxt(next.p.e) + "–" + clockTxt(next.p.l) + ")" + (next.travel ? "<br>" + dur(next.travel / 1000) + " " + MODE_NAME[S.mode] : "") : "All passes done"}<br><a href="#" data-directions="${sp.id}">Directions</a> · <a href="#" data-edit="${sp.id}">Edit</a>`);
   });
   bLayer.clearLayers();
   const cur = currentState(M, now);
@@ -1006,6 +1004,28 @@ function openSpot(spot, note = "") {
   };
 }
 
+// Walking directions in whichever maps app the viewer uses. Waze only does driving.
+function directionLinks(sp) {
+  const ll = sp.lat + "," + sp.lng;
+  return [
+    ["Google Maps", `https://www.google.com/maps/dir/?api=1&destination=${ll}&travelmode=walking`],
+    ["Apple Maps", `https://maps.apple.com/?daddr=${ll}&dirflg=w`],
+    ["Waze (driving)", `https://waze.com/ul?ll=${ll}&navigate=yes`],
+  ];
+}
+function openDirections(sp) {
+  const sheet = $("#sheet");
+  const links = directionLinks(sp);
+  if (/iPhone|iPad|Macintosh/.test(navigator.userAgent)) links.unshift(links.splice(1, 1)[0]);
+  sheet.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-label="Directions">
+    <div class="row" style="justify-content:space-between"><h2>Directions to ${esc(sp.name)}</h2><button class="x" data-close aria-label="Close">×</button></div>
+    <div class="row">${links.map(([n, u]) => `<a class="btn" href="${u}" target="_blank" rel="noopener" style="text-decoration:none">${n}</a>`).join("")}</div>
+    <p class="small muted" style="margin:0">Opens your maps app with walking directions from where you are.</p>
+  </div>`;
+  sheet.hidden = false;
+  sheet.onclick = (e) => { if (e.target === sheet || e.target.closest("[data-close]") || e.target.closest("a")) sheet.hidden = true; };
+}
+
 function openConfirm(title, body, yes) {
   const sheet = $("#sheet");
   sheet.innerHTML = `<div class="card" role="dialog" aria-modal="true"><h2>${esc(title)}</h2><p>${esc(body)}</p><div class="row"><button class="btn primary" data-yes type="button">Yes</button><button class="btn ghost" data-close type="button">Cancel</button></div></div>`;
@@ -1058,6 +1078,17 @@ document.addEventListener("click", (e) => {
     if (map && ME) map.setView([ME.lat, ME.lng], 15);
     return;
   }
+  const ss = t.closest("[data-showspot]");
+  if (ss) {
+    const sp = S.spots.find((s) => s.id === ss.dataset.showspot);
+    if (sp && sp.lat != null) {
+      S.mapLeg = "all"; go("map");
+      setTimeout(() => { applyMapFilter(false); map.setView([sp.lat, sp.lng], 16); spotMarkers[sp.id]?.openPopup(); }, 80);
+    }
+    return;
+  }
+  const dr = t.closest("[data-directions]");
+  if (dr) { e.preventDefault(); const sp = S.spots.find((s) => s.id === dr.dataset.directions); if (sp) openDirections(sp); return; }
   const ml = t.closest("[data-mapleg]");
   if (ml) { S.mapLeg = ml.dataset.mapleg; save(); applyMapFilter(true); return; }
   if (t.closest("#mapBradley")) {
