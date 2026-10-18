@@ -66,8 +66,8 @@ td.me { color: var(--me); font-weight: 700; }
   <section class="tiles" id="tiles" aria-label="Transition summary"></section>
 
   <figure class="fig" id="f-t1"><h2>T1: swim exit to bike start</h2><p>Athletes per 30-second band. The line marks Bradley.</p><div class="plot"></div></figure>
-  <figure class="fig" id="f-t2"><h2>T2: bike finish to run start</h2><p>Athletes per 30-second band. The line marks Bradley.</p><div class="plot"></div></figure>
-  <figure class="fig" id="f-crowd"><h2>Did T1 slow down when it got busy?</h2><p>Each dot is one athlete: when they came out of the water, and how long their T1 took. The line is the median of the athletes around each time.</p><div class="plot"></div></figure>
+  <figure class="fig" id="f-t2"><h2>T2: bike finish to run start</h2><p>Athletes per 30-second band. The line marks Bradley.<span id="t2early"></span></p><div class="plot"></div></figure>
+  <figure class="fig" id="f-crowd"><h2>T1 time by when they left the water</h2><p>Each dot is one athlete: when they came out of the water, and how long their T1 took. The line is the median of the athletes around each time. Read the rise with care: later swimmers are also slower athletes overall, so it isn't only transition crowding.</p><div class="plot"></div></figure>
   <figure class="fig" id="f-fin"><h2>Transitions vs finish time</h2><p>Finishers only: total time in T1 + T2 against overall finish time.</p><div class="plot"></div></figure>
 
   <section class="fig">
@@ -124,7 +124,8 @@ function histogram(figId, key) {
   if (vals.length < 20) { host.innerHTML = `<div class="empty">Not enough athletes through this transition yet (${vals.length}). It fills in after the evening data pull.</div>`; return; }
   const lo = Math.floor(quant(vals, 0.01) / 30) * 30, hi = Math.ceil(quant(vals, 0.99) / 30) * 30;
   const bins = []; for (let b = lo; b < hi; b += 30) bins.push({ b, n: 0 });
-  vals.forEach((v) => { const i = Math.floor((Math.min(Math.max(v, lo), hi - 1) - lo) / 30); bins[i].n++; });
+  // Values outside the clip range are left out, not piled into the end bars (which looked like a real spike).
+  vals.forEach((v) => { if (v < lo || v >= hi) return; bins[Math.floor((v - lo) / 30)].n++; });
   const W = Math.max(300, host.clientWidth || 860), H = Math.round(Math.min(300, Math.max(220, W * 0.4))), m = { l: 36, r: 10, t: 26, b: 30 }, pw = W - m.l - m.r, ph = H - m.t - m.b;
   const maxN = Math.max(...bins.map((x) => x.n));
   const X = (s) => m.l + (s - lo) / (hi - lo) * pw, Y = (n) => m.t + ph - n / maxN * ph;
@@ -172,7 +173,8 @@ function scatter(figId, pts, xFmt, yFmt, xLabel, yLabel, tipFn, withMedian) {
   niceTicks(x0, x1, W < 500 ? 3 : 5).forEach((v) => el("text", { x: X(v), y: H - 22, "text-anchor": "middle" }, svg).textContent = xFmt(v));
   el("text", { x: m.l + pw / 2, y: H - 4, "text-anchor": "middle" }, svg).textContent = xLabel;
   const g = el("g", { fill: "var(--field)", "fill-opacity": 0.35 }, svg);
-  pts.forEach((p) => { if (!p.me) el("circle", { cx: X(p.x), cy: Y(p.y), r: 2.4 }, g); });
+  // Dots outside the plotted range are left out rather than stacked along the edge (the median line still uses them).
+  pts.forEach((p) => { if (!p.me && p.y >= yLo && p.y <= y1 && p.x >= x0 && p.x <= x1) el("circle", { cx: X(p.x), cy: Y(p.y), r: 2.4 }, g); });
   if (withMedian) {
     const sorted = [...pts].sort((a, b) => a.x - b.x), w = Math.max(15, Math.round(sorted.length / 25)), line = [];
     for (let i = 0; i < sorted.length; i += Math.max(1, Math.round(w / 3))) { const win = sorted.slice(Math.max(0, i - w), i + w); line.push([X(sorted[i].x), Y(quant(win.map((p) => p.y), 0.5))]); }
@@ -196,12 +198,13 @@ function scatter(figId, pts, xFmt, yFmt, xLabel, yLabel, tipFn, withMedian) {
 
 function render() {
   const t1 = rows.map((r) => r.t1).filter((v) => v != null), t2 = rows.map((r) => r.t2).filter((v) => v != null);
+  const live = D.asOf < D.courseClose;
   const tile = (label, val, sub, me) => `<div class="tile ${me ? "me" : ""}"><b>${val}</b><span>${label}</span>${sub ? `<small>${sub}</small>` : ""}</div>`;
   $("#tiles").innerHTML = [
     tile("Median T1", t1.length ? fmtDur(quant(t1, 0.5)) : "—", t1.length ? `${t1.length.toLocaleString()} athletes` : "No data yet"),
-    tile("Median T2", t2.length ? fmtDur(quant(t2, 0.5)) : "—", t2.length ? `${t2.length.toLocaleString()} athletes` : "No data yet"),
+    tile("Median T2", t2.length ? fmtDur(quant(t2, 0.5)) : "—", t2.length ? `${t2.length.toLocaleString()} athletes${live && t2.length < t1.length * 0.9 ? " so far" : ""}` : "No data yet"),
     tile("Bradley's T1", B && B.t1 != null ? fmtDur(B.t1) : "—", B && B.t1 != null && t1.length ? `Faster than ${pctFaster(t1, B.t1)}%` : "Not through yet", true),
-    tile("Bradley's T2", B && B.t2 != null ? fmtDur(B.t2) : "—", B && B.t2 != null && t2.length ? `Faster than ${pctFaster(t2, B.t2)}%` : "Not through yet", true),
+    tile("Bradley's T2", B && B.t2 != null ? fmtDur(B.t2) : "—", B && B.t2 != null && t2.length ? `Faster than ${pctFaster(t2, B.t2)}%${live && t2.length < t1.length * 0.9 ? " of those through" : ""}` : "Not through yet", true),
   ].join("");
   histogram("#f-t1", "t1");
   histogram("#f-t2", "t2");
@@ -212,6 +215,7 @@ function render() {
   const qs = [0.1, 0.25, 0.5, 0.75, 0.9];
   const row = (name, arr, bv) => `<tr><td>${name}</td>${qs.map((q) => `<td>${arr.length ? fmtDur(quant(arr, q)) : "—"}</td>`).join("")}<td class="me">${bv != null ? fmtDur(bv) : "—"}</td><td>${arr.length.toLocaleString()}</td></tr>`;
   $("#table").innerHTML = `<table><thead><tr><th>Transition</th><th>10%</th><th>25%</th><th>Median</th><th>75%</th><th>90%</th><th>Bradley</th><th>Athletes</th></tr></thead><tbody>${row("T1", t1, B && B.t1)}${row("T2", t2, B && B.t2)}</tbody></table>`;
+  if (live && t2.length < t1.length * 0.9) $("#t2early").textContent = ` Only ${t2.length.toLocaleString()} of ${t1.length.toLocaleString()} athletes have reached T2 so far, the fastest cyclists, so this will shift as the rest come in.`;
   $("#asof").textContent = D.asOf < D.courseClose ? `Snapshot from ${fmtClock(D.asOf)}, while the race was on.` : "Final data.";
 }
 

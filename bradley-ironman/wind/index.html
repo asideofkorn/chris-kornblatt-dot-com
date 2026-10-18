@@ -71,8 +71,8 @@ a { color: inherit; }
 
   <figure class="fig" id="f-speed">
     <h2>Same road, both directions</h2>
-    <p>Median rider speed on the stretch between bike miles 7.6 and 14.9 (and the matching stretch coming back), in 20-minute windows. Both laps are combined.</p>
-    <div class="legend"><span><i style="background:var(--south)"></i>Southbound (heading out)</span><span><i style="background:var(--north)"></i>Northbound (heading back)</span><span><i class="dot" style="background:transparent;border:2px solid var(--ink)"></i>Bradley</span></div>
+    <p>Median rider speed on the stretch between bike miles 7.6 and 14.9 (and the matching stretch coming back), in 20-minute windows. Lap 2 (miles 63.6–71 and 97.1–104.4) is drawn dashed.</p>
+    <div class="legend"><span><i style="background:var(--south)"></i>Southbound (heading out)</span><span><i style="background:var(--north)"></i>Northbound (heading back)</span><span><i style="background:repeating-linear-gradient(90deg,var(--muted) 0 5px,transparent 5px 9px)"></i>Lap 2 dashed</span><span><i class="dot" style="background:transparent;border:2px solid var(--ink)"></i>Bradley</span></div>
     <div class="plot"></div>
   </figure>
 
@@ -86,7 +86,8 @@ a { color: inherit; }
     <h2>Reading the data</h2>
     <ul class="notes">
       <li>Rider speeds come from official timing-mat crossings (RTRT.me): the distance between two mats divided by the time between them. Athletes are anonymous; only Bradley is identified.</li>
-      <li>Speed differences aren't only wind: later in a lap riders are more tired, and faster riders reach each stretch earlier. Comparing directions at the same time of day reduces this but doesn't remove it.</li>
+      <li>Speed differences aren't only wind: later in a lap riders are more tired, and faster riders reach each stretch earlier. The north-vs-south tiles compare each rider with themselves on the same lap to remove the rider mix; fatigue and the time of day still play a part.</li>
+      <li>Wind after the time the weather was saved is the model's forecast, drawn dashed, and isn't used in the tiles.</li>
       <li>Weather: observed wind from the National Weather Service station at Sacramento Executive Airport (KSAC), about 6 miles north of the course; modeled hourly wind from Open-Meteo at the course's north and south ends.</li>
     </ul>
   </section>
@@ -120,21 +121,28 @@ function roadBearing() {
 function speeds(d) {
   const idx = (cum) => d.mats.findIndex((m) => Math.abs(m.cum - cum) < 0.01);
   const out = { south: [], north: [] }, me = { south: [], north: [] };
-  for (const dir of ["south", "north"]) for (const [c0, c1] of SEGS[dir]) {
-    const i0 = idx(c0), i1 = idx(c1); if (i0 < 0 || i1 < 0) continue;
+  for (const dir of ["south", "north"]) SEGS[dir].forEach(([c0, c1], lap) => {
+    const i0 = idx(c0), i1 = idx(c1); if (i0 < 0 || i1 < 0) return;
     d.athletes.forEach((a, n) => {
       let t0 = null, t1 = null;
       for (let k = 2; k < a.length; k += 2) { if (a[k] === i0) t0 = a[1] + a[k + 1]; if (a[k] === i1) t1 = a[1] + a[k + 1]; }
       if (t0 == null || t1 == null || t1 <= t0) return;
       const mph = (c1 - c0) / ((t1 - t0) / 3600);
       if (mph < 8 || mph > 35) return;
-      const rec = { t: (t0 + t1) / 2, mph };
+      const rec = { t: (t0 + t1) / 2, mph, lap, rider: n };
       out[dir].push(rec); if (n === d.bradley) me[dir].push(rec);
     });
-  }
+  });
   return { out, me };
 }
 
+// The same rider's speed north vs south on the same lap, so the comparison isn't skewed by which riders
+// happen to be on each stretch. Returns the median ratio and how many riders it's based on.
+function paired(out, rider) {
+  const key = (p) => p.rider + ":" + p.lap, south = new Map(out.south.map((p) => [key(p), p.mph]));
+  const r = out.north.filter((p) => (rider == null || p.rider === rider) && south.has(key(p))).map((p) => p.mph / south.get(key(p)));
+  return r.length ? { ratio: quant(r, 0.5), n: r.length } : null;
+}
 function axes(svg, m, pw, ph, W, H, t0, t1, y0, y1, yFmt, X, Y) {
   for (const v of niceVals(y0, y1)) { el("line", { x1: m.l, x2: m.l + pw, y1: Y(v), y2: Y(v), stroke: v === 0 ? "var(--muted)" : "var(--grid)" }, svg); el("text", { x: m.l - 6, y: Y(v) + 4, "text-anchor": "end" }, svg).textContent = yFmt(v); }
   const step = (t1 - t0) / 3600 > 8 ? (W < 520 ? 10800 : 7200) : 3600;
@@ -165,25 +173,30 @@ function render() {
   const { out, me } = speeds(D);
   const all = [...out.south, ...out.north];
   const station = (WX?.station?.obs || []).map((o) => ({ t: Date.parse(o.t) / 1000, speed: o.speed, gust: o.gust, dir: o.dir }));
-  const model = (WX?.model?.south?.hours || []).map((h) => ({ t: Date.parse(h.t + ":00-07:00") / 1000, speed: h.speed, gust: h.gust, dir: h.dir }));
+  // Hours after the weather was saved are the model's forecast, not a record: drawn dashed and kept out of the tiles.
+  const nowT = WX?.fetchedAt ? Date.parse(WX.fetchedAt) / 1000 : Infinity;
+  const model = (WX?.model?.south?.hours || []).map((h) => ({ t: Date.parse(h.t + ":00-07:00") / 1000, speed: h.speed, gust: h.gust, dir: h.dir })).map((h) => ({ ...h, fc: h.t > nowT }));
+  const modelPast = model.filter((h) => !h.fc);
   // Shared time axis: the bike hours, widened to whatever data exists.
   const times = [...all.map((p) => p.t), ...station.map((o) => o.t), ...model.map((o) => o.t)].filter((t) => t >= Date.parse("2026-10-18T07:00:00-07:00") / 1000 && t <= Date.parse("2026-10-18T19:00:00-07:00") / 1000);
   const t0 = Math.floor((times.length ? Math.min(...times) : Date.parse("2026-10-18T08:00:00-07:00") / 1000) / 3600) * 3600;
   const t1 = Math.ceil((times.length ? Math.max(...times) : Date.parse("2026-10-18T16:00:00-07:00") / 1000) / 3600) * 3600;
 
   // Tiles
-  const bikeHours = model.filter((h) => h.t >= Date.parse("2026-10-18T08:30:00-07:00") / 1000 && h.t <= Date.parse("2026-10-18T15:30:00-07:00") / 1000);
+  const bikeHours = modelPast.filter((h) => h.t >= Date.parse("2026-10-18T08:30:00-07:00") / 1000 && h.t <= Date.parse("2026-10-18T15:30:00-07:00") / 1000);
   const avgWind = bikeHours.length ? bikeHours.reduce((s, h) => s + h.speed, 0) / bikeHours.length : null;
   const vx = bikeHours.reduce((s, h) => s + Math.sin(h.dir * Math.PI / 180), 0), vy = bikeHours.reduce((s, h) => s + Math.cos(h.dir * Math.PI / 180), 0);
   const meanDir = bikeHours.length ? (Math.atan2(vx, vy) * 180 / Math.PI + 360) % 360 : null;
-  const gusts = [...station.map((o) => o.gust), ...model.map((h) => h.gust)].filter((g) => g != null);
-  const medS = out.south.length >= 10 ? quant(out.south.map((p) => p.mph), 0.5) : null, medN = out.north.length >= 10 ? quant(out.north.map((p) => p.mph), 0.5) : null;
+  const gusts = [...station.map((o) => o.gust), ...modelPast.map((h) => h.gust)].filter((g) => g != null);
+  const pAll = paired(out), pMe = paired(out, D.bradley);
+  const pct = (p) => { const v = (p.ratio - 1) * 100; return Math.abs(v) < 0.5 ? "Same" : `${v > 0 ? "+" : "−"}${Math.abs(v).toFixed(0)}%`; };
+  const sinceTxt = nowT < Date.parse("2026-10-18T15:30:00-07:00") / 1000 ? `8:30 am to ${fmtClock(nowT)}` : "";
   const tile = (label, val, sub) => `<div class="tile"><b>${val}</b><span>${label}</span>${sub ? `<small>${sub}</small>` : ""}</div>`;
   $("#tiles").innerHTML = [
-    tile("Wind during the bike", avgWind != null ? `${avgWind.toFixed(0)} mph` : "—", meanDir != null ? `mostly from the ${compass(meanDir)}` : "Weather data not saved yet"),
-    tile("Strongest gust", gusts.length ? `${Math.max(...gusts).toFixed(0)} mph` : "—", gusts.length ? "airport or course, any time" : ""),
-    tile("Southbound median", medS != null ? `${medS.toFixed(1)} mph` : "—", out.south.length ? `${out.south.length.toLocaleString()} rider passes` : "Not enough riders yet"),
-    tile("Northbound median", medN != null ? `${medN.toFixed(1)} mph` : "—", medS != null && medN != null ? (Math.abs(medN / medS - 1) < 0.005 ? "same as southbound" : `${Math.abs((medN / medS - 1) * 100).toFixed(0)}% ${medN > medS ? "faster" : "slower"} than southbound`) : out.north.length ? `${out.north.length.toLocaleString()} rider passes` : "Not enough riders yet"),
+    tile("Wind during the bike", avgWind != null ? `${avgWind.toFixed(0)} mph` : "—", meanDir != null ? `mostly from the ${compass(meanDir)}${sinceTxt ? " · " + sinceTxt : ""}` : "Weather data not saved yet"),
+    tile("Strongest gust", gusts.length ? `${Math.max(...gusts).toFixed(0)} mph` : "—", gusts.length ? `airport or course, so far` : ""),
+    tile("Riding north vs south", pAll ? pct(pAll) : "—", pAll ? `median rider's speed coming back vs going out, same lap · ${pAll.n.toLocaleString()} rider-laps` : "Not enough riders yet"),
+    tile("Bradley north vs south", pMe ? pct(pMe) : "—", pMe ? `his speed coming back vs going out · ${pMe.n} lap${pMe.n > 1 ? "s" : ""}` : "Not through both yet"),
   ].join("");
 
   // 1. Wind through the day
@@ -197,11 +210,13 @@ function render() {
       const X = (t) => m.l + (t - t0) / (t1 - t0) * pw, Y = (v) => m.t + 18 + ph - 18 - v / ymax * (ph - 18);
       axes(svg, m, pw, ph, W, H, t0, t1, 0, ymax, (v) => v + " mph", X, Y);
       const mh = model.filter(inRange);
-      if (mh.length > 1) el("path", { d: "M" + mh.map((h) => `${X(h.t).toFixed(1)},${Y(h.speed).toFixed(1)}`).join("L"), fill: "none", stroke: "var(--wind)", "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+      const past = mh.filter((h) => !h.fc), fut = mh.filter((h, i) => h.fc || (mh[i + 1] && mh[i + 1].fc));
+      if (past.length > 1) el("path", { d: "M" + past.map((h) => `${X(h.t).toFixed(1)},${Y(h.speed).toFixed(1)}`).join("L"), fill: "none", stroke: "var(--wind)", "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+      if (fut.length > 1) { el("path", { d: "M" + fut.map((h) => `${X(h.t).toFixed(1)},${Y(h.speed).toFixed(1)}`).join("L"), fill: "none", stroke: "var(--wind)", "stroke-width": 2, "stroke-dasharray": "4 4", opacity: 0.6 }, svg); const lf = fut[fut.length - 1]; el("text", { x: X(lf.t) - 4, y: Y(lf.speed) - 8, "text-anchor": "end" }, svg).textContent = "forecast"; }
       station.filter(inRange).forEach((o) => el("circle", { cx: X(o.t), cy: Y(o.speed), r: 4, fill: "var(--muted)", stroke: "var(--surface)", "stroke-width": 2 }, svg));
       // Arrows along the top point the way the wind blows (from its direction, plus 180°).
-      mh.forEach((h, i) => { if (i % (W < 520 ? 2 : 1)) return; const g = el("g", { transform: `translate(${X(h.t)},${m.t + 2}) rotate(${(h.dir + 180) % 360})` }, svg); el("path", { d: "M0,-7 L5,5 L0,2 L-5,5 Z", fill: "var(--wind)" }, g); });
-      hoverX(fig, svg, W, [...mh.map((h) => ({ x: X(h.t), y: Y(h.speed), h, src: "Course (model)" })), ...station.filter(inRange).map((h) => ({ x: X(h.t), y: Y(h.speed), h, src: "Airport (observed)" }))],
+      mh.forEach((h, i) => { if (i % (W < 520 ? 2 : 1)) return; const g = el("g", { transform: `translate(${X(h.t)},${m.t + 2}) rotate(${(h.dir + 180) % 360})`, opacity: h.fc ? 0.4 : 1 }, svg); el("path", { d: "M0,-7 L5,5 L0,2 L-5,5 Z", fill: "var(--wind)" }, g); });
+      hoverX(fig, svg, W, [...mh.map((h) => ({ x: X(h.t), y: Y(h.speed), h, src: h.fc ? "Course (forecast)" : "Course (model)" })), ...station.filter(inRange).map((h) => ({ x: X(h.t), y: Y(h.speed), h, src: "Airport (observed)" }))],
         (p) => `<b>${fmtClock(p.h.t)}</b> · ${p.src}<br>${p.h.speed.toFixed(0)} mph from the ${compass(p.h.dir)}${p.h.gust ? ` · gusts ${p.h.gust.toFixed(0)}` : ""}`);
     }
   }
@@ -213,25 +228,26 @@ function render() {
     else {
       const { svg, W, H, m, pw, ph } = frame(host, "Median rider speed by direction and time");
       const series = {};
-      for (const dir of ["south", "north"]) {
-        const bins = new Map(); out[dir].forEach((p) => { const b = Math.floor(p.t / WIN); (bins.get(b) || bins.set(b, []).get(b)).push(p.mph); });
-        series[dir] = [...bins].filter(([, v]) => v.length >= 5).map(([b, v]) => ({ t: b * WIN + WIN / 2, mph: quant(v, 0.5), n: v.length })).sort((a, b) => a.t - b.t);
+      // Each lap is its own line: mixing laps in one window jumps whenever the rider mix changes.
+      for (const dir of ["south", "north"]) for (const lap of [0, 1]) {
+        const bins = new Map(); out[dir].filter((p) => p.lap === lap).forEach((p) => { const b = Math.floor(p.t / WIN); (bins.get(b) || bins.set(b, []).get(b)).push(p.mph); });
+        series[dir + lap] = [...bins].filter(([, v]) => v.length >= 5).map(([b, v]) => ({ t: b * WIN + WIN / 2, mph: quant(v, 0.5), n: v.length })).sort((a, b) => a.t - b.t);
       }
-      const vals = [...series.south, ...series.north].map((p) => p.mph).concat([...me.south, ...me.north].map((p) => p.mph));
+      const vals = Object.values(series).flat().map((p) => p.mph).concat([...me.south, ...me.north].map((p) => p.mph));
       const y0 = Math.floor(Math.min(...vals) - 1), y1 = Math.ceil(Math.max(...vals) + 1);
       const X = (t) => m.l + (Math.min(Math.max(t, t0), t1) - t0) / (t1 - t0) * pw, Y = (v) => m.t + ph - (v - y0) / (y1 - y0) * ph;
       axes(svg, m, pw, ph, W, H, t0, t1, y0, y1, (v) => v + " mph", X, Y);
       const pts = [];
-      [["south", "var(--south)", "Southbound"], ["north", "var(--north)", "Northbound"]].forEach(([dir, color, name]) => {
+      [["south0", "var(--south)", "South, lap 1"], ["north0", "var(--north)", "North, lap 1"], ["south1", "var(--south)", "South, lap 2"], ["north1", "var(--north)", "North, lap 2"]].forEach(([dir, color, name]) => {
         const s = series[dir]; if (!s.length) return;
-        if (s.length > 1) el("path", { d: "M" + s.map((p) => `${X(p.t).toFixed(1)},${Y(p.mph).toFixed(1)}`).join("L"), fill: "none", stroke: color, "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+        if (s.length > 1) el("path", { d: "M" + s.map((p) => `${X(p.t).toFixed(1)},${Y(p.mph).toFixed(1)}`).join("L"), fill: "none", stroke: color, "stroke-width": 2, "stroke-linejoin": "round", ...(dir.endsWith("1") ? { "stroke-dasharray": "5 4" } : {}) }, svg);
         s.forEach((p) => { el("circle", { cx: X(p.t), cy: Y(p.mph), r: 3.5, fill: color, stroke: "var(--surface)", "stroke-width": 2 }, svg); pts.push({ x: X(p.t), y: Y(p.mph), p, name }); });
         const last = s[s.length - 1]; const t = el("text", { x: X(last.t) + 6, y: Y(last.mph) + 4, class: "lbl" }, svg); t.style.fill = color; t.textContent = X(last.t) > m.l + pw - 70 ? "" : name;
       });
       [...me.south.map((p) => ({ ...p, dir: "south" })), ...me.north.map((p) => ({ ...p, dir: "north" }))].forEach((p) => {
         el("circle", { cx: X(p.t), cy: Y(p.mph), r: 6, fill: "none", stroke: "var(--ink)", "stroke-width": 2 }, svg);
         el("text", { x: X(p.t), y: Y(p.mph) - 10, "text-anchor": "middle", class: "lbl" }, svg).textContent = "Bradley";
-        pts.push({ x: X(p.t), y: Y(p.mph), p: { ...p, n: 1 }, name: "Bradley, " + (p.dir === "south" ? "southbound" : "northbound") });
+        pts.push({ x: X(p.t), y: Y(p.mph), p: { ...p, n: 1 }, name: "Bradley, " + (p.dir === "south" ? "southbound" : "northbound") + ", lap " + (p.lap + 1) });
       });
       hoverX(fig, svg, W, pts, (q) => `<b>${q.name}</b> · ${fmtClock(q.p.t)}<br>${q.p.mph.toFixed(1)} mph${q.p.n > 1 ? ` · median of ${q.p.n}` : ""}`);
     }
@@ -249,7 +265,9 @@ function render() {
       const { svg, W, H, m, pw, ph } = frame(host, "Headwind for southbound riders over time", 200);
       const X = (t) => m.l + (t - t0) / (t1 - t0) * pw, Y = (v) => m.t + ph / 2 - v / lim * (ph / 2);
       axes(svg, m, pw, ph, W, H, t0, t1, -lim, lim, (v) => (v > 0 ? "+" : "") + v + " mph", X, Y);
-      el("path", { d: "M" + comp.map((c) => `${X(c.t).toFixed(1)},${Y(c.v).toFixed(1)}`).join("L"), fill: "none", stroke: "var(--south)", "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+      const cp = comp.filter((c) => !c.h.fc), cf = comp.filter((c, i) => c.h.fc || (comp[i + 1] && comp[i + 1].h.fc));
+      if (cp.length > 1) el("path", { d: "M" + cp.map((c) => `${X(c.t).toFixed(1)},${Y(c.v).toFixed(1)}`).join("L"), fill: "none", stroke: "var(--south)", "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+      if (cf.length > 1) el("path", { d: "M" + cf.map((c) => `${X(c.t).toFixed(1)},${Y(c.v).toFixed(1)}`).join("L"), fill: "none", stroke: "var(--south)", "stroke-width": 2, "stroke-dasharray": "4 4", opacity: 0.6 }, svg);
       el("text", { x: m.l + 6, y: m.t + 10 }, svg).textContent = "Headwind going south";
       el("text", { x: m.l + 6, y: m.t + ph - 4 }, svg).textContent = "Tailwind going south";
       hoverX(fig, svg, W, comp.map((c) => ({ x: X(c.t), y: Y(c.v), c })), (q) => `<b>${fmtClock(q.c.t)}</b><br>${Math.abs(q.c.v).toFixed(1)} mph ${q.c.v >= 0 ? "headwind" : "tailwind"} going south<br>(wind ${q.c.h.speed.toFixed(0)} mph from the ${compass(q.c.h.dir)}; road runs ${compass(bearing)})`);

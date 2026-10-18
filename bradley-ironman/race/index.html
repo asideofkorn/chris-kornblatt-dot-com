@@ -92,7 +92,7 @@ canvas { display: block; width: 100%; }
     <ul class="notes">
       <li>Source: official timing-mat crossings from RTRT.me, the service behind the IRONMAN Tracker app. Athletes are anonymous; only Bradley is identified.</li>
       <li>The vertical scale is stretched per sport so the swim and transitions are visible. Within each sport, distance is to scale.</li>
-      <li>"Didn't finish" means no finish time. It uses the last mat each athlete crossed, since chips sometimes miss a mat. Disqualifications after finishing aren't in the timing data.</li>
+      <li>"Didn't finish" means no finish time; while the race is on, the chart counts athletes as stopped once no timing mat has seen them for 3 hours. It uses the last mat each athlete crossed, since chips sometimes miss a mat. Disqualifications after finishing aren't in the timing data.</li>
       <li>"Didn't start" counts registered athletes with no time at any mat, so it includes anyone who withdrew before race day.</li>
       <li>Red markers are 2026 cutoffs: bike mile 56 by 3:00 PM, run checkpoints at Tower Bridge by 9:45 PM and 10:45 PM, and course close at midnight.</li>
     </ul>
@@ -133,9 +133,11 @@ function stageOf(cum) {
 
 function summarize() {
   const fin = D.athletes.filter((a) => a[0] === 0).length, dnf = D.athletes.filter((a) => a[0] === 1).length, on = D.athletes.filter((a) => a[0] === 2).length;
-  const tiles = [["Registered", D.registered], ["Started", D.started], ["Finished", fin], ["Didn't finish", dnf, "drop"], ["Didn't start", D.didNotStart]];
+  // During the race nobody has officially failed to finish yet; "stopped" means no timing mat in the last 3 hours.
+  const live = D.asOf < D.courseClose;
+  const tiles = [["Registered", D.registered], ["Started", D.started], ["Finished", fin], [live ? "Stopped" : "Didn't finish", dnf, "drop", live ? "no timing in 3+ hours" : ""], ["Didn't start", D.didNotStart, "", live ? "no time at any mat" : ""]];
   if (on) tiles.push(["Still on course", on]);
-  $("#tiles").innerHTML = tiles.map(([k, v, c]) => `<div class="tile ${c || ""}"><b>${v.toLocaleString()}</b><span>${k}</span></div>`).join("");
+  $("#tiles").innerHTML = tiles.map(([k, v, c, sub]) => `<div class="tile ${c || ""}"><b>${v.toLocaleString()}</b><span>${k}</span>${sub ? `<small class="muted" style="display:block;font-size:12px;margin-top:2px">${sub}</small>` : ""}</div>`).join("");
   $("#asof").textContent = D.asOf < D.courseClose ? `Snapshot taken ${fmtClock(D.asOf)}, while the race was still on; final numbers come after midnight.` : `Final data, pulled after the course closed.`;
   const order = ["Swim", "Swim exit to T1", "Bike lap 1", "Bike lap 2", "T2", "Run lap 1", "Run lap 2"];
   const counts = Object.fromEntries(order.map((k) => [k, 0]));
