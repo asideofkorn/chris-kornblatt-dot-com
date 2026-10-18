@@ -37,6 +37,10 @@ jobs:
           mkdir -p "$RUNNER_TEMP/pull" && cd "$RUNNER_TEMP/pull"
           node "$GITHUB_WORKSPACE/.github/scripts/pull-field.mjs"
           node "$GITHUB_WORKSPACE/.github/scripts/build-marey.mjs" "data/$(cat data/latest.txt)" "$GITHUB_WORKSPACE/bradley-ironman/race/marey.json"
+      - name: Save race-day wind
+        if: steps.window.outputs.over != '1'
+        continue-on-error: true
+        run: node .github/scripts/fetch-weather.mjs bradley-ironman/wind/weather.json
       - name: Check no identifiers leaked
         if: steps.window.outputs.over != '1'
         run: |
@@ -48,7 +52,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add bradley-ironman/race/marey.json
+          git add bradley-ironman/race/marey.json bradley-ironman/wind/weather.json 2>/dev/null || git add bradley-ironman/race/marey.json
           if git diff --cached --quiet; then echo "No change"; exit 0; fi
           git commit -q -m "Update race chart data $(date -u +%H:%MZ)"
           git pull -q --rebase origin main && git push -q origin HEAD:main
