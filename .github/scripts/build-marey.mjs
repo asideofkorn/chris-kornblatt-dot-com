@@ -37,11 +37,14 @@ const skip = new Set((d.profiles || []).filter((p) => p.class === "guide").map((
 
 // Gather each athlete's earliest crossing at each course position.
 const byPid = new Map();
+// Age group only (e.g. "M30-34"), kept so places can be ranked within an age group.
+const divOf = new Map((d.profiles || []).map((p) => [p.pid, (String(p.race || "").match(/[MF]\d{2}-\d{2}|[MF]\d{2}\+/) || [""])[0]]));
 for (const [point, rows] of Object.entries(d.splits || {})) {
   const cum = cumOf(point); if (cum == null) continue;
   for (const r of rows) {
     if ((r.course && r.course !== COURSE) || skip.has(r.pid)) continue;
     const t = Math.round(parseFloat(r.epochTime)); if (!(t > 0) || !r.pid) continue;
+    if (r.division && !divOf.get(r.pid)) divOf.set(r.pid, r.division);
     const a = byPid.get(r.pid) || new Map();
     const i = matIndex.get(cum);
     if (!a.has(i) || t < a.get(i)) a.set(i, t);
@@ -55,7 +58,7 @@ const finishIdx = mats.length - 1;
 const registered = (d.profiles || []).filter((p) => (!p.course || p.course === COURSE) && p.class !== "guide").length;
 
 // Status: 0 finished, 1 didn't finish, 2 still on course (only possible before the course closes).
-const athletes = [];
+const athletes = [], divCodes = [], divs = [];
 let bradley = -1;
 for (const [pid, times] of byPid) {
   const idx = [...times.keys()].sort((a, b) => a - b);
@@ -66,6 +69,9 @@ for (const [pid, times] of byPid) {
   for (const i of idx) row.push(i, times.get(i) - start);
   if (pid === BRADLEY) bradley = athletes.length;
   athletes.push(row);
+  const dv = divOf.get(pid) || "";
+  if (!divs.includes(dv)) divs.push(dv);
+  divCodes.push(divs.indexOf(dv));
 }
 
 const started = athletes.length;
@@ -74,6 +80,7 @@ const out = {
   didNotStart: Math.max(0, registered - started),
   mats: mats.map(({ name, leg, mile, cum }) => ({ name, leg, mile, cum })),
   athletes, bradley,
+  divs, div: divCodes, // div[i] indexes divs for athletes[i]
 };
 mkdirSync(dirname(output), { recursive: true });
 writeFileSync(output, JSON.stringify(out));
