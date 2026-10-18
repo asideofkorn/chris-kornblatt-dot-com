@@ -1,0 +1,41 @@
+name: Forecast snapshots
+
+# Each time Bradley crosses a timing mat, saves the tracker's own forecast (milestones, spots, every mat)
+# to data/forecasts.jsonl on the race-data branch, for the post-race review of how the prediction moved.
+# Reads the splits the race recorder saves, so it adds no polling of its own; only the live field
+# comparables the page fetches at each new mat. Each run loops for ~5h40m, like the race recorder.
+on:
+  schedule:
+    - cron: "30 */2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: forecast-snapshots
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - name: Check out race-data branch
+        uses: actions/checkout@v4
+        with:
+          ref: race-data
+      - name: Get the tracker page and script from main
+        run: |
+          git fetch -q --depth 1 origin main
+          mkdir -p "$RUNNER_TEMP/site" && git archive origin/main bradley-ironman .github/scripts/forecast-snapshots.mjs | tar -x -C "$RUNNER_TEMP/site"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install browser driver (uses the runner's Chrome)
+        run: cd "$RUNNER_TEMP/site" && npm i -q --no-save --no-package-lock playwright-core@1.48.2
+      - name: Snapshot forecasts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          SITE="$RUNNER_TEMP/site" RUN_MINUTES=340 node "$RUNNER_TEMP/site/.github/scripts/forecast-snapshots.mjs"
