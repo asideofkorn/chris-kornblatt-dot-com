@@ -152,6 +152,9 @@ td.num, th.num { text-align: right; }
 
 #map { height: 62vh; min-height: 320px; border-radius: 10px; border: 1px solid var(--line); z-index: 1; }
 .leaflet-container { font: inherit; background: var(--wash); }
+.mapwrap { position: relative; }
+.maphint { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 500; background: var(--ink); color: var(--bg); font-weight: 600; font-size: 14px; padding: 8px 12px; border-radius: 999px; pointer-events: none; white-space: nowrap; opacity: .9; }
+.maplock { position: absolute; top: 10px; right: 10px; z-index: 500; }
 .crs { fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .crs-swim { stroke: var(--swim); } .crs-bike { stroke: var(--bike); } .crs-run { stroke: var(--run); } .crs-t1, .crs-t2 { stroke: var(--muted); }
 .brange { stroke: var(--ink); stroke-opacity: .35; fill: none; stroke-linecap: round; }
@@ -208,7 +211,11 @@ td.num, th.num { text-align: right; }
       <button type="button" data-mapleg="all" aria-pressed="true">All</button><button type="button" data-mapleg="swim" aria-pressed="false">Swim</button><button type="button" data-mapleg="bike" aria-pressed="false">Bike</button><button type="button" data-mapleg="run" aria-pressed="false">Run</button>
     </div>
     <p class="small muted" id="mapHint">Tap the course to add a spot. It works out every time he passes there.</p>
-    <div id="map"></div>
+    <div class="mapwrap">
+      <div id="map"></div>
+      <div class="maphint" id="mapTapHint">Tap the map to move or zoom it</div>
+      <button class="btn slim primary maplock" id="mapLock" type="button" hidden>Done</button>
+    </div>
   </section>
   <section id="tab-log" data-tab="log" hidden></section>
   <section id="tab-plan" data-tab="plan" hidden></section>
@@ -818,6 +825,14 @@ function renderPlanProj(M) {
 let map = null, spotLayer = null, bLayer = null, meMarker = null, pickFor = null;
 const MAP_HINT = "Tap the course to add a spot. It works out every time he passes there.";
 const courseGroups = {}, courseBounds = {}, spotMarkers = {};
+let mapActive = false;
+function setMapActive(on) {
+  mapActive = on;
+  if (map) ["dragging", "touchZoom", "scrollWheelZoom", "doubleClickZoom"].forEach((h) => map[h] && (on ? map[h].enable() : map[h].disable()));
+  const hint = $("#mapTapHint"), lock = $("#mapLock");
+  if (hint) hint.hidden = on;
+  if (lock) lock.hidden = !on;
+}
 const ARROW_STEP = { swim: 0.3, bike: 2, run: 0.6 }; // miles between direction arrows
 // Compass heading (degrees clockwise from north) of the course at a leg mile, plus the point itself.
 function headingAt(leg, mile) {
@@ -848,7 +863,8 @@ function darkMode() {
 }
 function initMap() {
   if (map || !window.L) return;
-  map = L.map("map", { zoomControl: true }).setView([38.583, -121.507], 13);
+  // Starts locked so swiping scrolls the page; the first tap unlocks it.
+  map = L.map("map", { zoomControl: true, dragging: false, touchZoom: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false }).setView([38.583, -121.507], 13);
   // OpenStreetMap's own tiles need no key. Dark mode dims them with a CSS filter instead of a separate dark tile set.
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(map);
   if (darkMode()) map.getContainer().classList.add("dark-tiles");
@@ -885,6 +901,7 @@ function initMap() {
   bLayer = L.layerGroup().addTo(map);
   spotLayer = L.layerGroup().addTo(map);
   map.on("click", (e) => {
+    if (!mapActive && !pickFor) { setMapActive(true); return; }
     const lat = +e.latlng.lat.toFixed(5), lng = +e.latlng.lng.toFixed(5);
     const found = snapPasses(lat, lng);
     if (pickFor) {
@@ -1058,6 +1075,7 @@ function go(tab) {
   document.querySelectorAll("main section[data-tab]").forEach((s) => (s.hidden = s.dataset.tab !== tab));
   document.querySelectorAll("nav.tabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.go === tab));
   if (tab === "map") { initMap(); setTimeout(() => map && map.invalidateSize(), 50); }
+  else if (mapActive) setMapActive(false);
   window.scrollTo(0, 0);
 }
 
@@ -1089,6 +1107,7 @@ document.addEventListener("click", (e) => {
   }
   const dr = t.closest("[data-directions]");
   if (dr) { e.preventDefault(); const sp = S.spots.find((s) => s.id === dr.dataset.directions); if (sp) openDirections(sp); return; }
+  if (t.closest("#mapLock")) { setMapActive(false); return; }
   const ml = t.closest("[data-mapleg]");
   if (ml) { S.mapLeg = ml.dataset.mapleg; save(); applyMapFilter(true); return; }
   if (t.closest("#mapBradley")) {
