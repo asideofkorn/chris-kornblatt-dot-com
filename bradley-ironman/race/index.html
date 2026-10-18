@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Race Timetable · IRONMAN California 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one column; a tall Marey chart (time across, course distance down) with a dropout strip on its right edge. */
+:root {
+  --bg: #f2f3ef; --surface: #ffffff; --ink: #14171b; --muted: #5d656e; --line: #d8dbd4; --wash: #e7e9e3;
+  --swim: #1f84d0; --bike: #3f9a33; --run: #d3362c; --me: #7a3ff2; --drop: #c2410c;
+  --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "Barlow", "Helvetica Neue", Arial, system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #0e1114; --surface: #171b20; --ink: #eef1f4; --muted: #9aa3ad; --line: #2a3038; --wash: #20262d; --swim: #4aa8ee; --bike: #6cc35e; --run: #ef5f55; --me: #b394ff; --drop: #fb923c; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #0e1114; --surface: #171b20; --ink: #eef1f4; --muted: #9aa3ad; --line: #2a3038; --wash: #20262d; --swim: #4aa8ee; --bike: #6cc35e; --run: #ef5f55; --me: #b394ff; --drop: #fb923c; color-scheme: dark; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.45 var(--body); font-variant-numeric: tabular-nums; }
+.wrap { max-width: 980px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; display: grid; gap: 18px; }
+h1 { margin: 0; font: 800 clamp(34px, 7vw, 56px)/0.95 var(--display); text-transform: uppercase; letter-spacing: .01em; text-wrap: balance; }
+h2 { margin: 0; font: 700 22px/1.1 var(--display); text-transform: uppercase; letter-spacing: .03em; }
+.eyebrow { font: 700 12px/1.2 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.lede { margin: 6px 0 0; max-width: 62ch; color: var(--muted); }
+.muted { color: var(--muted); } .small { font-size: 13px; }
+a { color: inherit; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.tile b { display: block; font: 800 30px/1 var(--display); }
+.tile span { font: 700 11px/1.2 var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.tile.drop b { color: var(--drop); }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.seg { display: inline-flex; border: 1.5px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: none; padding: 8px 12px; font: 600 14px var(--body); color: var(--muted); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+:focus-visible { outline: 3px solid var(--me); outline-offset: 2px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
+.legend i { display: inline-block; width: 16px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+.chart { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+canvas { display: block; width: 100%; }
+.stages { display: grid; gap: 8px; }
+.stage { display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 1fr) 48px; gap: 10px; align-items: center; font-size: 15px; }
+.stage .bar { height: 14px; border-radius: 3px; background: var(--drop); min-width: 2px; }
+.stage b { text-align: right; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 12px; }
+.notes { margin: 0; padding-left: 18px; color: var(--muted); font-size: 14px; display: grid; gap: 4px; max-width: 70ch; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <div class="eyebrow">IRONMAN California · Sacramento · Oct 18, 2026</div>
+    <h1>Race timetable</h1>
+    <p class="lede">Every athlete's day as one line, drawn like a train timetable: time runs left to right, the course runs top to bottom. Steep lines are fast, flat stretches are slow, and lines that stop short are athletes who didn't finish. <span id="asof"></span></p>
+  </header>
+
+  <section class="tiles" id="tiles" aria-label="Field summary"></section>
+
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Show athletes">
+      <button type="button" data-show="all" aria-pressed="true">Everyone</button><button type="button" data-show="fin" aria-pressed="false">Finishers</button><button type="button" data-show="dnf" aria-pressed="false">Didn't finish</button>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--muted)"></i>Athlete</span>
+      <span><i style="background:var(--drop)"></i>Didn't finish (× where last timed)</span>
+      <span><i style="background:var(--me);height:4px"></i>Bradley, bib 1999</span>
+    </div>
+  </div>
+
+  <figure class="chart" style="margin:0">
+    <canvas id="marey" role="img" aria-label="Marey chart of every athlete's progress through the course by time of day"></canvas>
+  </figure>
+
+  <section class="panel">
+    <h2>Where athletes stopped</h2>
+    <p class="small muted" style="margin:0">Athletes who started but have no finish time, grouped by the last timing mat they crossed. The bars on the right edge of the chart show the same counts mat by mat.</p>
+    <div class="stages" id="stages"></div>
+  </section>
+
+  <section>
+    <h2>Reading the data</h2>
+    <ul class="notes">
+      <li>Source: official timing-mat crossings from RTRT.me, the service behind the IRONMAN Tracker app. Athletes are anonymous; only Bradley is identified.</li>
+      <li>The vertical scale is stretched per sport so the swim and transitions are visible. Within each sport, distance is to scale.</li>
+      <li>"Didn't finish" means no finish time. It uses the last mat each athlete crossed, since chips sometimes miss a mat. Disqualifications after finishing aren't in the timing data.</li>
+      <li>"Didn't start" counts registered athletes with no time at any mat, so it includes anyone who withdrew before race day.</li>
+      <li>Red markers are 2026 cutoffs: bike mile 56 by 3:00 PM, run checkpoints at Tower Bridge by 9:45 PM and 10:45 PM, and course close at midnight.</li>
+    </ul>
+  </section>
+</main>
+<script>
+"use strict";
+const $ = (s) => document.querySelector(s);
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+// Each sport gets its own band of the chart height so the 2.4 mi swim isn't a sliver next to 112 mi of bike.
+const BANDS = [
+  { leg: "swim", from: 0, to: 2.4, y0: 0, y1: 0.07, label: "Swim" },
+  { leg: "t1", from: 2.4, to: 2.76, y0: 0.07, y1: 0.09, label: "T1" },
+  { leg: "bike", from: 2.76, to: 114.8, y0: 0.09, y1: 0.585, label: "Bike" },
+  { leg: "t2", from: 114.8, to: 114.96, y0: 0.585, y1: 0.605, label: "T2" },
+  { leg: "run", from: 114.96, to: 141.04, y0: 0.605, y1: 1, label: "Run" },
+];
+const yFrac = (cum) => { for (const b of BANDS) if (cum <= b.to) return b.y0 + (b.y1 - b.y0) * Math.max(0, cum - b.from) / (b.to - b.from); return 1; };
+const fmtClock = (sec) => { const d = new Date(sec * 1000); let h = d.getHours(); const m = d.getMinutes(); const ap = h >= 12 ? "pm" : "am"; h = h % 12 || 12; return h + (m ? ":" + String(m).padStart(2, "0") : "") + " " + ap; };
+const clockAt = (hhmm) => Math.round(new Date(`2026-10-18T${hhmm}:00-07:00`).getTime() / 1000);
+const CUTOFFS = [
+  { t: clockAt("15:00"), cum: 2.76 + 56.03, label: "Bike mi 56 · 3:00 pm" },
+  { t: clockAt("21:45"), cum: 114.96 + 11.9, label: "Run · 9:45 pm" },
+  { t: clockAt("22:45"), cum: 114.96 + 15.99, label: "Run · 10:45 pm" },
+];
+
+let D = null, show = "all";
+
+function stageOf(cum) {
+  if (cum < 2.4) return "Swim";
+  if (cum < 2.76) return "Swim exit to T1";
+  if (cum < 58.79) return "Bike lap 1";
+  if (cum < 114.8) return "Bike lap 2";
+  if (cum < 114.96) return "T2";
+  if (cum < 128.77) return "Run lap 1";
+  return "Run lap 2";
+}
+
+function summarize() {
+  const fin = D.athletes.filter((a) => a[0] === 0).length, dnf = D.athletes.filter((a) => a[0] === 1).length, on = D.athletes.filter((a) => a[0] === 2).length;
+  const tiles = [["Registered", D.registered], ["Started", D.started], ["Finished", fin], ["Didn't finish", dnf, "drop"], ["Didn't start", D.didNotStart]];
+  if (on) tiles.push(["Still on course", on]);
+  $("#tiles").innerHTML = tiles.map(([k, v, c]) => `<div class="tile ${c || ""}"><b>${v.toLocaleString()}</b><span>${k}</span></div>`).join("");
+  $("#asof").textContent = D.asOf < D.courseClose ? `Snapshot taken ${fmtClock(D.asOf)}, while the race was still on; final numbers come after midnight.` : `Final data, pulled after the course closed.`;
+  const order = ["Swim", "Swim exit to T1", "Bike lap 1", "Bike lap 2", "T2", "Run lap 1", "Run lap 2"];
+  const counts = Object.fromEntries(order.map((k) => [k, 0]));
+  D.athletes.forEach((a) => { if (a[0] !== 1) return; const lastIdx = a[a.length - 2]; counts[stageOf(D.mats[lastIdx].cum + 0.001)]++; });
+  const max = Math.max(1, ...Object.values(counts));
+  $("#stages").innerHTML = order.map((k) => `<div class="stage"><span>${k}</span><div class="bar" style="width:${(counts[k] / max * 100).toFixed(1)}%"></div><b>${counts[k]}</b></div>`).join("");
+}
+
+function draw() {
+  const cv = $("#marey"), W = cv.parentElement.clientWidth, H = Math.round(Math.max(720, Math.min(1400, W * 1.5)));
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + "px";
+  const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const pad = { l: 52, r: W < 520 ? 44 : 70, t: 30, b: 14 };
+  const pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
+  const starts = D.athletes.map((a) => a[1]);
+  const lastT = Math.max(...D.athletes.map((a) => a[1] + a[a.length - 1]));
+  const t0 = Math.floor((Math.min(...starts) - 900) / 1800) * 1800;
+  const t1 = Math.min(D.courseClose + 1800, Math.ceil((Math.max(lastT, D.asOf) + 900) / 1800) * 1800);
+  const X = (t) => pad.l + (t - t0) / (t1 - t0) * pw, Y = (cum) => pad.t + yFrac(cum) * ph;
+  const C = { ink: css("--ink"), muted: css("--muted"), line: css("--line"), wash: css("--wash"), drop: css("--drop"), me: css("--me"), surface: css("--surface") };
+  g.clearRect(0, 0, W, H);
+  g.font = `600 11px ${css("--body")}`;
+
+  // Sport bands and labels
+  BANDS.forEach((b, i) => {
+    g.fillStyle = i % 2 ? C.surface : C.wash; g.globalAlpha = 0.6;
+    g.fillRect(pad.l, Y(b.from), pw, Y(b.to) - Y(b.from)); g.globalAlpha = 1;
+    g.fillStyle = css("--" + (b.leg.startsWith("t") ? "muted" : b.leg)); g.textAlign = "right"; g.textBaseline = "middle";
+    g.font = `700 ${b.leg.startsWith("t") ? 10 : 13}px ${css("--display")}`;
+    g.fillText(b.label.toUpperCase(), pad.l - 6, (Y(b.from) + Y(b.to)) / 2);
+  });
+  // Mile ticks inside bike and run
+  g.font = `500 10px ${css("--body")}`; g.fillStyle = C.muted; g.textAlign = "right";
+  [[2.76, 0, 112, 20, "bike"], [114.96, 0, 26, 5, "run"]].forEach(([base, a, b, step]) => {
+    for (let m = a + step; m < b; m += step) { const y = Y(base + m); g.fillText(m + " mi", pad.l - 6, y); g.strokeStyle = C.line; g.globalAlpha = .6; g.beginPath(); g.moveTo(pad.l, y); g.lineTo(pad.l + pw, y); g.stroke(); g.globalAlpha = 1; }
+  });
+  // Time grid
+  g.textAlign = "center"; g.textBaseline = "alphabetic";
+  const step = (t1 - t0) / 3600 > 10 ? 7200 : 3600;
+  for (let t = Math.ceil(t0 / step) * step; t <= t1; t += step) {
+    const x = X(t); g.strokeStyle = C.line; g.beginPath(); g.moveTo(x, pad.t); g.lineTo(x, pad.t + ph); g.stroke();
+    g.fillStyle = C.muted; g.fillText(fmtClock(t), x, pad.t - 10);
+  }
+
+  // Athlete lines
+  const visible = (s) => show === "all" || (show === "fin" ? s === 0 : s === 1);
+  const n = D.athletes.length;
+  const baseAlpha = Math.max(0.05, Math.min(0.35, 120 / Math.max(60, n)));
+  for (const pass of [0, 2, 1]) {
+    if (!visible(pass) && !(show === "all")) continue;
+    if (!visible(pass)) continue;
+    g.strokeStyle = pass === 1 ? C.drop : C.ink; g.globalAlpha = pass === 1 ? Math.min(0.7, baseAlpha * 5) : baseAlpha; g.lineWidth = 0.8;
+    g.beginPath();
+    for (const a of D.athletes) {
+      if (a[0] !== pass) continue;
+      for (let k = 2; k < a.length; k += 2) { const x = X(a[1] + a[k + 1]), y = Y(D.mats[a[k]].cum); k === 2 ? g.moveTo(x, y) : g.lineTo(x, y); }
+    }
+    g.stroke();
+  }
+  g.globalAlpha = 1;
+  // × where each non-finisher was last timed
+  if (show !== "fin") {
+    g.strokeStyle = C.drop; g.lineWidth = 1.2; g.globalAlpha = .8;
+    for (const a of D.athletes) { if (a[0] !== 1) continue; const x = X(a[1] + a[a.length - 1]), y = Y(D.mats[a[a.length - 2]].cum); g.beginPath(); g.moveTo(x - 2.5, y - 2.5); g.lineTo(x + 2.5, y + 2.5); g.moveTo(x + 2.5, y - 2.5); g.lineTo(x - 2.5, y + 2.5); g.stroke(); }
+    g.globalAlpha = 1;
+  }
+
+  // Cutoffs and course close
+  g.strokeStyle = C.drop; g.fillStyle = C.drop; g.lineWidth = 2; g.font = `700 10px ${css("--body")}`; g.textAlign = "right"; g.textBaseline = "middle";
+  CUTOFFS.forEach((c) => { if (c.t > t1) return; const x = X(c.t), y = Y(c.cum); g.beginPath(); g.moveTo(x, y - 9); g.lineTo(x, y + 9); g.stroke(); g.fillText(c.label, x - 5, y - 12); });
+  if (D.courseClose <= t1) { const x = X(D.courseClose); g.setLineDash([4, 4]); g.lineWidth = 1.2; g.beginPath(); g.moveTo(x, pad.t); g.lineTo(x, pad.t + ph); g.stroke(); g.setLineDash([]); g.save(); g.translate(x - 5, pad.t + 8); g.rotate(-Math.PI / 2); g.textAlign = "right"; g.fillText("Course closes", 0, 0); g.restore(); }
+
+  // Bradley
+  if (D.bradley >= 0) {
+    const a = D.athletes[D.bradley];
+    g.strokeStyle = C.me; g.lineWidth = 3; g.globalAlpha = 1; g.lineJoin = "round"; g.beginPath();
+    for (let k = 2; k < a.length; k += 2) { const x = X(a[1] + a[k + 1]), y = Y(D.mats[a[k]].cum); k === 2 ? g.moveTo(x, y) : g.lineTo(x, y); }
+    g.stroke();
+    const lx = X(a[1] + a[a.length - 1]), ly = Y(D.mats[a[a.length - 2]].cum);
+    g.fillStyle = C.me; g.beginPath(); g.arc(lx, ly, 4.5, 0, Math.PI * 2); g.fill();
+    g.font = `800 13px ${css("--display")}`; g.textAlign = lx > pad.l + pw - 80 ? "right" : "left"; g.textBaseline = "middle";
+    g.fillText("BRADLEY " + (a[0] === 0 ? fmtClock(a[1] + a[a.length - 1]) : ""), lx + (g.textAlign === "left" ? 8 : -8), ly);
+  }
+
+  // Dropout strip: athletes whose last timed mat was here
+  const last = new Array(D.mats.length).fill(0);
+  D.athletes.forEach((a) => { if (a[0] === 1) last[a[a.length - 2]]++; });
+  const maxDrop = Math.max(1, ...last), sx = pad.l + pw + 6, sw = pad.r - 26;
+  g.fillStyle = C.muted; g.font = `700 9px ${css("--body")}`; g.textAlign = "left"; g.textBaseline = "alphabetic"; g.fillText(W < 520 ? "OUT" : "STOPPED", sx, pad.t - 10);
+  last.forEach((c, i) => {
+    if (!c) return; const y = Y(D.mats[i].cum);
+    g.fillStyle = C.drop; g.fillRect(sx, y - 3, Math.max(2, c / maxDrop * sw), 6);
+    g.fillStyle = C.muted; g.font = `600 9px ${css("--body")}`; g.textBaseline = "middle"; g.fillText(c, sx + Math.max(2, c / maxDrop * sw) + 3, y);
+  });
+}
+
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-show]"); if (!b) return;
+  show = b.dataset.show; document.querySelectorAll("[data-show]").forEach((x) => x.setAttribute("aria-pressed", x === b)); draw();
+});
+let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(draw, 120); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", draw);
+
+fetch("marey.json", { cache: "no-cache" }).then((r) => r.json()).then((d) => { D = d; summarize(); draw(); })
+  .catch(() => { $("#tiles").innerHTML = `<p class="muted">The race data isn't available yet. It's published after the evening data pull.</p>`; });
+</script>
+</body>
+</html>
