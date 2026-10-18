@@ -156,6 +156,10 @@ td.num, th.num { text-align: right; }
 .crs-swim { stroke: var(--swim); } .crs-bike { stroke: var(--bike); } .crs-run { stroke: var(--run); } .crs-t1, .crs-t2 { stroke: var(--muted); }
 .brange { stroke: var(--ink); stroke-opacity: .35; fill: none; stroke-linecap: round; }
 .mat { stroke: var(--ink); fill: var(--surface); }
+.arrow { display: block; stroke: var(--surface); stroke-width: 1.5; stroke-linejoin: round; }
+.arrow-swim { fill: var(--swim); } .arrow-bike { fill: var(--bike); } .arrow-run { fill: var(--run); } .arrow-t1, .arrow-t2 { fill: var(--muted); }
+.bhead { width: 22px; height: 22px; }
+.bhead svg { fill: var(--ink); stroke: var(--surface); stroke-width: 1.5; }
 .bmark { width: 38px; height: 38px; border-radius: 50%; border: 3px solid var(--ink); background: var(--wash) center/cover; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
 .livepill { display: inline-flex; align-items: center; gap: 5px; }
 .livepill i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
@@ -199,6 +203,9 @@ td.num, th.num { text-align: right; }
     <div class="row" style="justify-content:space-between">
       <h2>Map</h2>
       <div class="row"><button class="btn slim" id="mapBradley" type="button">Find Bradley</button><button class="btn slim" id="mapLocate" type="button">Show me</button></div>
+    </div>
+    <div class="seg" role="group" aria-label="Show sport">
+      <button type="button" data-mapleg="all" aria-pressed="true">All</button><button type="button" data-mapleg="swim" aria-pressed="false">Swim</button><button type="button" data-mapleg="bike" aria-pressed="false">Bike</button><button type="button" data-mapleg="run" aria-pressed="false">Run</button>
     </div>
     <p class="small muted" id="mapHint">Tap the course to add a spot. It works out every time he passes there.</p>
     <div id="map"></div>
@@ -812,6 +819,31 @@ function renderPlanProj(M) {
 /* ---------- map ---------- */
 let map = null, spotLayer = null, bLayer = null, meMarker = null, pickFor = null;
 const MAP_HINT = "Tap the course to add a spot. It works out every time he passes there.";
+const courseGroups = {}, courseBounds = {};
+const ARROW_STEP = { swim: 0.3, bike: 2, run: 0.6 }; // miles between direction arrows
+// Compass heading (degrees clockwise from north) of the course at a leg mile, plus the point itself.
+function headingAt(leg, mile) {
+  const Lg = COURSE && COURSE.legs[leg]; if (!Lg) return null;
+  const m = Lg.m, c = Lg.c;
+  let i = 0; while (i < m.length - 2 && m[i + 1] < mile) i++;
+  let j = i + 1; while (j < c.length - 1 && c[j][0] === c[i][0] && c[j][1] === c[i][1]) j++;
+  const kx = Math.cos(c[i][0] * Math.PI / 180);
+  const dx = (c[j][1] - c[i][1]) * kx, dy = c[j][0] - c[i][0];
+  if (!dx && !dy) return null;
+  return { ll: posToLatLng(leg, mile), deg: (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360 };
+}
+function applyMapFilter(fit) {
+  if (!map) return;
+  const f = S.mapLeg || "all";
+  Object.entries(courseGroups).forEach(([k, g]) => { if (f === "all" || f === k) g.addTo(map); else map.removeLayer(g); });
+  document.querySelectorAll("[data-mapleg]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.mapleg === f));
+  if (fit) {
+    const bnd = L.latLngBounds([]);
+    Object.entries(courseBounds).forEach(([k, b]) => { if (f === "all" || f === k) bnd.extend(b); });
+    if (bnd.isValid()) map.fitBounds(bnd, { padding: [20, 20] });
+  }
+  renderMap();
+}
 function darkMode() {
   const t = document.documentElement.dataset.theme;
   return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
@@ -823,18 +855,34 @@ function initMap() {
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(map);
   if (darkMode()) map.getContainer().classList.add("dark-tiles");
   if (COURSE) {
+    // One layer per sport so the filter can show one at a time; transitions ride with the sport they lead into.
+    const groupOf = { swim: "swim", t1: "bike", bike: "bike", t2: "run", run: "run" };
+    ["swim", "bike", "run"].forEach((k) => (courseGroups[k] = L.layerGroup()));
     ["bike", "t1", "t2", "swim", "run"].forEach((k) => {
-      const Lg = COURSE.legs[k];
-      if (Lg) L.polyline(Lg.c, { className: "crs crs-" + k, weight: k === "bike" ? 4 : 5, opacity: 0.85, interactive: false }).addTo(map);
+      const Lg = COURSE.legs[k]; if (!Lg) return;
+      const line = L.polyline(Lg.c, { className: "crs crs-" + k, weight: k === "bike" ? 4 : 5, opacity: 0.85, interactive: false }).addTo(courseGroups[groupOf[k]]);
+      courseBounds[groupOf[k]] = courseBounds[groupOf[k]] ? courseBounds[groupOf[k]].extend(line.getBounds()) : line.getBounds();
+      // Direction arrows, nudged to the right of travel so out-and-back roads show both directions side by side.
+      const step = ARROW_STEP[k]; if (!step) return;
+      const end = Lg.m[Lg.m.length - 1];
+      for (let mi = step / 2; mi < end; mi += step) {
+        const h = headingAt(k, mi); if (!h) continue;
+        const rad = h.deg * Math.PI / 180, ox = Math.cos(rad) * 9, oy = Math.sin(rad) * 9;
+        L.marker(h.ll, { icon: L.divIcon({ className: "", iconSize: [18, 18], iconAnchor: [9, 9],
+          html: `<svg class="arrow arrow-${k}" viewBox="0 0 18 18" width="18" height="18" style="transform:translate(${ox.toFixed(1)}px,${oy.toFixed(1)}px) rotate(${h.deg.toFixed(0)}deg)"><path d="M9 2 L15 14 L9 11 L3 14 Z"/></svg>` }),
+          keyboard: false, title: `${LEGS[legIdx(k)].name} mile ${mi.toFixed(1)}, heading this way` })
+          .bindPopup(`<b>${LEGS[legIdx(k)].name} mile ${mi.toFixed(1)}</b><br>Arrow shows direction of travel`).addTo(courseGroups[groupOf[k]]);
+      }
     });
     const seen = new Set();
     COURSE.points.forEach(([name, label, leg, mile, lat, lng]) => {
       const key = lat.toFixed(4) + "," + lng.toFixed(4);
       const same = COURSE.points.filter((p) => p[4].toFixed(4) + "," + p[5].toFixed(4) === key).map((p) => posLabel(p[2] === "swim" && p[3] === 0 ? "start" : p[2], p[3]));
       if (seen.has(key)) return; seen.add(key);
-      L.circleMarker([lat, lng], { radius: 5, weight: 2, fillOpacity: 1, className: "mat" }).addTo(map)
+      L.circleMarker([lat, lng], { radius: 5, weight: 2, fillOpacity: 1, className: "mat" }).addTo(courseGroups[groupOf[leg]])
         .bindPopup("<b>Timing mat</b><br>" + [...new Set(same)].join("<br>"));
     });
+    applyMapFilter(false);
   }
   bLayer = L.layerGroup().addTo(map);
   spotLayer = L.layerGroup().addTo(map);
@@ -854,12 +902,14 @@ function initMap() {
   renderMap();
 }
 function renderMap() {
-  if (!map) return;
+  if (!map || !spotLayer) return;
   spotLayer.clearLayers();
+  const legFilter = S.mapLeg && S.mapLeg !== "all" ? S.mapLeg : null;
   const M = buildModel(), now = Date.now();
   const pts = [];
   S.spots.forEach((sp, n) => {
     if (sp.lat == null) return;
+    if (legFilter && !sp.passes.some((p) => p.leg === legFilter)) return;
     pts.push([sp.lat, sp.lng]);
     const next = sp.passes.map((p, k) => passInfo(M, sp, p, now)).filter((i) => !i.passed).sort((a, b) => a.p.x - b.p.x)[0];
     const icon = L.divIcon({ className: "", html: `<div class="pin"><span>${n + 1}</span></div>`, iconSize: [28, 28], iconAnchor: [4, 30] });
@@ -874,6 +924,13 @@ function renderMap() {
       if (seg.length > 1) L.polyline(seg, { className: "brange", weight: 12, interactive: false }).addTo(bLayer);
     }
     const ll = LEGS[cur.pos.i].dist ? posToLatLng(cur.pos.leg, cur.pos.mile) : posToLatLng(cur.pos.leg, (COURSE.legs[cur.pos.leg]?.m.at(-1) || 0) / 2);
+    const h = LEGS[cur.pos.i].dist ? headingAt(cur.pos.leg, cur.pos.mile) : null;
+    if (h) {
+      // Arrow just ahead of his photo, pointing the way he's moving.
+      const rad = h.deg * Math.PI / 180, ox = Math.sin(rad) * 30, oy = -Math.cos(rad) * 30;
+      L.marker(h.ll, { interactive: false, zIndexOffset: 1001, icon: L.divIcon({ className: "", iconSize: [22, 22], iconAnchor: [11, 11],
+        html: `<div class="bhead" style="transform:translate(${ox.toFixed(1)}px,${oy.toFixed(1)}px) rotate(${h.deg.toFixed(0)}deg)"><svg viewBox="0 0 18 18" width="22" height="22"><path d="M9 1 L16 15 L9 11.5 L2 15 Z"/></svg></div>` }) }).addTo(bLayer);
+    }
     if (ll) L.marker(ll, { icon: L.divIcon({ className: "", html: '<div class="bmark" style="background-image:url(bradley.jpg)"></div>', iconSize: [38, 38], iconAnchor: [19, 19] }), zIndexOffset: 1000 })
       .addTo(bLayer).bindPopup(`<b>Bradley, estimated</b><br>${LEGS[cur.pos.i].dist ? posLabel(cur.pos.leg, cur.pos.mile) : "In " + LEGS[cur.pos.i].name}`);
   }
@@ -1001,6 +1058,8 @@ document.addEventListener("click", (e) => {
     if (map && ME) map.setView([ME.lat, ME.lng], 15);
     return;
   }
+  const ml = t.closest("[data-mapleg]");
+  if (ml) { S.mapLeg = ml.dataset.mapleg; save(); applyMapFilter(true); return; }
   if (t.closest("#mapBradley")) {
     const cur = currentState(buildModel(), Date.now());
     const ll = cur.pre ? posToLatLng("swim", 0) : LEGS[cur.pos.i].dist ? posToLatLng(cur.pos.leg, cur.pos.mile) : null;
