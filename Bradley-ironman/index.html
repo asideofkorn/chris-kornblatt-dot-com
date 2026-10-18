@@ -1274,7 +1274,7 @@ function importFromHash() {
 
 renderPlanForm();
 importFromHash();
-go(S.tab || "now");
+go("now");
 renderAll();
 setInterval(() => { if ($("#sheet").hidden) renderAll(true); }, 15000);
 pollBradley();
