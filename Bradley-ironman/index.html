@@ -152,6 +152,16 @@ td.num, th.num { text-align: right; }
 
 #map { height: 62vh; min-height: 320px; border-radius: 10px; border: 1px solid var(--line); z-index: 1; }
 .leaflet-container { font: inherit; background: var(--wash); }
+.crs { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.crs-swim { stroke: var(--swim); } .crs-bike { stroke: var(--bike); } .crs-run { stroke: var(--run); } .crs-t1, .crs-t2 { stroke: var(--muted); }
+.brange { stroke: var(--ink); stroke-opacity: .35; fill: none; stroke-linecap: round; }
+.mat { stroke: var(--ink); fill: var(--surface); }
+.bmark { width: 38px; height: 38px; border-radius: 50%; border: 3px solid var(--ink); background: var(--wash) center/cover; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+.livepill { display: inline-flex; align-items: center; gap: 5px; }
+.livepill i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+.livepill.ok i { background: var(--go); } .livepill.err i { background: var(--miss); }
+.mats { display: grid; gap: 6px; }
+.mats div { display: flex; justify-content: space-between; gap: 10px; font-size: 15px; }
 .dark-tiles .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.95) contrast(.9); }
 .pin { width: 28px; height: 28px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--ink); border: 2px solid var(--surface); display: grid; place-items: center; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
 .pin span { transform: rotate(45deg); color: var(--bg); font: 800 14px/1 var(--display); }
@@ -175,7 +185,7 @@ td.num, th.num { text-align: right; }
     <img class="avatar" src="bradley.jpg" alt="Bradley" width="52" height="52">
     <div class="who">
       <h1>Bradley</h1>
-      <p>IRONMAN California · Sacramento · <span id="nowclock"></span></p>
+      <p><span id="nowclock"></span> · <span id="livepill" class="livepill"><i></i><span>Connecting to live timing</span></span></p>
     </div>
     <div class="bib" aria-label="Bib number 1999"><b>1999</b><span>IM California</span></div>
   </div>
@@ -188,9 +198,9 @@ td.num, th.num { text-align: right; }
   <section id="tab-map" data-tab="map" hidden>
     <div class="row" style="justify-content:space-between">
       <h2>Map</h2>
-      <button class="btn slim" id="mapLocate" type="button">Show me</button>
+      <div class="row"><button class="btn slim" id="mapBradley" type="button">Find Bradley</button><button class="btn slim" id="mapLocate" type="button">Show me</button></div>
     </div>
-    <p class="small muted" id="mapHint">Tap the map to add a spot. The course isn't drawn here. Each spot knows its course mile instead.</p>
+    <p class="small muted" id="mapHint">Tap the course to add a spot. It works out every time he passes there.</p>
     <div id="map"></div>
   </section>
   <section id="tab-log" data-tab="log" hidden></section>
@@ -210,6 +220,7 @@ td.num, th.num { text-align: right; }
 <div id="toast" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="course.js"></script>
 <script>
 "use strict";
 const RACE_DATE = "2026-10-18";
@@ -217,12 +228,29 @@ const KEY = "bradley-imca-2026-v1";
 const LEGS = [
   { k: "swim", name: "Swim", dist: 2.4, color: "var(--swim)" },
   { k: "t1", name: "T1", dist: 0, color: "var(--muted)" },
-  { k: "bike", name: "Bike", dist: 112, color: "var(--bike)" },
+  { k: "bike", name: "Bike", dist: 112.04, color: "var(--bike)" },
   { k: "t2", name: "T2", dist: 0, color: "var(--muted)" },
-  { k: "run", name: "Run", dist: 26.2, color: "var(--run)" },
+  { k: "run", name: "Run", dist: 26.08, color: "var(--run)" },
 ];
-// Bike loop length read off the official app: mile markers 14 and 46 sit on the same road.
-const LAP = { bike: 32, run: 13.1 };
+// Lap offsets from the RTRT timing mats: the same spot comes round again this many miles later.
+const LAP = { bike: 56.02, run: 11.89 };
+const COURSE = window.COURSE || null;
+
+// Live timing (RTRT.me, the service behind the IRONMAN Tracker app). Public app id from IRONMAN's own embed.
+const RT = { base: "https://api.rtrt.me", app: "5824c5c948fd08c23a8b4567", loader: "52139b797871851e0800638e", ev: "IRM-CALIFORNIA-2026", pid: "RL78MBN2" };
+const POINTS = {
+  START: ["start", 0], SWIM: ["swim", 2.4], T1: ["bike", 0], BIKE0: ["bike", 0.06],
+  BIKE1: ["bike", 7.62], BIKE2: ["bike", 14.95], BIKE3: ["bike", 19.92], BIKE4: ["bike", 25.57], BIKE5: ["bike", 28.03],
+  BIKE6: ["bike", 30.48], BIKE7: ["bike", 36.12], BIKE8: ["bike", 41.07], BIKE9: ["bike", 48.42], BIKE10: ["bike", 56.03], BIKE11: ["bike", 56.03],
+  BIKE12: ["bike", 63.64], BIKE13: ["bike", 71.0], BIKE14: ["bike", 75.94], BIKE15: ["bike", 81.58], BIKE16: ["bike", 84.04],
+  BIKE17: ["bike", 86.49], BIKE18: ["bike", 92.13], BIKE19: ["bike", 97.07], BIKE20: ["bike", 104.44], BIKE21: ["bike", 104.44], BIKE: ["bike", 112.04],
+  T2: ["run", 0], RUN1: ["run", 0.58], RUN2: ["run", 2.34], RUN3: ["run", 4.1], RUN4: ["run", 4.1], RUN5: ["run", 7.45], RUN6: ["run", 11.44],
+  RUN7: ["run", 13.81], RUN8: ["run", 13.81], RUN9: ["run", 13.81], RUN10: ["run", 13.81], RUN11: ["run", 13.81], RUN12: ["run", 13.81],
+  RUN13: ["run", 15.99], RUN14: ["run", 19.34], RUN15: ["run", 23.33], RUN16: ["run", 25.7], ANNOUNCER: ["run", 26.04], FINISH: ["run", 26.08],
+};
+// One mat per course position, in race order, for field lookups.
+const FIELD_ORDER = ["SWIM", "T1", "BIKE1", "BIKE2", "BIKE3", "BIKE4", "BIKE5", "BIKE6", "BIKE7", "BIKE8", "BIKE9", "BIKE10", "BIKE12", "BIKE13", "BIKE14", "BIKE15", "BIKE16", "BIKE17", "BIKE18", "BIKE19", "BIKE20", "BIKE", "T2", "RUN1", "RUN2", "RUN3", "RUN5", "RUN6", "RUN10", "RUN13", "RUN14", "RUN15", "RUN16", "FINISH"];
+const OLD_DEFAULT_SPOTS = ["Swim exit / T1", "Bike out", "Bike in / T2", "Run halfway", "Finish · State Capitol"];
 const SPEED = { walk: 3.0, run: 6.0, ride: 10.0 }; // mph
 const MODE_NAME = { walk: "walk", run: "jog", ride: "scooter/bike" };
 const DETOUR = 1.3; // straight-line to street distance
@@ -233,25 +261,50 @@ const DEFAULTS = () => ({
   plan: {
     start: { f: "07:00", x: "07:10", s: "07:20" },
     swim: { f: 60, x: 70, s: 80 },
-    t1: { f: 5, x: 8, s: 12 },
+    // T1/T2 and run defaults come from 2023–25 athletes with a similar swim and bike (long T1 here).
+    t1: { f: 9, x: 13, s: 17 },
     bike: { f: 20, x: 18, s: 16 },
-    t2: { f: 3, x: 5, s: 8 },
-    run: { f: "9:30", x: "10:30", s: "12:00" },
-    fade: 6,
+    t2: { f: 6, x: 9, s: 12 },
+    run: { f: "10:15", x: "12:15", s: "15:00" },
+    fade: 12,
+    bikeFade: 5,
   },
+  planV: 2,
   obs: [],
-  spots: [
-    { id: uid(), name: "Swim exit / T1", lat: null, lng: null, passes: [{ leg: "swim", mile: 2.4 }] },
-    { id: uid(), name: "Bike out", lat: null, lng: null, passes: [{ leg: "bike", mile: 0 }] },
-    { id: uid(), name: "Bike in / T2", lat: null, lng: null, passes: [{ leg: "bike", mile: 112 }] },
-    { id: uid(), name: "Run halfway", lat: null, lng: null, passes: [{ leg: "run", mile: 13.1 }] },
-    { id: uid(), name: "Finish · State Capitol", lat: 38.5767, lng: -121.4934, passes: [{ leg: "run", mile: 26.2 }] },
-  ],
+  spots: defaultSpots(),
   mode: "walk",
   alerts: {},
   fired: {},
+  field: null,
   tab: "now",
 });
+function defaultSpots() {
+  const mk = (name, lat, lng, fallback) => {
+    const passes = snapPasses(lat, lng);
+    return { id: uid(), name, lat, lng, passes: passes.length ? passes : fallback };
+  };
+  return [
+    mk("Swim exit", 38.582608, -121.508244, [{ leg: "swim", mile: 2.4 }]),
+    mk("Transition · Riverfront St", 38.579894, -121.511538, [{ leg: "bike", mile: 0 }, { leg: "bike", mile: 56.03 }, { leg: "bike", mile: 112.04 }, { leg: "run", mile: 0 }]),
+    mk("Run mile 4.1 / 15.9", 38.573547, -121.515391, [{ leg: "run", mile: 4.1 }, { leg: "run", mile: 15.99 }]),
+    mk("Run lap turn · 13.8 / 25.7", 38.577267, -121.49636, [{ leg: "run", mile: 13.81 }, { leg: "run", mile: 25.7 }]),
+    mk("Finish line", 38.578466, -121.500018, [{ leg: "run", mile: 26.08 }]),
+  ];
+}
+function migrate(d) {
+  if (d.planV === 2) return d;
+  const p = d.plan || {};
+  const same = (o, f, x, s) => o && String(o.f) === String(f) && String(o.x) === String(x) && String(o.s) === String(s);
+  const nd = DEFAULTS();
+  if (same(p.t1, 5, 8, 12)) p.t1 = nd.plan.t1;
+  if (same(p.t2, 3, 5, 8)) p.t2 = nd.plan.t2;
+  if (same(p.run, "9:30", "10:30", "12:00")) p.run = nd.plan.run;
+  if (+p.fade === 6) p.fade = nd.plan.fade;
+  if (p.bikeFade == null) p.bikeFade = nd.plan.bikeFade;
+  d.spots = nd.spots.concat((d.spots || []).filter((s) => !OLD_DEFAULT_SPOTS.includes(s.name)));
+  d.planV = 2;
+  return d;
+}
 
 let S = load();
 let ME = null; // {lat,lng,acc,t}
@@ -266,7 +319,7 @@ function load() {
       if (d && d.v === 1) {
         // Nothing real happens before 6am on race day; drop accidental early taps (e.g. a test "in the water" at 3am).
         d.obs = (d.obs || []).filter((o) => o.t >= clockToMs("06:00"));
-        return Object.assign(DEFAULTS(), d);
+        return Object.assign(DEFAULTS(), migrate(d));
       }
     }
   } catch (e) {}
@@ -313,6 +366,51 @@ function havMi(a, b) {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
+/* ---------- course geometry ---------- */
+// Every place within radius of (lat,lng) where the swim, bike or run course passes, as {leg, mile}.
+// Self-contained (no shared helpers) because it runs while the saved state loads.
+function snapPasses(lat, lng, radiusM = 60) {
+  if (!COURSE) return [];
+  const kx = Math.cos(lat * Math.PI / 180) * 111320, ky = 110540;
+  const out = [];
+  for (const leg of ["swim", "bike", "run"]) {
+    const L = COURSE.legs[leg]; if (!L) continue;
+    const hits = [];
+    for (let i = 0; i < L.c.length - 1; i++) {
+      const ax = (L.c[i][1] - lng) * kx, ay = (L.c[i][0] - lat) * ky;
+      const bx = (L.c[i + 1][1] - lng) * kx, by = (L.c[i + 1][0] - lat) * ky;
+      const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+      const t = l2 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / l2)) : 0;
+      const d = Math.hypot(ax + t * dx, ay + t * dy);
+      if (d <= radiusM) hits.push({ mile: L.m[i] + t * (L.m[i + 1] - L.m[i]), d });
+    }
+    hits.sort((p, q) => p.mile - q.mile);
+    let group = null;
+    for (const h of hits) {
+      if (group && h.mile - group.last < 0.3) { group.last = h.mile; if (h.d < group.best.d) group.best = h; }
+      else { if (group) out.push({ leg, mile: +group.best.mile.toFixed(2) }); group = { last: h.mile, best: h }; }
+    }
+    if (group) out.push({ leg, mile: +group.best.mile.toFixed(2) });
+  }
+  return out;
+}
+function posToLatLng(leg, mile) {
+  const L = COURSE && COURSE.legs[leg]; if (!L) return null;
+  const m = L.m, c = L.c;
+  if (mile <= m[0]) return c[0];
+  for (let i = 0; i < m.length - 1; i++) {
+    if (mile <= m[i + 1]) { const t = m[i + 1] > m[i] ? (mile - m[i]) / (m[i + 1] - m[i]) : 0; return [c[i][0] + t * (c[i + 1][0] - c[i][0]), c[i][1] + t * (c[i + 1][1] - c[i][1])]; }
+  }
+  return c[c.length - 1];
+}
+function subline(leg, m1, m2) {
+  const L = COURSE && COURSE.legs[leg]; if (!L || m2 <= m1) return [];
+  const pts = [posToLatLng(leg, m1)];
+  L.m.forEach((m, i) => { if (m > m1 && m < m2) pts.push(L.c[i]); });
+  pts.push(posToLatLng(leg, m2));
+  return pts;
+}
+
 /* ---------- prediction model ---------- */
 function legDurations(p) {
   const tri = (a, b, c) => { const v = [a, b, c].map((n) => Math.max(0, n || 0)); const so = [...v].sort((m, n) => m - n); return { f: so[0], x: v[1], s: so[2] }; };
@@ -331,18 +429,22 @@ function buildModel() {
   const U0 = []; let acc = 0;
   D.forEach((d, i) => { U0[i] = acc; acc += d.x; });
   const UT = acc;
-  const fade = clamp(+S.plan.fade || 0, 0, 30) / 100;
-  const a = 1 - fade / 2, b = 1 + fade / 2;
-
+  // Second half of the run (and lap 2 of the bike) is slower; a/b are first/second-half pace factors averaging 1.
+  const halves = {
+    run: clamp(+S.plan.fade || 0, 0, 40) / 100,
+    bike: clamp(+S.plan.bikeFade || 0, 0, 30) / 100,
+  };
   function frac(i, m) {
     const L = LEGS[i]; if (!L.dist) return 0;
     m = clamp(+m || 0, 0, L.dist);
-    if (L.k === "run") { const h = L.dist / 2; return m <= h ? a * m / L.dist : a * h / L.dist + b * (m - h) / L.dist; }
+    const fd = halves[L.k];
+    if (fd != null) { const a = 1 - fd / 2, b = 1 + fd / 2, h = L.dist / 2; return m <= h ? a * m / L.dist : a * h / L.dist + b * (m - h) / L.dist; }
     return m / L.dist;
   }
   function fracInv(i, f) {
     const L = LEGS[i]; if (!L.dist) return 0;
-    if (L.k === "run") { const h = L.dist / 2, fh = a * h / L.dist; return f <= fh ? f * L.dist / a : h + (f - fh) * L.dist / b; }
+    const fd = halves[L.k];
+    if (fd != null) { const a = 1 - fd / 2, b = 1 + fd / 2, h = L.dist / 2, fh = a * h / L.dist; return f <= fh ? f * L.dist / a : h + (f - fh) * L.dist / b; }
     return f * L.dist;
   }
   const posToU = (leg, mile) => { if (leg === "start") return 0; const i = legIdx(leg); return U0[i] + D[i].x * frac(i, mile); };
@@ -357,6 +459,16 @@ function buildModel() {
     const r = (q.t - p.t) / 1000 / du;
     if (!(r > 0.5 && r < 2)) { bad.push(q.id); continue; }
     segs.push({ i: legAt(q.u - 1), r, w: du });
+  }
+  // Athletes at his pace today: how long they took from his latest mat to the next ones.
+  const F = S.field;
+  const lastAuto = obs.filter((o) => o.src === "auto").reduce((m, o) => Math.max(m, o.t), 0);
+  if (F && F.qs && F.qs.length && POINTS[F.P] && F.Pt >= lastAuto - 1000) {
+    const uP = posToU(POINTS[F.P][0], POINTS[F.P][1]);
+    const q = F.qs[F.qs.length - 1];
+    const du = posToU(q.leg, q.mile) - uP;
+    const r = du > 60 ? (q.p50 - F.Pt) / 1000 / du : 0;
+    if (r > 0.5 && r < 2) segs.push({ i: legAt(uP + du - 1), r, w: du * 2 });
   }
   const sw = segs.reduce((s, g) => s + g.w, 0);
   const rAll = sw ? segs.reduce((s, g) => s + g.w * g.r, 0) / sw : 1;
@@ -524,6 +636,13 @@ function renderNow(M, now) {
   const deltaTxt = M.obs.length > 1 ? (Math.abs(delta) < 90 ? "On plan" : dur(Math.abs(delta)) + (delta > 0 ? " behind plan" : " ahead of plan")) : "Plan pace";
   const items = allPasses(M, now).filter((it) => !it.info.passed).sort((p, q) => p.info.p.x - q.info.p.x);
   const next = items.slice(0, 4);
+  const F = S.field;
+  const fieldHtml = F && F.qs && now - F.at < 20 * 60000 ? `<div class="panel">
+      <h3>Next timing mats</h3>
+      <div class="mats">${F.qs.map((q) => `<div><span><i class="legdot" style="background:${LEGS[legIdx(q.leg)].color}"></i>${posLabel(q.leg, q.mile)}</span><span><b>${clockHtml(q.p50)}</b> <span class="muted small">${clockTxt(q.p10)}–${clockTxt(q.p90)}</span></span></div>`).join("") || `<div class="muted small">Not enough athletes at his pace have reached the next mats yet.</div>`}</div>
+      <p class="small muted" style="margin:0">From ${F.peers} athletes at his pace today. ${F.nearby} others crossed ${esc(F.label || F.P)} within a minute of him.</p>
+    </div>` : "";
+  const appEst = LIVE.etfp ? `<div class="small muted">IRONMAN app's own finish estimate: ${esc(LIVE.etfp)}</div>` : "";
   const el = $("#tab-now");
   el.innerHTML = `
     <div class="status">${hero}${ribbon(M, cur.pre ? null : cur)}
@@ -532,8 +651,8 @@ function renderNow(M, now) {
         <div><span class="label">Race time</span><b>${hms((fin.x - M.actualStart) / 1000).slice(0, -3)}</b><span class="small muted">h:mm</span></div>
         <div><span class="label">Vs plan</span><b style="font-size:19px">${deltaTxt}</b></div>
       </div>
-      <div class="small muted">${basis}</div>
-    </div>
+      <div class="small muted">${basis}</div>${appEst}
+    </div>${fieldHtml}
     <div class="row" style="justify-content:space-between"><h2>Next places to see him</h2>${modeSeg()}</div>
     ${ME ? "" : `<div class="row"><button class="btn" data-locate type="button">Use my location for travel times</button></div>`}
     <div class="passes">${next.length ? next.map((it) => passCard(it, now, true)).join("") : `<div class="empty">No upcoming spots. Add one on the Spots or Map tab.</div>`}</div>
@@ -579,7 +698,7 @@ function renderLog(M) {
       <p class="small muted" id="lgMsg" role="status"></p>
     </form>
     <h3>Log</h3>
-    <div class="loglist">${list.length ? list.map((o) => `<div class="logitem"><div class="t">${clockHtml(o.t)}</div><div class="d"><b>${posLabel(o.leg, o.mile)}</b><small>${{ split: "Official split", seen: "Seen by me", friend: "Seen by a friend", start: "Start" }[o.src] || o.src}${o.note ? " · " + esc(o.note) : ""}${M.bad.includes(o.id) ? " · ⚠ doesn't fit the other points, check the time" : ""}</small></div><button class="x" data-del="${o.id}" aria-label="Remove">×</button></div>`).join("") : `<div class="empty">Nothing logged yet. Start with his swim start time or swim split from the IRONMAN app.</div>`}</div>
+    <div class="loglist">${list.length ? list.map((o) => `<div class="logitem"><div class="t">${clockHtml(o.t)}</div><div class="d"><b>${posLabel(o.leg, o.mile)}</b><small>${{ split: "Official split", auto: "Official · live timing", seen: "Seen by me", friend: "Seen by a friend", start: "Start" }[o.src] || o.src}${o.note ? " · " + esc(o.note) : ""}${M.bad.includes(o.id) ? " · ⚠ doesn't fit the other points, check the time" : ""}</small></div><button class="x" data-del="${o.id}" aria-label="Remove">×</button></div>`).join("") : `<div class="empty">Nothing logged yet. Start with his swim start time or swim split from the IRONMAN app.</div>`}</div>
     <div class="panel">
       <h3>Share with friends</h3>
       <p class="small muted">Copies a link with the plan, spots and log. Whoever opens it gets a copy of this data.</p>
@@ -644,8 +763,11 @@ function renderPlanForm() {
       ${row("bike", "Bike", "mph", "num")}
       ${row("t2", "T2", "minutes", "num")}
       ${row("run", "Run", "min / mi")}
-      <label class="field"><span class="label">Run fade · second half slower by %</span><input id="pl-fade" value="${esc(p.fade)}" inputmode="decimal"></label>
-      <p class="small muted">Fast and slow set the range shown for each time. When you log a split, the leg he's on adjusts to his real pace, and later legs move about half as much.</p>
+      <div class="grid2">
+        <label class="field"><span class="label">Bike lap 2 slower by %</span><input id="pl-bikeFade" value="${esc(p.bikeFade)}" inputmode="decimal"></label>
+        <label class="field"><span class="label">Run 2nd half slower by %</span><input id="pl-fade" value="${esc(p.fade)}" inputmode="decimal"></label>
+      </div>
+      <p class="small muted">Fast and slow set the range shown for each time. T1, T2 and the run start from 2023–25 athletes with a similar swim and bike; change them if Bradley expects otherwise. Official splits adjust the leg he's on, and later legs move about half as much.</p>
     </div>
     <div id="planProj"></div>`;
   $("#tab-plan").querySelectorAll("input[data-k]").forEach((inp) => inp.addEventListener("input", () => {
@@ -655,6 +777,7 @@ function renderPlanForm() {
     save(); renderAll(true);
   }));
   $("#pl-fade").addEventListener("input", (e) => { S.plan.fade = parseFloat(e.target.value) || 0; save(); renderAll(true); });
+  $("#pl-bikeFade").addEventListener("input", (e) => { S.plan.bikeFade = parseFloat(e.target.value) || 0; save(); renderAll(true); });
 }
 
 function renderPlanProj(M) {
@@ -666,44 +789,67 @@ function renderPlanProj(M) {
     rows.push(`<tr><td><i class="legdot" style="background:${L.color}"></i>${L.name} done</td><td class="num">${hms(M.D[i].x * M.R[i]).slice(0, -3)}</td><td class="num"><b>${clockHtml(p.x)}</b></td><td class="num muted">${p.past ? "done" : clockTxt(p.e) + " – " + clockTxt(p.l)}</td></tr>`);
   });
   const st = M.actualStart;
+  // 2026 athlete guide: per-athlete limits from his own start, plus fixed clock-time cutoffs on course.
   const cut = [
-    ["Swim cutoff", 2 * 3600 + 20 * 60, M.U0[0] + M.D[0].x],
-    ["Bike cutoff", 10.5 * 3600, M.U0[2] + M.D[2].x],
-    ["Finish cutoff", 17 * 3600, M.UT],
-  ].map(([n, sec, uu]) => { const p = M.predict(uu); const margin = (st + sec * 1000 - p.l) / 1000; return `<tr><td>${n}</td><td class="num">${hms(sec).slice(0, -3)}</td><td class="num" style="color:${margin > 1800 ? "var(--go)" : margin > 0 ? "var(--tight)" : "var(--miss)"}">${dur(margin)} spare</td></tr>`; }).join("");
+    ["Swim", "2:20 after start", st + (2 * 3600 + 20 * 60) * 1000, M.U0[0] + M.D[0].x],
+    ["Bike mile 56", "3:00 pm", clockToMs("15:00"), M.posToU("bike", 56.03)],
+    ["Bike finish", "10:30 after start", st + 10.5 * 3600 * 1000, M.U0[2] + M.D[2].x],
+    ["Run ~mile 12, Tower Bridge", "9:45 pm", clockToMs("21:45"), M.posToU("run", 11.9)],
+    ["Run ~mile 16, Tower Bridge", "10:45 pm", clockToMs("22:45"), M.posToU("run", 15.99)],
+    ["Finish", "17:00 after start", st + 17 * 3600 * 1000, M.UT],
+  ].map(([n, lim, at, uu]) => { const p = M.predict(uu); const margin = (at - p.l) / 1000; return `<tr><td>${n}</td><td class="num">${lim}</td><td class="num" style="color:${margin > 1800 ? "var(--go)" : margin > 0 ? "var(--tight)" : "var(--miss)"}">${dur(margin)} spare</td></tr>`; }).join("");
   $("#planProj").innerHTML = `
     <div class="panel"><h3>Projected splits</h3>
       <div class="tablewrap"><table><thead><tr><th>Point</th><th class="num">Leg</th><th class="num">Likely</th><th class="num">Range</th></tr></thead><tbody>${rows.join("")}</tbody></table></div>
       <p class="small muted">Leg times include any adjustment from logged splits.</p>
     </div>
     <div class="panel"><h3>Cutoffs</h3>
-      <div class="tablewrap"><table><thead><tr><th>Cutoff</th><th class="num">From his start</th><th class="num">At slow pace</th></tr></thead><tbody>${cut}</tbody></table></div>
-      <p class="small muted">These are standard IRONMAN limits counted from his own start. Check the 2026 athlete guide for the exact times.</p>
+      <div class="tablewrap"><table><thead><tr><th>Cutoff</th><th class="num">Limit</th><th class="num">At slow pace</th></tr></thead><tbody>${cut}</tbody></table></div>
+      <p class="small muted">From the 2026 athlete guide. "At slow pace" uses the latest end of his range.</p>
     </div>`;
 }
 
 /* ---------- map ---------- */
-let map = null, spotLayer = null, meMarker = null, pickFor = null;
+let map = null, spotLayer = null, bLayer = null, meMarker = null, pickFor = null;
+const MAP_HINT = "Tap the course to add a spot. It works out every time he passes there.";
 function darkMode() {
   const t = document.documentElement.dataset.theme;
   return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
 }
 function initMap() {
   if (map || !window.L) return;
-  map = L.map("map", { zoomControl: true }).setView([38.58, -121.505], 12);
+  map = L.map("map", { zoomControl: true }).setView([38.583, -121.507], 13);
   // OpenStreetMap's own tiles need no key. Dark mode dims them with a CSS filter instead of a separate dark tile set.
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(map);
   if (darkMode()) map.getContainer().classList.add("dark-tiles");
+  if (COURSE) {
+    ["bike", "t1", "t2", "swim", "run"].forEach((k) => {
+      const Lg = COURSE.legs[k];
+      if (Lg) L.polyline(Lg.c, { className: "crs crs-" + k, weight: k === "bike" ? 4 : 5, opacity: 0.85, interactive: false }).addTo(map);
+    });
+    const seen = new Set();
+    COURSE.points.forEach(([name, label, leg, mile, lat, lng]) => {
+      const key = lat.toFixed(4) + "," + lng.toFixed(4);
+      const same = COURSE.points.filter((p) => p[4].toFixed(4) + "," + p[5].toFixed(4) === key).map((p) => posLabel(p[2] === "swim" && p[3] === 0 ? "start" : p[2], p[3]));
+      if (seen.has(key)) return; seen.add(key);
+      L.circleMarker([lat, lng], { radius: 5, weight: 2, fillOpacity: 1, className: "mat" }).addTo(map)
+        .bindPopup("<b>Timing mat</b><br>" + [...new Set(same)].join("<br>"));
+    });
+  }
+  bLayer = L.layerGroup().addTo(map);
   spotLayer = L.layerGroup().addTo(map);
   map.on("click", (e) => {
+    const lat = +e.latlng.lat.toFixed(5), lng = +e.latlng.lng.toFixed(5);
+    const found = snapPasses(lat, lng);
     if (pickFor) {
-      const sp = S.spots.find((s) => s.id === pickFor.id) || pickFor;
-      sp.lat = +e.latlng.lat.toFixed(5); sp.lng = +e.latlng.lng.toFixed(5);
-      const draft = pickFor; pickFor = null; $("#mapHint").textContent = "Tap the map to add a spot.";
-      openSpot(draft);
+      const draft = pickFor; pickFor = null; $("#mapHint").textContent = MAP_HINT;
+      draft.lat = lat; draft.lng = lng;
+      if (found.length) draft.passes = found;
+      openSpot(draft, found.length ? `Found ${found.length} pass${found.length > 1 ? "es" : ""} on the course here.` : "");
       return;
     }
-    openSpot({ id: null, name: "", lat: +e.latlng.lat.toFixed(5), lng: +e.latlng.lng.toFixed(5), passes: [{ leg: "run", mile: "" }] });
+    openSpot({ id: null, name: "", lat, lng, passes: found.length ? found : [{ leg: "run", mile: "" }] },
+      found.length ? `He passes here ${found.length} time${found.length > 1 ? "s" : ""}.` : "This spot isn't on the course. Enter the mile he'd be at, or tap closer to a course line.");
   });
   renderMap();
 }
@@ -720,6 +866,17 @@ function renderMap() {
     L.marker([sp.lat, sp.lng], { icon }).addTo(spotLayer)
       .bindPopup(`<b>${esc(sp.name)}</b><br>${next ? "Next pass " + clockTxt(next.p.x) + " (" + clockTxt(next.p.e) + "–" + clockTxt(next.p.l) + ")" + (next.travel ? "<br>" + dur(next.travel / 1000) + " " + MODE_NAME[S.mode] : "") : "All passes done"}<br><a href="#" data-edit="${sp.id}">Edit</a>`);
   });
+  bLayer.clearLayers();
+  const cur = currentState(M, now);
+  if (COURSE && !cur.pre) {
+    if (cur.near.leg === cur.far.leg) {
+      const seg = subline(cur.near.leg, cur.near.mile, cur.far.mile);
+      if (seg.length > 1) L.polyline(seg, { className: "brange", weight: 12, interactive: false }).addTo(bLayer);
+    }
+    const ll = LEGS[cur.pos.i].dist ? posToLatLng(cur.pos.leg, cur.pos.mile) : posToLatLng(cur.pos.leg, (COURSE.legs[cur.pos.leg]?.m.at(-1) || 0) / 2);
+    if (ll) L.marker(ll, { icon: L.divIcon({ className: "", html: '<div class="bmark" style="background-image:url(bradley.jpg)"></div>', iconSize: [38, 38], iconAnchor: [19, 19] }), zIndexOffset: 1000 })
+      .addTo(bLayer).bindPopup(`<b>Bradley, estimated</b><br>${LEGS[cur.pos.i].dist ? posLabel(cur.pos.leg, cur.pos.mile) : "In " + LEGS[cur.pos.i].name}`);
+  }
   if (ME) {
     if (!meMarker) meMarker = L.marker([ME.lat, ME.lng], { icon: L.divIcon({ className: "", html: '<div class="medot"></div>', iconSize: [16, 16], iconAnchor: [8, 8] }), interactive: false }).addTo(map);
     else meMarker.setLatLng([ME.lat, ME.lng]);
@@ -727,7 +884,7 @@ function renderMap() {
 }
 
 /* ---------- spot editor sheet ---------- */
-function openSpot(spot) {
+function openSpot(spot, note = "") {
   const draft = JSON.parse(JSON.stringify(spot));
   const sheet = $("#sheet");
   const legOpts = (v) => ["swim", "bike", "run"].map((k) => `<option value="${k}" ${v === k ? "selected" : ""}>${LEGS[legIdx(k)].name}</option>`).join("");
@@ -739,14 +896,14 @@ function openSpot(spot) {
         <div class="row"><span class="small ${draft.lat == null ? "muted" : ""}">${draft.lat == null ? "Not set" : draft.lat.toFixed(4) + ", " + draft.lng.toFixed(4)}</span>
         <button class="btn slim" data-here type="button">Use where I am</button><button class="btn slim ghost" data-pick type="button">Pick on map</button></div></div>
       <div class="field"><span class="label">Where it sits on the course</span>
-        <p class="small muted" style="margin:0">Use the mile markers from the IRONMAN app. A spot can be passed more than once on a lap course, so add each pass.</p>
+        <p class="small muted" style="margin:0">Each time he passes this spot. Setting the location fills these in from the course map; you can also type a leg and mile.</p>
         ${draft.passes.map((p, k) => `<div class="passrow">
           <label class="field"><span class="label">Leg</span><select data-pl="${k}">${legOpts(p.leg)}</select></label>
           <label class="field"><span class="label">Mile</span><input data-pm="${k}" value="${esc(p.mile)}" inputmode="decimal" placeholder="mile"></label>
           <button class="x" data-prm="${k}" aria-label="Remove pass" type="button">×</button></div>`).join("")}
-        <div class="row"><button class="btn slim" data-addpass type="button">Add pass</button><button class="btn slim ghost" data-lap type="button">Add next lap (bike +32, run +13.1)</button></div>
+        <div class="row"><button class="btn slim" data-addpass type="button">Add pass</button><button class="btn slim ghost" data-lap type="button">Add next lap (bike +56, run +11.9)</button></div>
       </div>
-      <p class="small muted" id="spMsg" role="status"></p>
+      <p class="small muted" id="spMsg" role="status">${esc(note)}</p>
       <div class="row"><button class="btn primary" data-savespot type="button">Save spot</button>${draft.id ? `<button class="btn ghost" data-delspot type="button">Delete</button>` : ""}</div>
     </div>`;
   };
@@ -768,9 +925,16 @@ function openSpot(spot) {
     else if (t.closest("[data-prm]")) { pull(); draft.passes.splice(+t.closest("[data-prm]").dataset.prm, 1); draw(); }
     else if (t.closest("[data-here]")) {
       pull();
-      locate(true, () => { if (ME) { draft.lat = +ME.lat.toFixed(5); draft.lng = +ME.lng.toFixed(5); draw(); } });
+      locate(true, () => {
+        if (!ME) return;
+        draft.lat = +ME.lat.toFixed(5); draft.lng = +ME.lng.toFixed(5);
+        const found = snapPasses(draft.lat, draft.lng, Math.max(60, Math.min(150, ME.acc || 0)));
+        if (found.length) draft.passes = found;
+        note = found.length ? `Found ${found.length} pass${found.length > 1 ? "es" : ""} on the course here.` : "You're not right on the course. Enter the mile he'll be at nearest you.";
+        draw();
+      });
     }
-    else if (t.closest("[data-pick]")) { pull(); pickFor = draft; sheet.hidden = true; go("map"); $("#mapHint").textContent = "Tap the map where this spot is."; }
+    else if (t.closest("[data-pick]")) { pull(); pickFor = draft; sheet.hidden = true; go("map"); $("#mapHint").textContent = "Tap the course where this spot is."; }
     else if (t.closest("[data-savespot]")) {
       pull();
       const passes = draft.passes.map((p) => ({ leg: p.leg, mile: parseFloat(p.mile) })).filter((p) => p.mile >= 0 && p.mile <= LEGS[legIdx(p.leg)].dist);
@@ -837,6 +1001,12 @@ document.addEventListener("click", (e) => {
     if (map && ME) map.setView([ME.lat, ME.lng], 15);
     return;
   }
+  if (t.closest("#mapBradley")) {
+    const cur = currentState(buildModel(), Date.now());
+    const ll = cur.pre ? posToLatLng("swim", 0) : LEGS[cur.pos.i].dist ? posToLatLng(cur.pos.leg, cur.pos.mile) : null;
+    if (map && ll) map.setView(ll, 14);
+    return;
+  }
   if (t.closest("[data-newspot]")) { openSpot({ id: null, name: "", lat: null, lng: null, passes: [{ leg: "run", mile: "" }] }); return; }
   const ed = t.closest("[data-edit]"); if (ed) { e.preventDefault(); const sp = S.spots.find((s) => s.id === ed.dataset.edit); if (sp) openSpot(sp); return; }
   const del = t.closest("[data-del]"); if (del) { S.obs = S.obs.filter((o) => o.id !== del.dataset.del); save(); renderAll(); return; }
@@ -871,6 +1041,121 @@ function checkAlerts(M, now) {
   });
 }
 
+/* ---------- live timing (RTRT.me) ---------- */
+let LIVE = { state: "idle", msg: "Connecting to live timing", at: 0, etfp: null };
+const TOKEN_KEY = "rtrt-token-v1";
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+let tokenPromise = null;
+async function getToken() {
+  let t = null;
+  try { t = localStorage.getItem(TOKEN_KEY); } catch (e) {}
+  if (t) return t;
+  try { const j = await (await fetch(`${RT.base}/register?appid=${RT.app}`)).json(); t = j && (j.token || (j.data && j.data.token)); } catch (e) {}
+  if (!t) {
+    // Same registration RTRT's own web tracker does: a random client id announced once.
+    t = Array.from(crypto.getRandomValues(new Uint8Array(10)), (b) => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+    await fetch(`${RT.base}/publicconf`, { method: "POST", body: new URLSearchParams({ appid: RT.loader, token: t, lang_app: RT.app, tracker_ver: "3", web: "1", version: "8.3.0", secure: "1" }) });
+  }
+  try { localStorage.setItem(TOKEN_KEY, t); } catch (e) {}
+  return t;
+}
+function ensureToken() { if (!tokenPromise) tokenPromise = getToken().catch((e) => { tokenPromise = null; throw e; }); return tokenPromise; }
+async function rtGet(path, params) {
+  const q = new URLSearchParams({ appid: RT.app, token: await ensureToken(), ...params });
+  const j = await (await fetch(`${RT.base}${path}?${q}`)).json();
+  if (j && j.error) { const e = new Error(j.error.msg || j.error.type); e.type = j.error.type; throw e; }
+  return j;
+}
+async function rt(path, params = {}) {
+  try { return await rtGet(path, params); }
+  catch (e) {
+    if (e.type === "no_results") return { list: [] };
+    if (e.type !== "not_authorized") throw e;
+    try { localStorage.removeItem(TOKEN_KEY); } catch (_) {}
+    tokenPromise = null;
+    return await rtGet(path, params).catch((e2) => { if (e2.type === "no_results") return { list: [] }; throw e2; });
+  }
+}
+function parseNet(s) { const p = String(s || "").split(":").map(Number); return p.length === 3 && p.every((n) => !isNaN(n)) ? p[0] * 3600 + p[1] * 60 + p[2] : null; }
+function quantile(arr, q) { const a = [...arr].sort((m, n) => m - n); const i = (a.length - 1) * q, lo = Math.floor(i), hi = Math.ceil(i); return a[lo] + (a[hi] - a[lo]) * (i - lo); }
+function setLive(state, msg) {
+  LIVE.state = state; LIVE.msg = msg;
+  const el = $("#livepill"); if (!el) return;
+  el.className = "livepill" + (state === "ok" ? " ok" : state === "err" ? " err" : "");
+  el.lastElementChild.textContent = msg;
+}
+
+let polling = false;
+async function pollBradley() {
+  if (polling) return; polling = true;
+  try {
+    const j = await rt(`/events/${RT.ev}/profiles/${RT.pid}/splits`);
+    const rows = j.list || [];
+    const fresh = [];
+    for (const row of rows) {
+      const def = POINTS[row.point]; const t = parseFloat(row.epochTime) * 1000;
+      if (!def || !(t > 0)) continue;
+      const id = "rt:" + def[0] + ":" + def[1];
+      if (S.obs.some((o) => o.id === id)) continue;
+      const o = { id, leg: def[0], mile: def[1], t, src: "auto", note: row.label || row.point, point: row.point, net: parseNet(row.netTime) };
+      S.obs.push(o); fresh.push(o);
+    }
+    const last = rows.filter((r) => r.etfp).at(-1);
+    if (last) { const parts = String(last.etfp).split("~"); LIVE.etfp = parts[2] || null; }
+    LIVE.at = Date.now();
+    setLive("ok", rows.length ? "Live · checked " + clockTxt(LIVE.at) : "Live · no official times yet");
+    if (fresh.length) {
+      save(); renderAll();
+      const o = fresh.sort((a, b) => b.t - a.t)[0];
+      toast("Official time: " + posLabel(o.leg, o.mile) + " at " + clockTxt(o.t));
+      refreshField();
+    }
+  } catch (e) {
+    setLive("err", "Live timing unavailable · log splits by hand");
+  } finally { polling = false; }
+}
+
+async function fetchField(point) {
+  const rows = [];
+  for (let start = 1; start <= 3001; start += 1000) {
+    const j = await rt(`/events/${RT.ev}/points/${point}/splits`, { max: 1000, start });
+    const list = j.list || [];
+    list.forEach((r) => { const net = parseNet(r.netTime), t = parseFloat(r.epochTime) * 1000; if (net != null && t > 0) rows.push({ pid: r.pid || r.bib, net, t }); });
+    if (list.length < 1000) break;
+    await sleep(400);
+  }
+  return rows;
+}
+let fieldBusy = false;
+async function refreshField() {
+  if (fieldBusy) return;
+  const autos = S.obs.filter((o) => o.src === "auto" && o.point && o.point !== "START" && o.net != null).sort((a, b) => b.t - a.t);
+  const P = autos[0]; if (!P) return;
+  const same = (n) => POINTS[n] && POINTS[n][0] === P.leg && POINTS[n][1] === P.mile;
+  const idx = FIELD_ORDER.findIndex(same); if (idx < 0) return;
+  fieldBusy = true;
+  try {
+    const atP = await fetchField(FIELD_ORDER[idx]);
+    const others = atP.filter((r) => r.pid !== RT.pid);
+    let peers = [];
+    for (let x = 0.01; x <= 0.1 + 1e-9 && peers.length < 15; x += 0.005) peers = others.filter((r) => Math.abs(r.net - P.net) <= P.net * x);
+    const nearby = others.filter((r) => Math.abs(r.t - P.t) <= 60000).length;
+    const qs = [];
+    for (const name of FIELD_ORDER.slice(idx + 1, idx + 4)) {
+      await sleep(400);
+      const byPid = new Map((await fetchField(name)).map((r) => [r.pid, r.net]));
+      const deltas = peers.filter((p) => byPid.has(p.pid)).map((p) => byPid.get(p.pid) - p.net).filter((d) => d > 0);
+      if (deltas.length < 8) break;
+      const [leg, mile] = POINTS[name];
+      qs.push({ point: name, leg, mile, n: deltas.length, p10: P.t + quantile(deltas, 0.1) * 1000, p50: P.t + quantile(deltas, 0.5) * 1000, p90: P.t + quantile(deltas, 0.9) * 1000 });
+    }
+    S.field = { P: P.point, label: P.note, Pt: P.t, at: Date.now(), peers: peers.length, nearby, qs };
+    save(); renderAll();
+  } catch (e) {
+    // Field data is a bonus; the page keeps working from Bradley's own splits.
+  } finally { fieldBusy = false; }
+}
+
 /* ---------- main loop ---------- */
 function renderAll(skipPlanForm) {
   const M = buildModel(), now = Date.now();
@@ -902,6 +1187,11 @@ importFromHash();
 go(S.tab || "now");
 renderAll();
 setInterval(() => { if ($("#sheet").hidden) renderAll(true); }, 15000);
+pollBradley();
+setInterval(() => { if (!document.hidden) pollBradley(); }, 75000);
+setInterval(() => { if (!document.hidden) refreshField(); }, 4 * 60000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - LIVE.at > 30000) pollBradley(); });
+setTimeout(refreshField, 5000);
 try { navigator.permissions?.query({ name: "geolocation" }).then((p) => { if (p.state === "granted") locate(false); }).catch(() => {}); } catch (e) {}
 </script>
 </body>
