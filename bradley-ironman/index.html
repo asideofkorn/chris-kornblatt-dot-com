@@ -171,6 +171,7 @@ td.num, th.num { text-align: right; }
 .arrow { display: block; stroke: var(--surface); stroke-width: 1.5; stroke-linejoin: round; }
 .arrow-swim { fill: var(--swim); } .arrow-bike { fill: var(--bike); } .arrow-run { fill: var(--run); } .arrow-t1, .arrow-t2 { fill: var(--muted); }
 .bhead { width: 22px; height: 22px; }
+.appmark { width: 30px; height: 30px; border-radius: 50%; background: var(--tight); color: #fff; border: 2px solid var(--surface); display: grid; place-items: center; font: 800 13px/1 var(--display); box-shadow: 0 1px 6px rgba(0,0,0,.4); }
 .bhead svg { fill: var(--ink); stroke: var(--surface); stroke-width: 1.5; }
 .bmark { width: 38px; height: 38px; border-radius: 50%; border: 3px solid var(--ink); background: var(--wash) center/cover; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
 .livepill { display: inline-flex; align-items: center; gap: 5px; }
@@ -219,6 +220,7 @@ td.num, th.num { text-align: right; }
     <div class="seg" role="group" aria-label="Show sport">
       <button type="button" data-mapleg="all" aria-pressed="true">All</button><button type="button" data-mapleg="swim" aria-pressed="false">Swim</button><button type="button" data-mapleg="bike" aria-pressed="false">Bike</button><button type="button" data-mapleg="run" aria-pressed="false">Run</button>
     </div>
+    <div class="seg" role="group" aria-label="Which estimate"><button type="button" data-est="ours" aria-pressed="false">Ours</button><button type="button" data-est="app" aria-pressed="false">IRONMAN</button><button type="button" data-est="both" aria-pressed="true">Both</button></div>
     <p class="small muted" id="mapHint">Tap the course to add a spot. It works out every time he passes there.</p>
     <div class="mapwrap">
       <div id="map"></div>
@@ -231,6 +233,7 @@ td.num, th.num { text-align: right; }
         <div class="seg" role="group" aria-label="Show sport">
           <button type="button" data-mapleg="all" aria-pressed="true">All</button><button type="button" data-mapleg="swim" aria-pressed="false">Swim</button><button type="button" data-mapleg="bike" aria-pressed="false">Bike</button><button type="button" data-mapleg="run" aria-pressed="false">Run</button>
         </div>
+        <div class="seg" role="group" aria-label="Which estimate"><button type="button" data-est="ours" aria-pressed="false">Ours</button><button type="button" data-est="app" aria-pressed="false">IRONMAN</button><button type="button" data-est="both" aria-pressed="true">Both</button></div>
         <div class="row" style="flex-wrap:nowrap">
           <button class="btn slim" id="fsBradley" type="button" aria-label="Find Bradley">Bradley</button>
           <button class="btn slim fsclose" id="mapExit" type="button" aria-label="Close full screen">×</button>
@@ -683,7 +686,9 @@ function renderNow(M, now) {
       <div class="mats">${F.qs.map((q) => `<div><span><i class="legdot" style="background:${LEGS[legIdx(q.leg)].color}"></i>${posLabel(q.leg, q.mile)}</span><span><b>${clockHtml(q.p50)}</b> <span class="muted small">${clockTxt(q.p10)}–${clockTxt(q.p90)}</span></span></div>`).join("") || `<div class="muted small">Not enough athletes at his pace have reached the next mats yet.</div>`}</div>
       <p class="small muted" style="margin:0">From ${F.peers} athletes at his pace today. ${F.nearby} others crossed ${esc(F.label || F.P)} within a minute of him.</p>
     </div>` : "";
-  const appEst = LIVE.etfp ? `<div class="small muted">IRONMAN app's own finish estimate: ${esc(LIVE.etfp)}</div>` : "";
+  const ap = appPosition(now);
+  const appEst = (ap ? `<div class="small muted">IRONMAN app puts him at <b>${ap.leg === "t1" || ap.leg === "t2" ? "the transition" : posLabel(ap.leg, ap.mile)}</b>, next mat ${esc(posLabel(POINTS[S.appEst.to][0], POINTS[S.appEst.to][1]))} at ${clockTxt(S.appEst.toT)}.</div>` : "")
+    + (LIVE.etfp ? `<div class="small muted">IRONMAN app's own finish estimate: ${esc(LIVE.etfp)}</div>` : "");
   const el = $("#tab-now");
   el.innerHTML = `
     <div class="status">${hero}${ribbon(M, cur.pre ? null : cur)}
@@ -992,7 +997,16 @@ function renderMap() {
   });
   bLayer.clearLayers();
   const cur = currentState(M, now);
-  if (COURSE && !cur.pre) {
+  const show = S.estShow || "both";
+  if (COURSE && show !== "ours") {
+    const a = appPosition(now);
+    if (a) {
+      const all = a.leg === "t1" || a.leg === "t2" ? posToLatLng(a.leg, 0.1) : posToLatLng(a.leg, a.mile);
+      if (all) L.marker(all, { zIndexOffset: 900, icon: L.divIcon({ className: "", html: '<div class="appmark">IM</div>', iconSize: [30, 30], iconAnchor: [15, 15] }) })
+        .addTo(bLayer).bindPopup(`<b>IRONMAN app's estimate</b><br>${a.leg === "t1" || a.leg === "t2" ? "In " + a.leg.toUpperCase() : posLabel(a.leg, a.mile)}<br>Next mat ${esc(posLabel(POINTS[S.appEst.to][0], POINTS[S.appEst.to][1]))} at ${clockTxt(S.appEst.toT)}`);
+    }
+  }
+  if (COURSE && !cur.pre && show !== "app") {
     if (cur.near.leg === cur.far.leg) {
       const seg = subline(cur.near.leg, cur.near.mile, cur.far.mile);
       if (seg.length > 1) L.polyline(seg, { className: "brange", weight: 12, interactive: false }).addTo(bLayer);
@@ -1181,6 +1195,8 @@ document.addEventListener("click", (e) => {
   if (t.closest("#mapFull")) { setMapFull(true); return; }
   if (t.closest("#mapExit")) { setMapFull(false); return; }
   if (t.closest("#fsBradley")) { $("#mapBradley").click(); return; }
+  const es = t.closest("[data-est]");
+  if (es) { S.estShow = es.dataset.est; save(); syncEstButtons(); renderMap(); return; }
   const ml = t.closest("[data-mapleg]");
   if (ml) { S.mapLeg = ml.dataset.mapleg; save(); applyMapFilter(true); return; }
   if (t.closest("#mapBradley")) {
@@ -1222,6 +1238,26 @@ function checkAlerts(M, now) {
     }
   });
 }
+
+/* ---------- IRONMAN app estimate ---------- */
+// RTRT cumulative course miles: bike starts at 2.76, run at 114.96 (T1/T2 sit between).
+const CUM = { start: 0, swim: 0, bike: 2.76, run: 114.96 };
+function toCum(leg, mile) { return (CUM[leg] || 0) + (leg === "start" ? 0 : +mile || 0); }
+function fromCum(c) {
+  if (c <= 2.4) return { leg: "swim", mile: Math.max(0, c) };
+  if (c < 2.76) return { leg: "t1", mile: 0 };
+  if (c <= 114.8) return { leg: "bike", mile: c - 2.76 };
+  if (c < 114.96) return { leg: "t2", mile: 0 };
+  return { leg: "run", mile: Math.min(26.08, c - 114.96) };
+}
+// Where the IRONMAN app's dot would be now: linear from his last mat to its predicted next mat, carrying on at that speed after.
+function appPosition(now) {
+  const A = S.appEst; if (!A || !POINTS[A.from] || !POINTS[A.to] || !(A.toT > A.fromT)) return null;
+  const c0 = toCum(...POINTS[A.from]), c1 = toCum(...POINTS[A.to]);
+  if (c1 <= c0) return null;
+  return fromCum(Math.min(141.04, c0 + (c1 - c0) * Math.max(0, now - A.fromT) / (A.toT - A.fromT)));
+}
+function syncEstButtons() { const v = S.estShow || "both"; document.querySelectorAll("[data-est]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.est === v)); }
 
 /* ---------- live timing (RTRT.me) ---------- */
 let LIVE = { state: "idle", msg: "Connecting to live timing", at: 0, etfp: null };
@@ -1284,6 +1320,14 @@ async function pollBradley() {
     }
     const last = rows.filter((r) => r.etfp).at(-1);
     if (last) { const parts = String(last.etfp).split("~"); LIVE.etfp = parts[2] || null; }
+    // The IRONMAN app's dot: it slides from his last mat toward its predicted time at the next mat.
+    const lr = rows.filter((r) => POINTS[r.point] && parseFloat(r.epochTime) > 0).at(-1);
+    const nx = lr && lr.etnp ? String(lr.etnp).split("~") : null;
+    if (lr && nx && POINTS[nx[0]] && parseNet(nx[1]) != null && parseNet(lr.netTime) != null) {
+      const fromT = parseFloat(lr.epochTime) * 1000;
+      S.appEst = { from: lr.point, fromT, to: nx[0], toT: fromT + (parseNet(nx[1]) - parseNet(lr.netTime)) * 1000, label: nx[2] || "" };
+      save();
+    }
     LIVE.at = Date.now();
     setLive("ok", rows.length ? "Live · checked " + clockTxt(LIVE.at) : "Live · no official times yet");
     if (fresh.length) {
@@ -1365,6 +1409,7 @@ function importFromHash() {
 }
 
 renderPlanForm();
+syncEstButtons();
 importFromHash();
 go("now");
 renderAll();
