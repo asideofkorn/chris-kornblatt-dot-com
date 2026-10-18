@@ -764,7 +764,7 @@ function renderNow(M, now) {
   const F = S.field;
   const fieldHtml = F && F.qs && now - F.at < 20 * 60000 ? `<div class="panel">
       <h3>Next timing mats</h3>
-      <div class="mats">${F.qs.map((q) => `<div><span><i class="legdot" style="background:${LEGS[legIdx(q.leg)].color}"></i>${posLabel(q.leg, q.mile)}</span><span><b>${estHtml(q.p50)}</b> <span class="muted small">${clockTxt(q.p10)}–${clockTxt(q.p90)}</span></span></div>`).join("") || `<div class="muted small">Not enough athletes at his pace have reached the next mats yet.</div>`}</div>
+      <div class="mats">${F.qs.filter((q) => !M.obs.some((o) => o.point === q.point)).map((q) => `<div><span><i class="legdot" style="background:${LEGS[legIdx(q.leg)].color}"></i>${posLabel(q.leg, q.mile)}</span><span><b>${estHtml(q.p50)}</b> <span class="muted small">${clockTxt(q.p10)}–${clockTxt(q.p90)}</span></span></div>`).join("") || `<div class="muted small">Not enough athletes at his pace have reached the next mats yet.</div>`}</div>
       <p class="small muted" style="margin:0">From ${F.peers} athletes at his pace today. ${F.nearby} others crossed ${esc(F.label || F.P)} within a minute of him.</p>
     </div>` : "";
   const pl = S.field && S.field.place;
