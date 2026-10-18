@@ -154,7 +154,14 @@ td.num, th.num { text-align: right; }
 .leaflet-container { font: inherit; background: var(--wash); }
 .mapwrap { position: relative; }
 .maphint { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 500; background: var(--ink); color: var(--bg); font-weight: 600; font-size: 14px; padding: 8px 12px; border-radius: 999px; pointer-events: none; white-space: nowrap; opacity: .9; }
-.maplock { position: absolute; top: 10px; right: 10px; z-index: 500; }
+.mapcorner { position: absolute; top: 10px; right: 10px; z-index: 500; display: flex; gap: 6px; }
+.fsbar { position: absolute; z-index: 500; top: calc(env(safe-area-inset-top, 0px) + 10px); left: max(10px, env(safe-area-inset-left, 0px)); right: max(10px, env(safe-area-inset-right, 0px)); display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fsbar .seg { background: var(--surface); box-shadow: 0 2px 10px rgba(0,0,0,.25); }
+.fsbar .btn { box-shadow: 0 2px 10px rgba(0,0,0,.25); }
+.fsclose { font-size: 24px; line-height: 1; width: 44px; padding: 0; }
+.mapwrap.fs { position: fixed; inset: 0; z-index: 35; background: var(--bg); }
+.mapwrap.fs #map { height: 100%; min-height: 0; border: 0; border-radius: 0; }
+.mapwrap.fs .mapcorner, .mapwrap.fs .maphint { display: none; }
 .crs { fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .crs-swim { stroke: var(--swim); } .crs-bike { stroke: var(--bike); } .crs-run { stroke: var(--run); } .crs-t1, .crs-t2 { stroke: var(--muted); }
 .brange { stroke: var(--ink); stroke-opacity: .35; fill: none; stroke-linecap: round; }
@@ -214,7 +221,19 @@ td.num, th.num { text-align: right; }
     <div class="mapwrap">
       <div id="map"></div>
       <div class="maphint" id="mapTapHint">Tap the map to move or zoom it</div>
-      <button class="btn slim primary maplock" id="mapLock" type="button" hidden>Done</button>
+      <div class="mapcorner">
+        <button class="btn slim primary" id="mapLock" type="button" hidden>Done</button>
+        <button class="btn slim" id="mapFull" type="button" aria-label="Full screen map">⤢ Full screen</button>
+      </div>
+      <div class="fsbar" id="fsBar" hidden>
+        <div class="seg" role="group" aria-label="Show sport">
+          <button type="button" data-mapleg="all" aria-pressed="true">All</button><button type="button" data-mapleg="swim" aria-pressed="false">Swim</button><button type="button" data-mapleg="bike" aria-pressed="false">Bike</button><button type="button" data-mapleg="run" aria-pressed="false">Run</button>
+        </div>
+        <div class="row" style="flex-wrap:nowrap">
+          <button class="btn slim" id="fsBradley" type="button" aria-label="Find Bradley">Bradley</button>
+          <button class="btn slim fsclose" id="mapExit" type="button" aria-label="Close full screen">×</button>
+        </div>
+      </div>
     </div>
   </section>
   <section id="tab-log" data-tab="log" hidden></section>
@@ -825,7 +844,18 @@ function renderPlanProj(M) {
 let map = null, spotLayer = null, bLayer = null, meMarker = null, pickFor = null;
 const MAP_HINT = "Tap the course to add a spot. It works out every time he passes there.";
 const courseGroups = {}, courseBounds = {}, spotMarkers = {};
-let mapActive = false;
+let mapActive = false, mapFull = false;
+// Full screen is a fixed overlay rather than the Fullscreen API, which iPhone Safari doesn't support for pages.
+function setMapFull(on) {
+  mapFull = on;
+  const wrap = $(".mapwrap"); if (!wrap) return;
+  wrap.classList.toggle("fs", on);
+  $("#fsBar").hidden = !on;
+  document.documentElement.style.overflow = on ? "hidden" : "";
+  setMapActive(on);
+  setTimeout(() => map && map.invalidateSize(), 60);
+}
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && mapFull) setMapFull(false); });
 function setMapActive(on) {
   mapActive = on;
   if (map) ["dragging", "touchZoom", "scrollWheelZoom", "doubleClickZoom"].forEach((h) => map[h] && (on ? map[h].enable() : map[h].disable()));
@@ -864,8 +894,9 @@ function darkMode() {
 function initMap() {
   if (map || !window.L) return;
   // Starts locked so swiping scrolls the page; the first tap unlocks it.
-  map = L.map("map", { zoomControl: true, dragging: false, touchZoom: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false }).setView([38.583, -121.507], 13);
+  map = L.map("map", { zoomControl: false, dragging: false, touchZoom: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false }).setView([38.583, -121.507], 13);
   // OpenStreetMap's own tiles need no key. Dark mode dims them with a CSS filter instead of a separate dark tile set.
+  L.control.zoom({ position: "bottomright" }).addTo(map);
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(map);
   if (darkMode()) map.getContainer().classList.add("dark-tiles");
   if (COURSE) {
@@ -1075,7 +1106,7 @@ function go(tab) {
   document.querySelectorAll("main section[data-tab]").forEach((s) => (s.hidden = s.dataset.tab !== tab));
   document.querySelectorAll("nav.tabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.go === tab));
   if (tab === "map") { initMap(); setTimeout(() => map && map.invalidateSize(), 50); }
-  else if (mapActive) setMapActive(false);
+  else { if (mapFull) setMapFull(false); if (mapActive) setMapActive(false); }
   window.scrollTo(0, 0);
 }
 
@@ -1108,6 +1139,9 @@ document.addEventListener("click", (e) => {
   const dr = t.closest("[data-directions]");
   if (dr) { e.preventDefault(); const sp = S.spots.find((s) => s.id === dr.dataset.directions); if (sp) openDirections(sp); return; }
   if (t.closest("#mapLock")) { setMapActive(false); return; }
+  if (t.closest("#mapFull")) { setMapFull(true); return; }
+  if (t.closest("#mapExit")) { setMapFull(false); return; }
+  if (t.closest("#fsBradley")) { $("#mapBradley").click(); return; }
   const ml = t.closest("[data-mapleg]");
   if (ml) { S.mapLeg = ml.dataset.mapleg; save(); applyMapFilter(true); return; }
   if (t.closest("#mapBradley")) {
