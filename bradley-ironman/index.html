@@ -226,6 +226,7 @@ td.num, th.num { text-align: right; }
       <button type="button" data-mapleg="all" aria-pressed="true">All</button><button type="button" data-mapleg="swim" aria-pressed="false">Swim</button><button type="button" data-mapleg="bike" aria-pressed="false">Bike</button><button type="button" data-mapleg="run" aria-pressed="false">Run</button>
     </div>
     <div class="seg" role="group" aria-label="Which estimate"><button type="button" data-est="ours" aria-pressed="false">Ours</button><button type="button" data-est="app" aria-pressed="false">IRONMAN</button><button type="button" data-est="both" aria-pressed="true">Both</button></div>
+    <p class="small" id="estNote" hidden>The IRONMAN estimate shows up after his first timed split past the start (swim exit). The timing feed doesn't send one before that.</p>
     <p class="small muted" id="mapHint">Tap the course to add a spot. It works out every time he passes there.</p>
     <div class="mapwrap">
       <div id="map"></div>
@@ -1022,6 +1023,7 @@ function initMap() {
   renderMap();
 }
 function renderMap() {
+  syncEstButtons();
   if (!map || !spotLayer) return;
   spotLayer.clearLayers();
   const legFilter = S.mapLeg && S.mapLeg !== "all" ? S.mapLeg : null;
@@ -1318,7 +1320,13 @@ function appPosition(now) {
   if (c1 <= c0) return null;
   return fromCum(Math.min(141.04, c0 + (c1 - c0) * Math.max(0, now - A.fromT) / (A.toT - A.fromT)));
 }
-function syncEstButtons() { const v = S.estShow || "both"; document.querySelectorAll("[data-est]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.est === v)); }
+function syncEstButtons() {
+  const v = S.estShow || "both";
+  document.querySelectorAll("[data-est]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.est === v));
+  // The feed only attaches IRONMAN's estimate to splits after the start, so say why the IM dot is missing.
+  const note = $("#estNote");
+  if (note) note.hidden = v === "ours" || !!appPosition(Date.now());
+}
 
 /* ---------- live timing (RTRT.me) ---------- */
 let LIVE = { state: "idle", msg: "Connecting to live timing", at: 0, etfp: null };
