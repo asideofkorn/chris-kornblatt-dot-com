@@ -60,6 +60,7 @@ button { cursor: pointer; }
 /* Header */
 header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--bg); border-bottom: 1px solid var(--line); }
 header.top .wrap { display: flex; align-items: center; gap: 12px; padding-block: 10px; }
+.avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; flex: none; border: 2px solid var(--ink); background: var(--wash); }
 .who { flex: 1; min-width: 0; }
 .who h1 { margin: 0; font: 800 28px/1 var(--display); letter-spacing: .01em; text-transform: uppercase; }
 .who p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
@@ -170,6 +171,7 @@ td.num, th.num { text-align: right; }
 <body>
 <header class="top">
   <div class="wrap">
+    <img class="avatar" src="bradley.jpg" alt="Bradley" width="52" height="52">
     <div class="who">
       <h1>Bradley</h1>
       <p>IRONMAN California · Sacramento · <span id="nowclock"></span></p>
