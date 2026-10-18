@@ -324,7 +324,8 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 const DEFAULTS = () => ({
   v: 1,
   plan: {
-    start: { f: "07:00", x: "07:10", s: "07:20" },
+    // He crossed the start mat at 7:47:25 (official); the plan counts from there.
+    start: { f: "07:47", x: "07:47", s: "07:47" },
     // Bradley's own targets: ~1:30 swim in still water, ~1:10 with the river current; 18–19 mph bike; 9:15/mi run (his strongest leg).
     swim: { f: 60, x: 70, s: 85 },
     // T1/T2 come from 2023–25 athletes with a similar swim and bike (T1 is long here).
@@ -335,7 +336,7 @@ const DEFAULTS = () => ({
     fade: 8,
     bikeFade: 5,
   },
-  planV: 3,
+  planV: 4,
   obs: [],
   spots: defaultSpots(),
   mode: "walk",
@@ -364,7 +365,15 @@ function toV3(d) {
   d.planV = 3;
   return d;
 }
+// v4: his official 7:47 start replaces the planned 7:00–7:20 window.
 function migrate(d) {
+  if (d.planV === 4) return d;
+  d = migrateV3(d);
+  d.plan.start = DEFAULTS().plan.start;
+  d.planV = 4;
+  return d;
+}
+function migrateV3(d) {
   if (d.planV === 3) return d;
   if (d.planV === 2) return toV3(d);
   const p = d.plan || {};
@@ -846,13 +855,15 @@ function renderLog(M) {
 
 function renderPlanForm() {
   const p = S.plan;
+  const so = S.obs.find((o) => o.leg === "start");
+  const startRow = () => so ? `<div class="planrow"><div class="lg">Start<div class="small muted" style="font:500 11px var(--body);text-transform:none">official</div></div><div style="grid-column:2/-1;align-self:center"><b>${clockHtml(so.t)}</b> <span class="small muted">· the forecast counts from here</span></div></div>` : row("start", "Start", "in water");
   const row = (k, lbl, unit, kind = "text") => `<div class="planrow"><div class="lg">${lbl}<div class="small muted" style="font:500 11px var(--body);text-transform:none">${unit}</div></div>
     ${["f", "x", "s"].map((w) => `<input id="pl-${k}-${w}" data-k="${k}" data-w="${w}" value="${esc(p[k][w])}" inputmode="${kind === "num" ? "decimal" : "text"}" aria-label="${lbl} ${{ f: "fast", x: "expected", s: "slow" }[w]}">`).join("")}</div>`;
   $("#tab-plan").innerHTML = `
     <h2>Pace plan</h2>
     <div class="panel">
       <div class="planrow"><span></span><span class="planhead">Fast</span><span class="planhead">Expected</span><span class="planhead">Slow</span></div>
-      ${row("start", "Start", "in water")}
+      ${startRow()}
       ${row("swim", "Swim", "minutes", "num")}
       ${row("t1", "T1", "minutes", "num")}
       ${row("bike", "Bike", "mph", "num")}
@@ -876,6 +887,8 @@ function renderPlanForm() {
 }
 
 function renderPlanProj(M) {
+  // The form was drawn before his official start arrived; redraw it once so Start shows the official time.
+  if (M.obs.some((o) => o.leg === "start") && $("#tab-plan [data-k=start]")) renderPlanForm();
   // Forecast = the frozen pre-race plan from his actual start, never adjusted. Actual = official/logged times where both ends of a leg are known, else today's projection.
   const atU = (uu) => M.obs.find((o) => Math.abs(o.u - uu) < 1);
   const tAt = (uu) => { const o = atU(uu); return o ? { t: o.t, real: true } : { t: M.predict(uu).x, real: false }; };
