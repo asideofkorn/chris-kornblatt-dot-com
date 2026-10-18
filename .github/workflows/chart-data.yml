@@ -1,0 +1,56 @@
+name: Chart data
+
+# Every hour on race day until 2am PT: pull the full field, build the ANONYMIZED chart data
+# (no names, bibs, ages or locations), publish it, and redeploy the site. The raw pull with names
+# stays on the runner and is never committed here; the private ironman-2026-data repo keeps that copy.
+on:
+  schedule:
+    - cron: "20 * 18,19 10 *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: chart-data
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Stop after race night
+        id: window
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "$(date -u +%s)" -gt "$(date -u -d 2026-10-19T09:45:00Z +%s)" ]; then echo "over=1" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/checkout@v4
+        if: steps.window.outputs.over != '1'
+      - uses: actions/setup-node@v4
+        if: steps.window.outputs.over != '1'
+        with:
+          node-version: 20
+      - name: Pull field and build anonymized chart data
+        if: steps.window.outputs.over != '1'
+        run: |
+          mkdir -p "$RUNNER_TEMP/pull" && cd "$RUNNER_TEMP/pull"
+          node "$GITHUB_WORKSPACE/.github/scripts/pull-field.mjs"
+          node "$GITHUB_WORKSPACE/.github/scripts/build-marey.mjs" "data/$(cat data/latest.txt)" "$GITHUB_WORKSPACE/bradley-ironman/race/marey.json"
+      - name: Check no identifiers leaked
+        if: steps.window.outputs.over != '1'
+        run: |
+          node -e 'const d=require("./bradley-ironman/race/marey.json"); const s=JSON.stringify(d.athletes); if (/[A-Za-z]/.test(s) || /RL78|"bib"|"pid"/.test(JSON.stringify(d))) { console.error("identifiers found"); process.exit(1); } console.log("ok:", d.athletes.length, "athletes");'
+      - name: Publish and redeploy
+        if: steps.window.outputs.over != '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add bradley-ironman/race/marey.json
+          if git diff --cached --quiet; then echo "No change"; exit 0; fi
+          git commit -q -m "Update race chart data $(date -u +%H:%MZ)"
+          git pull -q --rebase origin main && git push -q origin HEAD:main
+          # Pushes made with the workflow token don't trigger other workflows, so start the deploy explicitly.
+          gh workflow run pages.yml --ref main
