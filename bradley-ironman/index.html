@@ -177,6 +177,7 @@ td.num, th.num { text-align: right; }
 .arrow { display: block; stroke: var(--surface); stroke-width: 1.5; stroke-linejoin: round; }
 .arrow-swim { fill: var(--swim); } .arrow-bike { fill: var(--bike); } .arrow-run { fill: var(--run); } .arrow-t1, .arrow-t2 { fill: var(--muted); }
 .bhead { width: 22px; height: 22px; }
+.appmark.approx { border-style: dashed; opacity: .85; }
 .appmark { width: 30px; height: 30px; border-radius: 50%; background: var(--tight); color: #fff; border: 2px solid var(--surface); display: grid; place-items: center; font: 800 13px/1 var(--display); box-shadow: 0 1px 6px rgba(0,0,0,.4); }
 .bhead svg { fill: var(--ink); stroke: var(--surface); stroke-width: 1.5; }
 .bmark { width: 38px; height: 38px; border-radius: 50%; border: 3px solid var(--ink); background: var(--wash) center/cover; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
@@ -718,7 +719,7 @@ function renderNow(M, now) {
   const ord = (n) => n + (["th", "st", "nd", "rd"][(n % 100 - 20) % 10] || ["th", "st", "nd", "rd"][n % 100] || "th");
   const placeHtml = pl ? `<div class="small"><b>Place at ${POINTS[pl.point] ? posLabel(POINTS[pl.point][0], POINTS[pl.point][1]) : esc(pl.point)}:</b> ${ord(pl.place)} of ${pl.total.toLocaleString()} through so far${pl.div ? ` · ${esc(pl.div)}: ${ord(pl.divPlace)} of ${pl.divTotal}` : ""}</div>` : "";
   const ap = appPosition(now);
-  const appEst = (ap ? `<div class="small muted">IRONMAN app puts him at <b>${ap.leg === "t1" || ap.leg === "t2" ? "the transition" : posLabel(ap.leg, ap.mile)}</b>, next mat ${esc(posLabel(POINTS[S.appEst.to][0], POINTS[S.appEst.to][1]))} at ${clockTxt(S.appEst.toT)}.</div>` : "")
+  const appEst = (ap ? `<div class="small muted">IRONMAN app puts him at <b>${ap.leg === "t1" || ap.leg === "t2" ? "the transition" : posLabel(ap.leg, ap.mile)}</b>, next mat ${esc(posLabel(POINTS[S.appEst.to][0], POINTS[S.appEst.to][1]))} at ${clockTxt(S.appEst.toT)}${S.appEst.approx ? ` <span class="muted">(approximation: median of the ${S.appEst.n} athletes through that mat so far)</span>` : ""}.</div>` : "")
     + (LIVE.etfp ? `<div class="small muted">IRONMAN app's own finish estimate: ${esc(LIVE.etfp)}</div>` : "");
   const el = $("#tab-now");
   el.innerHTML = `
@@ -1045,8 +1046,8 @@ function renderMap() {
     const a = appPosition(now);
     if (a) {
       const all = a.leg === "t1" || a.leg === "t2" ? posToLatLng(a.leg, 0.1) : posToLatLng(a.leg, a.mile);
-      if (all) L.marker(all, { zIndexOffset: 900, icon: L.divIcon({ className: "", html: '<div class="appmark">IM</div>', iconSize: [30, 30], iconAnchor: [15, 15] }) })
-        .addTo(bLayer).bindPopup(`<b>IRONMAN app's estimate</b><br>${a.leg === "t1" || a.leg === "t2" ? "In " + a.leg.toUpperCase() : posLabel(a.leg, a.mile)}<br>Next mat ${esc(posLabel(POINTS[S.appEst.to][0], POINTS[S.appEst.to][1]))} at ${clockTxt(S.appEst.toT)}`);
+      if (all) L.marker(all, { zIndexOffset: 900, icon: L.divIcon({ className: "", html: '<div class="appmark${S.appEst.approx ? " approx" : ""}">IM</div>', iconSize: [30, 30], iconAnchor: [15, 15] }) })
+        .addTo(bLayer).bindPopup(`<b>IRONMAN app's estimate${S.appEst.approx ? " (approximate)" : ""}</b><br>${a.leg === "t1" || a.leg === "t2" ? "In " + a.leg.toUpperCase() : posLabel(a.leg, a.mile)}<br>Next mat ${esc(posLabel(POINTS[S.appEst.to][0], POINTS[S.appEst.to][1]))} at ${clockTxt(S.appEst.toT)}`);
     }
   }
   if (COURSE && !cur.pre && show !== "app") {
@@ -1396,6 +1397,10 @@ async function pollBradley() {
       const fromT = parseFloat(lr.epochTime) * 1000;
       S.appEst = { from: lr.point, fromT, to: nx[0], toT: fromT + (parseNet(nx[1]) - parseNet(lr.netTime)) * 1000, label: nx[2] || "" };
       save();
+    } else if (lr && !nx) {
+      // No IRONMAN estimate on this split (the start mat never has one). Approximate the app's dot:
+      // his time at this mat plus the field's median time from here to the next mat so far.
+      await approxAppEst(lr);
     }
     LIVE.at = Date.now();
     setLive("ok", rows.length ? "Live · checked " + clockTxt(LIVE.at) : "Live · no official times yet");
@@ -1420,6 +1425,25 @@ async function fetchField(point) {
     await sleep(400);
   }
   return rows;
+}
+let approxAt = 0;
+async function approxAppEst(lr) {
+  if (Date.now() - approxAt < 3 * 60000 && S.appEst && S.appEst.from === lr.point) return;
+  approxAt = Date.now();
+  const def = POINTS[lr.point];
+  const idx = FIELD_ORDER.findIndex((n) => POINTS[n][0] === def[0] && POINTS[n][1] === def[1]);
+  const next = FIELD_ORDER[idx + 1] || FIELD_ORDER[0];
+  if (!next || idx + 1 >= FIELD_ORDER.length) return;
+  try {
+    const rows = await fetchField(next);
+    if (rows.length < 5) return;
+    const fromNet = parseNet(lr.netTime) || 0;
+    const legs = rows.map((r) => r.net - fromNet).filter((v) => v > 0);
+    if (legs.length < 5) return;
+    const fromT = parseFloat(lr.epochTime) * 1000;
+    S.appEst = { from: lr.point, fromT, to: next, toT: fromT + quantile(legs, 0.5) * 1000, label: "", approx: true, n: legs.length };
+    save(); renderAll();
+  } catch (e) {}
 }
 let fieldBusy = false;
 async function refreshField() {
