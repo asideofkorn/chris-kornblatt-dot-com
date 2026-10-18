@@ -1541,30 +1541,41 @@ function setLive(state, msg) {
 }
 
 let polling = false;
+// His own splits, from the profile feed or from a mat's field list. The profile feed can lag the mats by half an
+// hour, so field pulls feed his crossings in too. The latest row also sets the IRONMAN app's dot and finish estimate.
+let latestRow = null;
+function takeSplits(rows) {
+  const fresh = [];
+  for (const row of rows) {
+    const def = POINTS[row.point]; const t = parseFloat(row.epochTime) * 1000;
+    if (!def || !(t > 0)) continue;
+    if (!latestRow || t > parseFloat(latestRow.epochTime) * 1000) latestRow = row;
+    const id = "rt:" + def[0] + ":" + def[1];
+    if (S.obs.some((o) => o.id === id)) continue;
+    const o = { id, leg: def[0], mile: def[1], t, src: "auto", note: row.label || row.point, point: row.point, net: parseNet(row.netTime) };
+    S.obs.push(o); fresh.push(o);
+  }
+  const lr = latestRow;
+  if (lr && lr.etfp) { const parts = String(lr.etfp).split("~"); LIVE.etfp = parts[2] || LIVE.etfp; }
+  // The IRONMAN app's dot: it slides from his last mat toward its predicted time at the next mat.
+  const nx = lr && lr.etnp ? String(lr.etnp).split("~") : null;
+  if (lr && nx && POINTS[nx[0]] && parseNet(nx[1]) != null && parseNet(lr.netTime) != null) {
+    const fromT = parseFloat(lr.epochTime) * 1000;
+    S.appEst = { from: lr.point, fromT, to: nx[0], toT: fromT + (parseNet(nx[1]) - parseNet(lr.netTime)) * 1000, label: nx[2] || "" };
+  }
+  if (fresh.length) save();
+  return fresh;
+}
+
 async function pollBradley() {
   if (polling) return; polling = true;
   try {
     const j = await rt(`/events/${RT.ev}/profiles/${RT.pid}/splits`);
     const rows = j.list || [];
-    const fresh = [];
-    for (const row of rows) {
-      const def = POINTS[row.point]; const t = parseFloat(row.epochTime) * 1000;
-      if (!def || !(t > 0)) continue;
-      const id = "rt:" + def[0] + ":" + def[1];
-      if (S.obs.some((o) => o.id === id)) continue;
-      const o = { id, leg: def[0], mile: def[1], t, src: "auto", note: row.label || row.point, point: row.point, net: parseNet(row.netTime) };
-      S.obs.push(o); fresh.push(o);
-    }
-    const last = rows.filter((r) => r.etfp).at(-1);
-    if (last) { const parts = String(last.etfp).split("~"); LIVE.etfp = parts[2] || null; }
-    // The IRONMAN app's dot: it slides from his last mat toward its predicted time at the next mat.
-    const lr = rows.filter((r) => POINTS[r.point] && parseFloat(r.epochTime) > 0).at(-1);
+    const fresh = takeSplits(rows);
+    const lr = latestRow;
     const nx = lr && lr.etnp ? String(lr.etnp).split("~") : null;
-    if (lr && nx && POINTS[nx[0]] && parseNet(nx[1]) != null && parseNet(lr.netTime) != null) {
-      const fromT = parseFloat(lr.epochTime) * 1000;
-      S.appEst = { from: lr.point, fromT, to: nx[0], toT: fromT + (parseNet(nx[1]) - parseNet(lr.netTime)) * 1000, label: nx[2] || "" };
-      save();
-    } else if (lr && !nx) {
+    if (lr && !nx) {
       // No IRONMAN estimate on this split (the start mat never has one). Approximate the app's dot:
       // his time at this mat plus the field's median time from here to the next mat so far.
       await approxAppEst(lr);
@@ -1588,6 +1599,8 @@ async function fetchField(point) {
     const j = await rt(`/events/${RT.ev}/points/${point}/splits`, { max: 1000, start });
     const list = j.list || [];
     list.forEach((r) => { const net = parseNet(r.netTime), t = parseFloat(r.epochTime) * 1000; if (net != null && t > 0) rows.push({ pid: r.pid || r.bib, net, t, div: r.division || r.agegroup || r.category || r.race || "" }); });
+    const mine = list.filter((r) => r.pid === RT.pid);
+    if (mine.length) { const fresh = takeSplits(mine); if (fresh.length) { renderAll(); toast("Official time: " + posLabel(fresh[0].leg, fresh[0].mile) + " at " + clockTxt(fresh[0].t)); } }
     if (list.length < 1000) break;
     await sleep(400);
   }
