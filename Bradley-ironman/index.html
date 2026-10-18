@@ -820,12 +820,26 @@ function renderPlanForm() {
 }
 
 function renderPlanProj(M) {
+  // Forecast = the pace plan as entered, never adjusted. Actual = official/logged times where both ends of a leg are known, else today's projection.
+  const atU = (uu) => M.obs.find((o) => Math.abs(o.u - uu) < 1);
+  const tAt = (uu) => { const o = atU(uu); return o ? { t: o.t, real: true } : { t: M.predict(uu).x, real: false }; };
+  const signed = (sec) => (Math.abs(sec) < 30 ? "±0" : (sec > 0 ? "+" : "−") + hms(Math.abs(sec)).replace(/^0:/, "").replace(/^0(\d)/, "$1").slice(0, Math.abs(sec) >= 3600 ? -3 : undefined));
+  const cmpRows = LEGS.map((L, i) => {
+    const a = tAt(M.U0[i]), b = tAt(M.U0[i] + M.D[i].x);
+    const act = (b.t - a.t) / 1000, plan = M.D[i].x, done = a.real && b.real;
+    const diff = act - plan;
+    return `<tr><td><i class="legdot" style="background:${L.color}"></i>${L.name}</td>
+      <td class="num">${hms(plan).slice(0, -3)}<div class="small muted">${hms(M.D[i].f).slice(0, -3)}–${hms(M.D[i].s).slice(0, -3)}</div></td>
+      <td class="num">${done ? `<b>${hms(act).slice(0, -3)}</b><div class="small muted">official</div>` : `<span class="muted">≈${hms(act).slice(0, -3)}</span><div class="small muted">${a.real ? "in progress" : "projected"}</div>`}</td>
+      <td class="num" style="color:${!done ? "var(--muted)" : diff > 60 ? "var(--miss)" : diff < -60 ? "var(--go)" : "inherit"}">${signed(diff)}</td></tr>`;
+  });
+  const planStart = clockToMs(S.plan.start.x), planFinish = planStart + M.UT * 1000;
+  const finNow = M.predict(M.UT), finObs = atU(M.UT);
   const rows = [];
-  let u = 0;
   LEGS.forEach((L, i) => {
-    u = M.U0[i] + M.D[i].x;
-    const p = M.predict(u);
-    rows.push(`<tr><td><i class="legdot" style="background:${L.color}"></i>${L.name} done</td><td class="num">${hms(M.D[i].x * M.R[i]).slice(0, -3)}</td><td class="num"><b>${clockHtml(p.x)}</b></td><td class="num muted">${p.past ? "done" : clockTxt(p.e) + " – " + clockTxt(p.l)}</td></tr>`);
+    const uu = M.U0[i] + M.D[i].x;
+    const p = M.predict(uu);
+    rows.push(`<tr><td><i class="legdot" style="background:${L.color}"></i>${L.name} done</td><td class="num muted">${clockTxt(planStart + uu * 1000)}</td><td class="num"><b>${clockHtml(p.x)}</b></td><td class="num muted">${p.past ? "done" : clockTxt(p.e) + " – " + clockTxt(p.l)}</td></tr>`);
   });
   const st = M.actualStart;
   // 2026 athlete guide: per-athlete limits from his own start, plus fixed clock-time cutoffs on course.
@@ -838,9 +852,13 @@ function renderPlanProj(M) {
     ["Finish", "17:00 after start", st + 17 * 3600 * 1000, M.UT],
   ].map(([n, lim, at, uu]) => { const p = M.predict(uu); const margin = (at - p.l) / 1000; return `<tr><td>${n}</td><td class="num">${lim}</td><td class="num" style="color:${margin > 1800 ? "var(--go)" : margin > 0 ? "var(--tight)" : "var(--miss)"}">${dur(margin)} spare</td></tr>`; }).join("");
   $("#planProj").innerHTML = `
-    <div class="panel"><h3>Projected splits</h3>
-      <div class="tablewrap"><table><thead><tr><th>Point</th><th class="num">Leg</th><th class="num">Likely</th><th class="num">Range</th></tr></thead><tbody>${rows.join("")}</tbody></table></div>
-      <p class="small muted">Leg times include any adjustment from logged splits.</p>
+    <div class="panel"><h3>Forecast vs actual</h3>
+      <div class="tablewrap"><table><thead><tr><th>Leg</th><th class="num">Forecast</th><th class="num">Actual</th><th class="num">±</th></tr></thead><tbody>${cmpRows.join("")}
+        <tr><td><b>Finish</b></td><td class="num">${clockTxt(planFinish)}</td><td class="num">${finObs ? `<b>${clockHtml(finObs.t)}</b>` : `<span class="muted">≈${clockTxt(finNow.x)}</span>`}</td><td class="num">${signed(((finObs ? finObs.t : finNow.x) - planFinish) / 1000)}</td></tr></tbody></table></div>
+      <p class="small muted">Forecast is the pace plan above and never changes. Actual fills in from official times as each leg finishes; until then it shows today's projection. Finish forecast assumes a ${clockTxt(planStart)} start.</p>
+    </div>
+    <div class="panel"><h3>Time of day at each point</h3>
+      <div class="tablewrap"><table><thead><tr><th>Point</th><th class="num">Forecast</th><th class="num">Now likely</th><th class="num">Range</th></tr></thead><tbody>${rows.join("")}</tbody></table></div>
     </div>
     <div class="panel"><h3>Cutoffs</h3>
       <div class="tablewrap"><table><thead><tr><th>Cutoff</th><th class="num">Limit</th><th class="num">At slow pace</th></tr></thead><tbody>${cut}</tbody></table></div>
