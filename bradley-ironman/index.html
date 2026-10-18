@@ -686,6 +686,9 @@ function renderNow(M, now) {
       <div class="mats">${F.qs.map((q) => `<div><span><i class="legdot" style="background:${LEGS[legIdx(q.leg)].color}"></i>${posLabel(q.leg, q.mile)}</span><span><b>${clockHtml(q.p50)}</b> <span class="muted small">${clockTxt(q.p10)}–${clockTxt(q.p90)}</span></span></div>`).join("") || `<div class="muted small">Not enough athletes at his pace have reached the next mats yet.</div>`}</div>
       <p class="small muted" style="margin:0">From ${F.peers} athletes at his pace today. ${F.nearby} others crossed ${esc(F.label || F.P)} within a minute of him.</p>
     </div>` : "";
+  const pl = S.field && S.field.place;
+  const ord = (n) => n + (["th", "st", "nd", "rd"][(n % 100 - 20) % 10] || ["th", "st", "nd", "rd"][n % 100] || "th");
+  const placeHtml = pl ? `<div class="small"><b>Place at ${POINTS[pl.point] ? posLabel(POINTS[pl.point][0], POINTS[pl.point][1]) : esc(pl.point)}:</b> ${ord(pl.place)} of ${pl.total.toLocaleString()} through so far${pl.div ? ` · ${esc(pl.div)}: ${ord(pl.divPlace)} of ${pl.divTotal}` : ""}</div>` : "";
   const ap = appPosition(now);
   const appEst = (ap ? `<div class="small muted">IRONMAN app puts him at <b>${ap.leg === "t1" || ap.leg === "t2" ? "the transition" : posLabel(ap.leg, ap.mile)}</b>, next mat ${esc(posLabel(POINTS[S.appEst.to][0], POINTS[S.appEst.to][1]))} at ${clockTxt(S.appEst.toT)}.</div>` : "")
     + (LIVE.etfp ? `<div class="small muted">IRONMAN app's own finish estimate: ${esc(LIVE.etfp)}</div>` : "");
@@ -697,7 +700,7 @@ function renderNow(M, now) {
         <div><span class="label">Race time</span><b>${hms((fin.x - M.actualStart) / 1000).slice(0, -3)}</b><span class="small muted">h:mm</span></div>
         <div><span class="label">Vs plan</span><b style="font-size:19px">${deltaTxt}</b></div>
       </div>
-      <div class="small muted">${basis}</div>${appEst}
+      <div class="small muted">${basis}</div>${placeHtml}${appEst}
     </div>${fieldHtml}
     <div class="row" style="justify-content:space-between"><h2>Next places to see him</h2>${modeSeg()}</div>
     ${ME ? "" : `<div class="row"><button class="btn" data-locate type="button">Use my location for travel times</button></div>`}
@@ -1379,7 +1382,7 @@ async function fetchField(point) {
   for (let start = 1; start <= 3001; start += 1000) {
     const j = await rt(`/events/${RT.ev}/points/${point}/splits`, { max: 1000, start });
     const list = j.list || [];
-    list.forEach((r) => { const net = parseNet(r.netTime), t = parseFloat(r.epochTime) * 1000; if (net != null && t > 0) rows.push({ pid: r.pid || r.bib, net, t }); });
+    list.forEach((r) => { const net = parseNet(r.netTime), t = parseFloat(r.epochTime) * 1000; if (net != null && t > 0) rows.push({ pid: r.pid || r.bib, net, t, div: r.division || r.agegroup || r.category || r.race || "" }); });
     if (list.length < 1000) break;
     await sleep(400);
   }
@@ -1408,7 +1411,12 @@ async function refreshField() {
       const [leg, mile] = POINTS[name];
       qs.push({ point: name, leg, mile, n: deltas.length, p10: P.t + quantile(deltas, 0.1) * 1000, p50: P.t + quantile(deltas, 0.5) * 1000, p90: P.t + quantile(deltas, 0.9) * 1000 });
     }
-    S.field = { P: P.point, label: P.note, Pt: P.t, at: Date.now(), peers: peers.length, nearby, qs };
+    // Place by net time among everyone through this mat so far (later starters can still slot in ahead).
+    const place = { point: P.point, label: P.note, t: P.t, place: 1 + others.filter((r) => r.net < P.net).length, total: atP.length };
+    const myDiv = (atP.find((r) => r.pid === RT.pid)?.div || "").match(/[MF]\d{2}-\d{2}|[MF]\d{2}\+/)?.[0];
+    if (myDiv) { const inDiv = atP.filter((r) => String(r.div).includes(myDiv)); place.div = myDiv; place.divPlace = 1 + inDiv.filter((r) => r.pid !== RT.pid && r.net < P.net).length; place.divTotal = inDiv.length; }
+    S.places = Object.assign(S.places || {}, { [P.point]: place });
+    S.field = { P: P.point, label: P.note, Pt: P.t, at: Date.now(), peers: peers.length, nearby, qs, place };
     save(); renderAll();
   } catch (e) {
     // Field data is a bonus; the page keeps working from Bradley's own splits.
