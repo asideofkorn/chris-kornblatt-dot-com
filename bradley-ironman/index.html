@@ -700,6 +700,23 @@ function passCard(item, now, compact) {
   </article>`;
 }
 
+// His speed between his last two official mats on the current leg, plus his average for the leg so far.
+function lastSpeed(M) {
+  const o = M.obs.filter((x) => x.src === "auto" && x.leg !== "start").sort((p, q) => p.t - q.t);
+  const b = o[o.length - 1]; if (!b || !LEGS[legIdx(b.leg)].dist) return "";
+  const same = o.filter((x) => x.leg === b.leg && x.mile < b.mile - 0.2);
+  const a = same[same.length - 1]; if (!a) return "";
+  const first = same[0];
+  const fmt = (mi, sec) => {
+    if (b.leg === "bike") return `${(mi / (sec / 3600)).toFixed(1)} mph`;
+    if (b.leg === "run") { const p = sec / 60 / mi; return `${Math.floor(p)}:${String(Math.round((p % 1) * 60)).padStart(2, "0")}/mi`; }
+    const p = sec / (mi * 16.0934); return `${Math.floor(p / 60)}:${String(Math.round(p % 60)).padStart(2, "0")}/100m`;
+  };
+  const seg = fmt(b.mile - a.mile, (b.t - a.t) / 1000);
+  const avg = first !== a ? fmt(b.mile - first.mile, (b.t - first.t) / 1000) : "";
+  return `<div class="small"><b>Last stretch: ${seg}</b> <span class="muted">(${posLabel(a.leg, a.mile)} → ${b.mile.toFixed(1)}, official)</span>${avg ? ` · ${LEGS[legIdx(b.leg)].name.toLowerCase()} average <b>${avg}</b>` : ""}</div>`;
+}
+
 function renderNow(M, now) {
   const cur = currentState(M, now);
   const st = S.plan.start;
@@ -724,6 +741,7 @@ function renderNow(M, now) {
       <div class="range">${range}</div>`;
   }
   const a = M.anchor;
+  const speedHtml = lastSpeed(M);
   const basis = a ? `Based on <b>${posLabel(a.leg, a.mile)}</b> at ${clockHtml(a.t)} (${dur((now - a.t) / 1000)} ago)${M.obs.length > 1 ? ` and ${M.obs.length - 1} earlier point${M.obs.length > 2 ? "s" : ""}` : ""}.` : "Based on the pace plan only. Log a split or sighting to sharpen this.";
   const fin = M.predict(M.UT);
   const planFin = M.actualStart + M.UT * 1000;
@@ -749,7 +767,7 @@ function renderNow(M, now) {
         <div><span class="label">Finish time</span><b>${fin.past ? "" : '<span class="approx">~</span>'}${hms((fin.x - M.actualStart) / 1000).slice(0, -3)}</b><span class="small muted">${fin.past ? "official" : "projected"} h:mm</span></div>
         <div><span class="label">Vs plan</span><b style="font-size:19px">${deltaTxt}</b></div>
       </div>
-      <div class="small muted">${basis}</div>${placeHtml}${appEst}
+      ${speedHtml}<div class="small muted">${basis}</div>${placeHtml}${appEst}
     </div>${fieldHtml}
     ${spotsHtml(M, now)}`;
 }
