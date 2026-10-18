@@ -177,8 +177,9 @@ td.num, th.num { text-align: right; }
 .arrow { display: block; stroke: var(--surface); stroke-width: 1.5; stroke-linejoin: round; }
 .arrow-swim { fill: var(--swim); } .arrow-bike { fill: var(--bike); } .arrow-run { fill: var(--run); } .arrow-t1, .arrow-t2 { fill: var(--muted); }
 .bhead { width: 22px; height: 22px; }
+.approx { opacity: .7; margin-right: .04em; }
 .appmark.approx { border-style: dashed; opacity: .85; }
-.appmark { width: 30px; height: 30px; border-radius: 50%; background: var(--tight); color: #fff; border: 2px solid var(--surface); display: grid; place-items: center; font: 800 13px/1 var(--display); box-shadow: 0 1px 6px rgba(0,0,0,.4); }
+.appmark { width: 34px; height: 34px; border-radius: 50%; background: #d2001f; color: #fff; border: 2px solid #fff; display: grid; place-items: center; font: 800 13px/1 var(--display); box-shadow: 0 1px 6px rgba(0,0,0,.4); }
 .bhead svg { fill: var(--ink); stroke: var(--surface); stroke-width: 1.5; }
 .bmark { width: 38px; height: 38px; border-radius: 50%; border: 3px solid var(--ink); background: var(--wash) center/cover; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
 .livepill { display: inline-flex; align-items: center; gap: 5px; }
@@ -428,6 +429,8 @@ function paceMin(str) { // "10:30" -> 10.5
 }
 function hm(ms) { const d = new Date(ms); let h = d.getHours(); const m = d.getMinutes(); const ap = h >= 12 ? "pm" : "am"; h = h % 12 || 12; return { t: h + ":" + String(m).padStart(2, "0"), ap }; }
 const clockHtml = (ms) => { const x = hm(ms); return x.t + '<span class="ap">' + x.ap + "</span>"; };
+// "~" marks a time that is an estimate rather than an official split.
+const estHtml = (t) => '<span class="approx">~</span>' + clockHtml(t);
 const clockTxt = (ms) => { const x = hm(ms); return x.t + " " + x.ap; };
 function dur(sec) {
   const neg = sec < 0; sec = Math.abs(sec);
@@ -677,7 +680,7 @@ function passCard(item, now, compact) {
   const p = info.p;
   const L = LEGS[legIdx(item.pass.leg)];
   const bell = S.alerts[item.key];
-  const timeHtml = info.passed ? clockHtml(p.x) : clockHtml(p.x);
+  const timeHtml = p.past ? clockHtml(p.x) : estHtml(p.x);
   const rangeTxt = info.passed ? (p.past ? "logged" : "") : clockTxt(p.e) + " – " + clockTxt(p.l);
   const inTxt = !info.passed ? "in " + dur((p.x - now) / 1000) : "";
   return `<article class="pass">
@@ -707,7 +710,7 @@ function renderNow(M, now) {
       <div class="where">Starts in ${dur((clockToMs(st.x) - now) / 1000)}</div>
       <div class="range">Rolling swim start. He'll likely enter the water between <b>${clockHtml(clockToMs(st.f))}</b> and <b>${clockHtml(clockToMs(st.s))}</b>. His official start time comes in automatically from live timing.</div>`;
   } else if (cur.done) {
-    hero = `<div class="label">Projected</div><div class="where">Finished</div><div class="range">Estimated finish ${clockHtml(M.predict(M.UT).x)}. Log his official finish on the Log tab.</div>`;
+    hero = `<div class="label">Projected</div><div class="where">Finished</div><div class="range">Estimated finish ${estHtml(M.predict(M.UT).x)}. Log his official finish on the Log tab.</div>`;
   } else {
     const L = LEGS[cur.pos.i];
     const big = L.dist ? "Mile " + cur.pos.mile.toFixed(1) : "In " + L.name;
@@ -726,7 +729,7 @@ function renderNow(M, now) {
   const F = S.field;
   const fieldHtml = F && F.qs && now - F.at < 20 * 60000 ? `<div class="panel">
       <h3>Next timing mats</h3>
-      <div class="mats">${F.qs.map((q) => `<div><span><i class="legdot" style="background:${LEGS[legIdx(q.leg)].color}"></i>${posLabel(q.leg, q.mile)}</span><span><b>${clockHtml(q.p50)}</b> <span class="muted small">${clockTxt(q.p10)}–${clockTxt(q.p90)}</span></span></div>`).join("") || `<div class="muted small">Not enough athletes at his pace have reached the next mats yet.</div>`}</div>
+      <div class="mats">${F.qs.map((q) => `<div><span><i class="legdot" style="background:${LEGS[legIdx(q.leg)].color}"></i>${posLabel(q.leg, q.mile)}</span><span><b>${estHtml(q.p50)}</b> <span class="muted small">${clockTxt(q.p10)}–${clockTxt(q.p90)}</span></span></div>`).join("") || `<div class="muted small">Not enough athletes at his pace have reached the next mats yet.</div>`}</div>
       <p class="small muted" style="margin:0">From ${F.peers} athletes at his pace today. ${F.nearby} others crossed ${esc(F.label || F.P)} within a minute of him.</p>
     </div>` : "";
   const pl = S.field && S.field.place;
@@ -739,7 +742,7 @@ function renderNow(M, now) {
   el.innerHTML = `
     <div class="status">${hero}${ribbon(M, cur.pre ? null : cur)}
       <div class="kv">
-        <div><span class="label">Finish</span><b>${clockHtml(fin.x)}</b><span class="small muted">${clockTxt(fin.e)}–${clockTxt(fin.l)}</span></div>
+        <div><span class="label">Finish</span><b>${fin.past ? clockHtml(fin.x) : estHtml(fin.x)}</b><span class="small muted">${clockTxt(fin.e)}–${clockTxt(fin.l)}</span></div>
         <div><span class="label">Race time</span><b>${hms((fin.x - M.actualStart) / 1000).slice(0, -3)}</b><span class="small muted">h:mm</span></div>
         <div><span class="label">Vs plan</span><b style="font-size:19px">${deltaTxt}</b></div>
       </div>
@@ -910,7 +913,7 @@ function renderPlanProj(M) {
   LEGS.forEach((L, i) => {
     const uu = M.U0[i] + M.D[i].x;
     const p = M.predict(uu);
-    rows.push(`<tr><td><i class="legdot" style="background:${L.color}"></i>${L.name} done</td><td class="num muted">${clockTxt(planStart + OU[i] * 1000)}</td><td class="num"><b>${clockHtml(p.x)}</b></td><td class="num muted">${p.past ? "done" : clockTxt(p.e) + " – " + clockTxt(p.l)}</td></tr>`);
+    rows.push(`<tr><td><i class="legdot" style="background:${L.color}"></i>${L.name} done</td><td class="num muted">${clockTxt(planStart + OU[i] * 1000)}</td><td class="num"><b>${p.past ? clockHtml(p.x) : estHtml(p.x)}</b></td><td class="num muted">${p.past ? "done" : clockTxt(p.e) + " – " + clockTxt(p.l)}</td></tr>`);
   });
   const st = M.actualStart;
   // 2026 athlete guide: per-athlete limits from his own start, plus fixed clock-time cutoffs on course.
@@ -938,6 +941,8 @@ function renderPlanProj(M) {
 }
 
 /* ---------- map ---------- */
+// IRONMAN-style "M-dot" badge for the app's estimate.
+const IM_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="5" r="2.6" fill="#fff"/><path d="M3.5 21V9.5h3.6l4.9 6.2 4.9-6.2h3.6V21h-3.6v-6.3L12 19.8l-4.9-5.1V21z" fill="#fff"/></svg>';
 let map = null, spotLayer = null, bLayer = null, meMarker = null, pickFor = null;
 const courseGroups = {}, courseBounds = {}, spotMarkers = {};
 let mapActive = false, mapFull = false;
@@ -1063,7 +1068,7 @@ function renderMap() {
     const a = appPosition(now);
     if (a) {
       const all = a.leg === "t1" || a.leg === "t2" ? posToLatLng(a.leg, 0.1) : posToLatLng(a.leg, a.mile);
-      if (all) L.marker(all, { zIndexOffset: 900, icon: L.divIcon({ className: "", html: '<div class="appmark${S.appEst.approx ? " approx" : ""}">IM</div>', iconSize: [30, 30], iconAnchor: [15, 15] }) })
+      if (all) L.marker(all, { zIndexOffset: 900, icon: L.divIcon({ className: "", html: `<div class="appmark${S.appEst.approx ? " approx" : ""}" title="IRONMAN app's estimate">${IM_ICON}</div>`, iconSize: [34, 34], iconAnchor: [17, 17] }) })
         .addTo(bLayer).bindPopup(`<b>IRONMAN app's estimate${S.appEst.approx ? " (approximate)" : ""}</b><br>${a.leg === "t1" || a.leg === "t2" ? "In " + a.leg.toUpperCase() : posLabel(a.leg, a.mile)}<br>Next mat ${esc(posLabel(POINTS[S.appEst.to][0], POINTS[S.appEst.to][1]))} at ${clockTxt(S.appEst.toT)}`);
     }
   }
@@ -1204,8 +1209,11 @@ function toast(msg) {
   const t = $("#toast"); t.textContent = msg; t.hidden = false;
   clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 3200);
 }
+const TABS = ["now", "map", "log", "plan", "charts"];
 function go(tab) {
   S.tab = tab; save();
+  // Keep the tab in the URL so links like ../#charts and the browser's back button land on the right tab.
+  history.replaceState(null, "", location.pathname + location.search + (tab === "now" ? "" : "#" + tab));
   document.querySelectorAll("main section[data-tab]").forEach((s) => (s.hidden = s.dataset.tab !== tab));
   document.querySelectorAll("nav.tabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.go === tab));
   if (tab === "map") { initMap(); setTimeout(() => map && map.invalidateSize(), 50); }
@@ -1526,7 +1534,7 @@ function importFromHash() {
 renderPlanForm();
 syncEstButtons();
 importFromHash();
-go("now");
+go(TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "now");
 renderAll();
 setInterval(() => { if ($("#sheet").hidden) renderAll(true); }, 15000);
 pollBradley();
