@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Transitions · IRONMAN California 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one column of figures. The field is a neutral gray context; Bradley is the single highlight, always direct-labeled. */
+:root {
+  --bg: #f2f3ef; --surface: #ffffff; --ink: #14171b; --muted: #5d656e; --line: #d8dbd4; --grid: #e6e8e3;
+  --field: #7d8790; --me: #7a3ff2;
+  --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "Barlow", "Helvetica Neue", Arial, system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #0e1114; --surface: #171b20; --ink: #eef1f4; --muted: #9aa3ad; --line: #2a3038; --grid: #222830; --field: #6b747e; --me: #8f66f0; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #0e1114; --surface: #171b20; --ink: #eef1f4; --muted: #9aa3ad; --line: #2a3038; --grid: #222830; --field: #6b747e; --me: #8f66f0; color-scheme: dark; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.45 var(--body); font-variant-numeric: tabular-nums; }
+.wrap { max-width: 900px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; display: grid; gap: 18px; }
+h1 { margin: 0; font: 800 clamp(34px, 7vw, 56px)/0.95 var(--display); text-transform: uppercase; letter-spacing: .01em; }
+h2 { margin: 0; font: 700 22px/1.1 var(--display); text-transform: uppercase; letter-spacing: .03em; }
+.eyebrow { font: 700 12px/1.2 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.lede { margin: 6px 0 0; max-width: 62ch; color: var(--muted); }
+.muted { color: var(--muted); } .small { font-size: 13px; }
+a { color: inherit; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.tile b { display: block; font: 800 30px/1 var(--display); }
+.tile span { font: 700 11px/1.2 var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.tile small { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; }
+.tile.me b { color: var(--me); }
+.fig { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 8px; margin: 0; position: relative; }
+.fig p { margin: 0; color: var(--muted); font-size: 14px; max-width: 70ch; }
+.fig svg { display: block; width: 100%; height: auto; overflow: visible; }
+.fig svg text { fill: var(--muted); font: 500 11px var(--body); }
+.fig svg .lbl-me { fill: var(--ink); font-weight: 700; }
+.empty { border: 1.5px dashed var(--line); border-radius: 10px; padding: 16px; color: var(--muted); }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 13px; padding: 6px 9px; border-radius: 6px; white-space: nowrap; z-index: 5; transform: translate(-50%, calc(-100% - 10px)); }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: right; padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { font: 700 11px/1 var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+td.me { color: var(--me); font-weight: 700; }
+.notes { margin: 0; padding-left: 18px; color: var(--muted); font-size: 14px; display: grid; gap: 4px; max-width: 70ch; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <p style="margin:0 0 10px"><a href="../" class="small" style="font-weight:600">← Bradley's tracker</a> · <a href="../race/" class="small" style="font-weight:600">Race timetable</a></p>
+    <div class="eyebrow">IRONMAN California · Sacramento · Oct 18, 2026</div>
+    <h1>Transitions</h1>
+    <p class="lede">How long the field spent getting from swim to bike (T1) and bike to run (T2). T1 here includes the climb out of the river and the run to transition, so it's longer than at most races. <span id="asof"></span></p>
+  </header>
+
+  <section class="tiles" id="tiles" aria-label="Transition summary"></section>
+
+  <figure class="fig" id="f-t1"><h2>T1: swim exit to bike start</h2><p>Athletes per 30-second band. The line marks Bradley.</p><div class="plot"></div></figure>
+  <figure class="fig" id="f-t2"><h2>T2: bike finish to run start</h2><p>Athletes per 30-second band. The line marks Bradley.</p><div class="plot"></div></figure>
+  <figure class="fig" id="f-crowd"><h2>Did T1 slow down when it got busy?</h2><p>Each dot is one athlete: when they came out of the water, and how long their T1 took. The line is the median of the athletes around each time.</p><div class="plot"></div></figure>
+  <figure class="fig" id="f-fin"><h2>Transitions vs finish time</h2><p>Finishers only: total time in T1 + T2 against overall finish time.</p><div class="plot"></div></figure>
+
+  <section class="fig">
+    <h2>Table view</h2>
+    <div class="tablewrap" id="table"></div>
+  </section>
+
+  <section>
+    <h2>Reading the data</h2>
+    <ul class="notes">
+      <li>T1 is the time between the swim exit mat and the bike start mat; T2 is between the bike finish mat and the run start mat. Athletes missing either mat are left out of that transition.</li>
+      <li>The fastest and slowest 1% are clipped from the histograms so the shape is readable; they still count in the table.</li>
+      <li>Source: official timing-mat crossings (RTRT.me). Athletes are anonymous; only Bradley is identified.</li>
+    </ul>
+  </section>
+</main>
+<script>
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const NS = "http://www.w3.org/2000/svg";
+const fmtDur = (s) => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = s % 60; return h ? `${h}:${String(m).padStart(2, "0")}:${String(ss).padStart(2, "0")}` : `${m}:${String(ss).padStart(2, "0")}`; };
+const fmtClock = (sec) => { const d = new Date(sec * 1000); let h = d.getHours(); const m = d.getMinutes(); const ap = h >= 12 ? "pm" : "am"; h = h % 12 || 12; return `${h}:${String(m).padStart(2, "0")} ${ap}`; };
+const quant = (a, q) => { const s = [...a].sort((x, y) => x - y); const i = (s.length - 1) * q, lo = Math.floor(i), hi = Math.ceil(i); return s[lo] + (s[hi] - s[lo]) * (i - lo); };
+const pctFaster = (arr, v) => Math.round(arr.filter((x) => x > v).length / arr.length * 100);
+// Round tick values (whole minutes / quarter hours / hours) so axes read cleanly.
+const niceTicks = (lo, hi, max = 6) => { const step = [30, 60, 120, 300, 600, 900, 1800, 3600, 7200].find((s) => (hi - lo) / s <= max) || 7200; const out = []; for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) out.push(v); return out; };
+const el = (tag, attrs, parent) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); parent && parent.appendChild(n); return n; };
+
+let rows = [], B = null, D = null;
+
+function derive(d) {
+  const idx = (cum) => d.mats.findIndex((m) => Math.abs(m.cum - cum) < 0.005);
+  const iSwim = idx(2.4), iT1 = idx(2.76), iBike = idx(114.8), iT2 = idx(114.96), iFin = d.mats.length - 1;
+  return d.athletes.map((a, n) => {
+    const t = new Map(); for (let k = 2; k < a.length; k += 2) t.set(a[k], a[1] + a[k + 1]);
+    const r = { n, status: a[0], me: n === d.bradley };
+    if (t.has(iSwim) && t.has(iT1)) { r.t1 = t.get(iT1) - t.get(iSwim); r.swimOut = t.get(iSwim); }
+    if (t.has(iBike) && t.has(iT2)) r.t2 = t.get(iT2) - t.get(iBike);
+    if (a[0] === 0 && t.has(iFin)) r.finish = t.get(iFin) - a[1];
+    if (r.t1 != null && !(r.t1 > 60 && r.t1 < 3600)) delete r.t1;
+    if (r.t2 != null && !(r.t2 > 30 && r.t2 < 3600)) delete r.t2;
+    return r;
+  });
+}
+
+// One tooltip per figure, positioned over the hovered mark.
+function tipFor(fig) { let t = $(".tip", fig); if (!t) { t = document.createElement("div"); t.className = "tip"; t.hidden = true; fig.appendChild(t); } return t; }
+function showTip(fig, svg, x, y, html) { const t = tipFor(fig), r = svg.getBoundingClientRect(), fr = fig.getBoundingClientRect(), k = r.width / svg.viewBox.baseVal.width; t.innerHTML = html; t.style.left = (r.left - fr.left + x * k) + "px"; t.style.top = (r.top - fr.top + y * k) + "px"; t.hidden = false; }
+function hideTip(fig) { const t = $(".tip", fig); if (t) t.hidden = true; }
+
+function histogram(figId, key) {
+  const fig = $(figId), host = $(".plot", fig); host.innerHTML = "";
+  const vals = rows.map((r) => r[key]).filter((v) => v != null);
+  if (vals.length < 20) { host.innerHTML = `<div class="empty">Not enough athletes through this transition yet (${vals.length}). It fills in after the evening data pull.</div>`; return; }
+  const lo = Math.floor(quant(vals, 0.01) / 30) * 30, hi = Math.ceil(quant(vals, 0.99) / 30) * 30;
+  const bins = []; for (let b = lo; b < hi; b += 30) bins.push({ b, n: 0 });
+  vals.forEach((v) => { const i = Math.floor((Math.min(Math.max(v, lo), hi - 1) - lo) / 30); bins[i].n++; });
+  const W = Math.max(300, host.clientWidth || 860), H = Math.round(Math.min(300, Math.max(220, W * 0.4))), m = { l: 36, r: 10, t: 26, b: 30 }, pw = W - m.l - m.r, ph = H - m.t - m.b;
+  const maxN = Math.max(...bins.map((x) => x.n));
+  const X = (s) => m.l + (s - lo) / (hi - lo) * pw, Y = (n) => m.t + ph - n / maxN * ph;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `${key.toUpperCase()} histogram` }, host);
+  // recessive grid + y ticks
+  const step = maxN > 200 ? 100 : maxN > 80 ? 40 : maxN > 30 ? 10 : 5;
+  for (let n = step; n <= maxN; n += step) { el("line", { x1: m.l, x2: m.l + pw, y1: Y(n), y2: Y(n), stroke: "var(--grid)" }, svg); el("text", { x: m.l - 6, y: Y(n) + 4, "text-anchor": "end" }, svg).textContent = n; }
+  // x ticks every 2 minutes (or 5 for wide spreads)
+  const xs = (hi - lo) / (W < 500 ? 4 : 8) > 120 ? 300 : 120;
+  for (let s = Math.ceil(lo / xs) * xs; s <= hi; s += xs) el("text", { x: X(s), y: H - 10, "text-anchor": "middle" }, svg).textContent = fmtDur(s);
+  // bars: 2px surface gap, 4px rounded top anchored to baseline
+  const bw = pw / bins.length;
+  bins.forEach((bin) => {
+    if (!bin.n) return;
+    const x = X(bin.b) + 1, w = Math.max(1, bw - 2), y = Y(bin.n), h = m.t + ph - y, r = Math.min(4, w / 2, h);
+    el("path", { d: `M${x},${m.t + ph}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${m.t + ph}Z`, fill: "var(--field)" }, svg);
+    const hit = el("rect", { x: X(bin.b), y: m.t, width: bw, height: ph, fill: "transparent" }, svg);
+    hit.addEventListener("pointerenter", () => showTip(fig, svg, X(bin.b) + bw / 2, y, `${fmtDur(bin.b)}–${fmtDur(bin.b + 30)} · <b>${bin.n}</b> athlete${bin.n === 1 ? "" : "s"}`));
+    hit.addEventListener("pointerleave", () => hideTip(fig));
+  });
+  el("line", { x1: m.l, x2: m.l + pw, y1: m.t + ph, y2: m.t + ph, stroke: "var(--line)" }, svg);
+  // median and Bradley
+  const med = quant(vals, 0.5);
+  el("line", { x1: X(med), x2: X(med), y1: m.t, y2: m.t + ph, stroke: "var(--muted)", "stroke-dasharray": "3 3" }, svg);
+  el("text", { x: X(med) + 4, y: m.t + 10 }, svg).textContent = `Median ${fmtDur(med)}`;
+  if (B && B[key] != null) {
+    const bx = X(Math.min(Math.max(B[key], lo), hi));
+    el("line", { x1: bx, x2: bx, y1: m.t - 8, y2: m.t + ph, stroke: "var(--me)", "stroke-width": 2 }, svg);
+    const right = bx > m.l + pw * 0.7;
+    const t = el("text", { x: bx + (right ? -5 : 5), y: m.t - 12, "text-anchor": right ? "end" : "start", class: "lbl-me" }, svg);
+    t.textContent = `Bradley ${fmtDur(B[key])} · faster than ${pctFaster(vals, B[key])}%`;
+  }
+}
+
+function scatter(figId, pts, xFmt, yFmt, xLabel, yLabel, tipFn, withMedian) {
+  const fig = $(figId), host = $(".plot", fig); host.innerHTML = "";
+  if (pts.length < 20) { host.innerHTML = `<div class="empty">Not enough athletes yet (${pts.length}). It fills in after the evening data pull.</div>`; return; }
+  const W = Math.max(300, host.clientWidth || 860), H = Math.round(Math.min(360, Math.max(280, W * 0.5))), m = { l: 46, r: 12, t: 18, b: 40 }, pw = W - m.l - m.r, ph = H - m.t - m.b;
+  const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
+  const x0 = quant(xs, 0.005), x1 = quant(xs, 0.995), y0 = Math.min(quant(ys, 0.005), 0) || quant(ys, 0.005), y1 = quant(ys, 0.99);
+  const yLo = Math.max(0, quant(ys, 0.005) * 0.9);
+  const X = (v) => m.l + (Math.min(Math.max(v, x0), x1) - x0) / (x1 - x0) * pw, Y = (v) => m.t + ph - (Math.min(Math.max(v, yLo), y1) - yLo) / (y1 - yLo) * ph;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `${yLabel} by ${xLabel}` }, host);
+  niceTicks(yLo, y1, 5).forEach((v) => { el("line", { x1: m.l, x2: m.l + pw, y1: Y(v), y2: Y(v), stroke: "var(--grid)" }, svg); el("text", { x: m.l - 6, y: Y(v) + 4, "text-anchor": "end" }, svg).textContent = yFmt(v); });
+  niceTicks(x0, x1, W < 500 ? 3 : 5).forEach((v) => el("text", { x: X(v), y: H - 22, "text-anchor": "middle" }, svg).textContent = xFmt(v));
+  el("text", { x: m.l + pw / 2, y: H - 4, "text-anchor": "middle" }, svg).textContent = xLabel;
+  const g = el("g", { fill: "var(--field)", "fill-opacity": 0.35 }, svg);
+  pts.forEach((p) => { if (!p.me) el("circle", { cx: X(p.x), cy: Y(p.y), r: 2.4 }, g); });
+  if (withMedian) {
+    const sorted = [...pts].sort((a, b) => a.x - b.x), w = Math.max(15, Math.round(sorted.length / 25)), line = [];
+    for (let i = 0; i < sorted.length; i += Math.max(1, Math.round(w / 3))) { const win = sorted.slice(Math.max(0, i - w), i + w); line.push([X(sorted[i].x), Y(quant(win.map((p) => p.y), 0.5))]); }
+    el("path", { d: "M" + line.map((p) => p.join(",")).join("L"), fill: "none", stroke: "var(--ink)", "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+  }
+  const me = pts.find((p) => p.me);
+  if (me) {
+    el("circle", { cx: X(me.x), cy: Y(me.y), r: 6, fill: "var(--me)", stroke: "var(--surface)", "stroke-width": 2 }, svg);
+    const right = X(me.x) > m.l + pw * 0.7;
+    el("text", { x: X(me.x) + (right ? -10 : 10), y: Y(me.y) - 8, "text-anchor": right ? "end" : "start", class: "lbl-me" }, svg).textContent = "Bradley";
+  }
+  // nearest-dot hover
+  const hit = el("rect", { x: m.l, y: m.t, width: pw, height: ph, fill: "transparent" }, svg);
+  hit.addEventListener("pointermove", (e) => {
+    const r = svg.getBoundingClientRect(), k = W / r.width, px = (e.clientX - r.left) * k, py = (e.clientY - r.top) * k;
+    let best = null, bd = 400; for (const p of pts) { const d = (X(p.x) - px) ** 2 + (Y(p.y) - py) ** 2; if (d < bd) { bd = d; best = p; } }
+    best ? showTip(fig, svg, X(best.x), Y(best.y), tipFn(best)) : hideTip(fig);
+  });
+  hit.addEventListener("pointerleave", () => hideTip(fig));
+}
+
+function render() {
+  const t1 = rows.map((r) => r.t1).filter((v) => v != null), t2 = rows.map((r) => r.t2).filter((v) => v != null);
+  const tile = (label, val, sub, me) => `<div class="tile ${me ? "me" : ""}"><b>${val}</b><span>${label}</span>${sub ? `<small>${sub}</small>` : ""}</div>`;
+  $("#tiles").innerHTML = [
+    tile("Median T1", t1.length ? fmtDur(quant(t1, 0.5)) : "—", t1.length ? `${t1.length.toLocaleString()} athletes` : "No data yet"),
+    tile("Median T2", t2.length ? fmtDur(quant(t2, 0.5)) : "—", t2.length ? `${t2.length.toLocaleString()} athletes` : "No data yet"),
+    tile("Bradley's T1", B && B.t1 != null ? fmtDur(B.t1) : "—", B && B.t1 != null && t1.length ? `Faster than ${pctFaster(t1, B.t1)}%` : "Not through yet", true),
+    tile("Bradley's T2", B && B.t2 != null ? fmtDur(B.t2) : "—", B && B.t2 != null && t2.length ? `Faster than ${pctFaster(t2, B.t2)}%` : "Not through yet", true),
+  ].join("");
+  histogram("#f-t1", "t1");
+  histogram("#f-t2", "t2");
+  scatter("#f-crowd", rows.filter((r) => r.t1 != null).map((r) => ({ x: r.swimOut, y: r.t1, me: r.me })),
+    fmtClock, fmtDur, "Swim exit time", "T1", (p) => `${p.me ? "<b>Bradley</b> · " : ""}Out of water ${fmtClock(p.x)} · T1 <b>${fmtDur(p.y)}</b>`, true);
+  scatter("#f-fin", rows.filter((r) => r.t1 != null && r.t2 != null && r.finish != null).map((r) => ({ x: r.finish, y: r.t1 + r.t2, me: r.me })),
+    (v) => fmtDur(v).replace(/:\d\d$/, ""), fmtDur, "Finish time (h:mm)", "T1 + T2", (p) => `${p.me ? "<b>Bradley</b> · " : ""}Finish ${fmtDur(p.x)} · T1+T2 <b>${fmtDur(p.y)}</b>`, true);
+  const qs = [0.1, 0.25, 0.5, 0.75, 0.9];
+  const row = (name, arr, bv) => `<tr><td>${name}</td>${qs.map((q) => `<td>${arr.length ? fmtDur(quant(arr, q)) : "—"}</td>`).join("")}<td class="me">${bv != null ? fmtDur(bv) : "—"}</td><td>${arr.length.toLocaleString()}</td></tr>`;
+  $("#table").innerHTML = `<table><thead><tr><th>Transition</th><th>10%</th><th>25%</th><th>Median</th><th>75%</th><th>90%</th><th>Bradley</th><th>Athletes</th></tr></thead><tbody>${row("T1", t1, B && B.t1)}${row("T2", t2, B && B.t2)}</tbody></table>`;
+  $("#asof").textContent = D.asOf < D.courseClose ? `Snapshot from ${fmtClock(D.asOf)}, while the race was on.` : "Final data.";
+}
+
+fetch("../race/marey.json", { cache: "no-cache" }).then((r) => r.json()).then((d) => { D = d; rows = derive(d); B = rows.find((r) => r.me) || null; render(); })
+  .catch(() => { $("#tiles").innerHTML = `<p class="muted">The race data isn't available yet. It's published after the evening data pull.</p>`; });
+let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => D && render(), 150); });
+</script>
+</body>
+</html>
