@@ -195,6 +195,8 @@ td.num, th.num { text-align: right; }
 .empty { border: 1.5px dashed var(--line); border-radius: 10px; padding: 16px; color: var(--muted); }
 .banner { background: var(--ink); color: var(--bg); border-radius: 10px; padding: 12px 14px; display: grid; gap: 8px; }
 .banner .btn { border-color: var(--bg); }
+.updatebar { position: fixed; left: 12px; right: 12px; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); z-index: 30; max-width: 560px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; box-shadow: 0 4px 18px rgba(0,0,0,.35); }
+.updatebar .btn { background: var(--bg); color: var(--ink); }
 
 .sheet { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.45); display: flex; align-items: flex-end; justify-content: center; }
 .sheet .card { background: var(--bg); width: 100%; max-width: 640px; max-height: 88vh; overflow-y: auto; border-radius: 14px 14px 0 0; padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); display: grid; gap: 14px; }
@@ -272,6 +274,7 @@ td.num, th.num { text-align: right; }
   </section>
 </main>
 
+<div class="banner updatebar" id="updateBar" role="status" hidden><span><b>New version of the tracker.</b> <span class="small">Refresh to get it.</span></span><button class="btn slim" id="updateBtn" type="button">Refresh</button></div>
 <nav class="tabs" aria-label="Sections">
   <div class="row" role="tablist">
     <button role="tab" data-go="now" aria-selected="true">Now</button>
@@ -1541,6 +1544,20 @@ pollBradley();
 setInterval(() => { if (!document.hidden) pollBradley(); }, 75000);
 setInterval(() => { if (!document.hidden) refreshField(); }, 4 * 60000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - LIVE.at > 30000) pollBradley(); });
+
+// New-version banner: the deploy stamps BUILD with a hash of this page's code and writes version.json alongside.
+const BUILD = "__BUILD__";
+async function checkVersion() {
+  if (BUILD.includes("BUILD") || !$("#updateBar").hidden) return;
+  try {
+    const v = await (await fetch("version.json?t=" + Date.now(), { cache: "no-store" })).json();
+    if (v.build && v.build !== BUILD) $("#updateBar").hidden = false;
+  } catch (e) {}
+}
+$("#updateBtn").onclick = () => location.reload();
+setInterval(() => { if (!document.hidden) checkVersion(); }, 3 * 60000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) checkVersion(); });
+checkVersion();
 setTimeout(refreshField, 5000);
 try { navigator.permissions?.query({ name: "geolocation" }).then((p) => { if (p.state === "granted") locate(false); }).catch(() => {}); } catch (e) {}
 </script>

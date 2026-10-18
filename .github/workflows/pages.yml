@@ -23,6 +23,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Stamp tracker version
+        # A hash of the tracker's own code, so its "new version" banner ignores hourly chart-data deploys.
+        run: |
+          V=$(cat bradley-ironman/index.html bradley-ironman/course.js | sha256sum | cut -c1-12)
+          sed -i "s/__BUILD__/$V/" bradley-ironman/index.html
+          printf '{"build":"%s"}\n' "$V" > bradley-ironman/version.json
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload site
