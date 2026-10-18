@@ -173,6 +173,12 @@ td.num, th.num { text-align: right; }
 .mapwrap.fs #map { height: 100%; min-height: 0; border: 0; border-radius: 0; }
 .mapwrap.fs .mapcorner, .mapwrap.fs .maphint { display: none; }
 .crs { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.crs-casing { stroke: var(--surface); opacity: 1; }
+.milelbl { transform: translate(-50%, -50%); white-space: nowrap; padding: 1px 5px; border-radius: 999px; background: var(--surface); color: var(--ink); border: 1.5px solid var(--run); font: 700 11px/1.3 var(--body); }
+.endmark { transform: translate(-50%, -130%); white-space: nowrap; padding: 3px 8px; border-radius: 6px; font: 800 12px/1.2 var(--body); box-shadow: 0 1px 6px rgba(0,0,0,.35); border: 2px solid #fff; }
+.endmark.go { background: #15803d; color: #fff; }
+.endmark.stop { background: var(--ink); color: var(--surface); }
+.endmark.fin { background: #111; color: #fff; }
 .crs-swim { stroke: var(--swim); } .crs-bike { stroke: var(--bike); } .crs-run { stroke: var(--run); } .crs-t1, .crs-t2 { stroke: var(--muted); }
 .brange { stroke: var(--ink); stroke-opacity: .35; fill: none; stroke-linecap: round; }
 .mat { stroke: var(--ink); fill: var(--surface); }
@@ -971,7 +977,7 @@ function renderPlanProj(M) {
 // IRONMAN-style "M-dot" badge for the app's estimate.
 const IM_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="5" r="2.6" fill="#fff"/><path d="M3.5 21V9.5h3.6l4.9 6.2 4.9-6.2h3.6V21h-3.6v-6.3L12 19.8l-4.9-5.1V21z" fill="#fff"/></svg>';
 let map = null, spotLayer = null, bLayer = null, meMarker = null, pickFor = null;
-const courseGroups = {}, courseBounds = {}, spotMarkers = {};
+const courseGroups = {}, courseBounds = {}, spotMarkers = {}, endGroups = {};
 let mapActive = false, mapFull = false;
 // Full screen is a fixed overlay rather than the Fullscreen API, which iPhone Safari doesn't support for pages.
 function setMapFull(on) {
@@ -1007,6 +1013,7 @@ function applyMapFilter(fit) {
   if (!map) return;
   const f = S.mapLeg || "all";
   Object.entries(courseGroups).forEach(([k, g]) => { if (f === "all" || f === k) g.addTo(map); else map.removeLayer(g); });
+  Object.entries(endGroups).forEach(([k, g]) => { if (f === k) g.addTo(map); else map.removeLayer(g); });
   document.querySelectorAll("[data-mapleg]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.mapleg === f));
   if (fit) {
     const bnd = L.latLngBounds([]);
@@ -1033,7 +1040,27 @@ function initMap() {
     ["swim", "bike", "run"].forEach((k) => (courseGroups[k] = L.layerGroup()));
     ["bike", "t1", "t2", "swim", "run"].forEach((k) => {
       const Lg = COURSE.legs[k]; if (!Lg) return;
-      const line = L.polyline(Lg.c, { className: "crs crs-" + k, weight: k === "bike" ? 4 : 5, opacity: 0.85, interactive: false }).addTo(courseGroups[groupOf[k]]);
+      const line = L.polyline(Lg.c, { className: "crs crs-" + k, weight: k === "bike" ? 4 : 5, opacity: 0.85, interactive: false });
+      if (k === "run") {
+        // The run crosses itself, so draw it in mile order in short pieces, each over a casing: where paths cross,
+        // the later pass visibly goes over the earlier one.
+        const end = Lg.m[Lg.m.length - 1], STEP = 0.25;
+        for (let m = 0; m < end; m += STEP) {
+          const pts = subline("run", m, Math.min(end, m + STEP + 0.02)); if (pts.length < 2) continue;
+          // The casing starts a little in so it doesn't nick the end of the previous piece on a straight road.
+          const cas = subline("run", m + 0.04, Math.min(end, m + STEP));
+          if (cas.length > 1) L.polyline(cas, { className: "crs crs-casing", weight: 10, interactive: false }).addTo(courseGroups.run);
+          L.polyline(pts, { className: "crs crs-run", weight: 5, opacity: 0.95, interactive: false }).addTo(courseGroups.run);
+        }
+        // Mile numbers every 2 miles; where the second lap passes the same spot they share one label ("6 · 18").
+        const labels = [];
+        for (let mi = 2; mi < end; mi += 2) {
+          const ll = posToLatLng("run", mi);
+          const near = labels.find((x) => Math.abs(mi - x.mi[0] - LAP.run) < 0.5 && havMi({ lat: x.ll[0], lng: x.ll[1] }, { lat: ll[0], lng: ll[1] }) < 0.15);
+          if (near) near.mi.push(mi); else labels.push({ ll, mi: [mi] });
+        }
+        labels.forEach((x) => L.marker(x.ll, { keyboard: false, interactive: false, icon: L.divIcon({ className: "", iconSize: null, html: `<div class="milelbl">${x.mi.join(" · ")}</div>` }) }).addTo(courseGroups.run));
+      } else line.addTo(courseGroups[groupOf[k]]);
       courseBounds[groupOf[k]] = courseBounds[groupOf[k]] ? courseBounds[groupOf[k]].extend(line.getBounds()) : line.getBounds();
       // Direction arrows, nudged to the right of travel so out-and-back roads show both directions side by side.
       const step = ARROW_STEP[k]; if (!step) return;
@@ -1055,6 +1082,18 @@ function initMap() {
       L.circleMarker([lat, lng], { radius: 5, weight: 2, fillOpacity: 1, className: "mat" }).addTo(courseGroups[groupOf[leg]])
         .bindPopup("<b>Timing mat</b><br>" + [...new Set(same)].join("<br>"));
     });
+    // Start and finish of each sport, marked differently so the order is clear where the course overlaps.
+    // With all sports showing, only the race's own start and finish are marked; one sport shows its own ends.
+    ["all", "swim", "bike", "run"].forEach((k) => (endGroups[k] = L.layerGroup()));
+    const endMark = (ll, cls, text, grp) => L.marker(ll, { zIndexOffset: 500, keyboard: false, icon: L.divIcon({ className: "", iconSize: null, html: `<div class="endmark ${cls}">${text}</div>` }) }).bindPopup(`<b>${text.replace(/<[^>]+>/g, "")}</b>`).addTo(endGroups[grp]);
+    const first = (k) => COURSE.legs[k].c[0], last = (k) => COURSE.legs[k].c[COURSE.legs[k].c.length - 1];
+    endMark(first("swim"), "go", "▶ Swim start", "swim");
+    endMark(last("swim"), "stop", "Swim exit", "swim");
+    endMark(first("bike"), "go", "▶ Bike start · finish", "bike");
+    endMark(first("run"), "go", "▶ Run start", "run");
+    endMark(last("run"), "fin", "🏁 Finish", "run");
+    endMark(first("swim"), "go", "▶ Race start", "all");
+    endMark(last("run"), "fin", "🏁 Finish", "all");
     applyMapFilter(false);
   }
   bLayer = L.layerGroup().addTo(map);
