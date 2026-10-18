@@ -983,7 +983,7 @@ function renderPlanProj(M) {
 // IRONMAN-style "M-dot" badge for the app's estimate.
 const IM_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="5" r="2.6" fill="#fff"/><path d="M3.5 21V9.5h3.6l4.9 6.2 4.9-6.2h3.6V21h-3.6v-6.3L12 19.8l-4.9-5.1V21z" fill="#fff"/></svg>';
 let map = null, spotLayer = null, bLayer = null, meMarker = null, pickFor = null;
-const courseGroups = {}, courseBounds = {}, spotMarkers = {}, endGroups = {}, fineGroups = {};
+const courseGroups = {}, courseBounds = {}, spotMarkers = {}, endGroups = {}, arrowGroups = {};
 let mapActive = false, mapFull = false;
 // Full screen is a fixed overlay rather than the Fullscreen API, which iPhone Safari doesn't support for pages.
 function setMapFull(on) {
@@ -1003,9 +1003,7 @@ function setMapActive(on) {
   if (hint) hint.hidden = on;
   if (lock) lock.hidden = !on;
 }
-const ARROW_STEP = { swim: 0.3, bike: 2, run: 0.6 }; // miles between direction arrows
-const ARROW_FINE = { swim: 0.1, bike: 0.5, run: 0.15 }; // when zoomed in to street level
-const FINE_ZOOM = 15;
+const ARROW_PX = 110; // screen distance between direction arrows, whatever the zoom
 // Tapping the course lists every time he passes that spot, in order, with direction and time.
 function courseTap(e) {
   if (pickFor) return;
@@ -1059,16 +1057,39 @@ function playRoute(which) {
   routeAnim = { stop() { cancelAnimationFrame(raf); map.removeLayer(trail); map.removeLayer(ball); routeAnim = null; } };
   raf = requestAnimationFrame(step);
 }
-function showFineArrows() {
-  const f = S.mapLeg || "all", z = map.getZoom() >= FINE_ZOOM;
-  Object.entries(fineGroups).forEach(([k, g]) => { if (z && (f === "all" || f === k)) g.addTo(map); else map.removeLayer(g); });
+// Direction arrows are spaced by screen distance and rebuilt on zoom, so the map never fills up with them.
+// Each sits just right of its line, so a road used both ways shows both directions; an arrow that would land on
+// top of one already drawn pointing the same way (the repeat lap) is skipped.
+function drawArrows() {
+  if (!map || !COURSE) return;
+  const f = S.mapLeg || "all", z = map.getZoom();
+  const mPerPx = 156543.03 * Math.cos(38.58 * Math.PI / 180) / 2 ** z;
+  const step = ARROW_PX * mPerPx / 1609.34;
+  const groupOf = { swim: "swim", t1: "bike", bike: "bike", t2: "run", run: "run" };
+  Object.values(arrowGroups).forEach((g) => map.removeLayer(g));
+  ["swim", "bike", "run"].forEach((k) => {
+    const g = (arrowGroups[k] = L.layerGroup());
+    if (f !== "all" && f !== groupOf[k]) return;
+    const Lg = COURSE.legs[k]; if (!Lg) return;
+    const end = Lg.m[Lg.m.length - 1], placed = [];
+    for (let mi = step / 2; mi < end; mi += step) {
+      const h = headingAt(k, mi); if (!h) continue;
+      const pt = map.latLngToLayerPoint(h.ll);
+      if (placed.some((q) => q.pt.distanceTo(pt) < ARROW_PX * 0.45 && Math.abs(((q.deg - h.deg + 540) % 360) - 180) < 40)) continue;
+      placed.push({ pt, deg: h.deg });
+      const rad = h.deg * Math.PI / 180, ox = Math.cos(rad) * 8, oy = Math.sin(rad) * 8;
+      L.marker(h.ll, { interactive: false, keyboard: false, icon: L.divIcon({ className: "", iconSize: [14, 14], iconAnchor: [7, 7],
+        html: `<svg class="arrow arrow-${k}" viewBox="0 0 18 18" width="14" height="14" style="transform:translate(${ox.toFixed(1)}px,${oy.toFixed(1)}px) rotate(${h.deg.toFixed(0)}deg)"><path d="M9 2 L15 14 L9 11 L3 14 Z"/></svg>` }) }).addTo(g);
+    }
+    g.addTo(map);
+  });
 }
 function applyMapFilter(fit) {
   if (!map) return;
   const f = S.mapLeg || "all";
   Object.entries(courseGroups).forEach(([k, g]) => { if (f === "all" || f === k) g.addTo(map); else map.removeLayer(g); });
   Object.entries(endGroups).forEach(([k, g]) => { if (f === k) g.addTo(map); else map.removeLayer(g); });
-  showFineArrows();
+  drawArrows();
   document.querySelectorAll("[data-mapleg]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.mapleg === f));
   if (fit) {
     const bnd = L.latLngBounds([]);
@@ -1117,20 +1138,6 @@ function initMap() {
         labels.forEach((x) => L.marker(x.ll, { keyboard: false, interactive: false, icon: L.divIcon({ className: "", iconSize: null, html: `<div class="milelbl">mi ${x.mi.join(" · ")}</div>` }) }).addTo(courseGroups.run));
       } else line.addTo(courseGroups[groupOf[k]]);
       courseBounds[groupOf[k]] = courseBounds[groupOf[k]] ? courseBounds[groupOf[k]].extend(line.getBounds()) : line.getBounds();
-      // Direction arrows, nudged to the right of travel so out-and-back roads show both directions side by side.
-      // A denser set appears when zoomed in, so the direction is readable on any stretch of road.
-      if (!ARROW_STEP[k]) return;
-      const end = Lg.m[Lg.m.length - 1];
-      fineGroups[groupOf[k]] ||= L.layerGroup();
-      for (const [step, grp] of [[ARROW_STEP[k], courseGroups[groupOf[k]]], [ARROW_FINE[k], fineGroups[groupOf[k]]]])
-      for (let mi = step / 2; mi < end; mi += step) {
-        const h = headingAt(k, mi); if (!h) continue;
-        const rad = h.deg * Math.PI / 180, ox = Math.cos(rad) * 9, oy = Math.sin(rad) * 9;
-        L.marker(h.ll, { icon: L.divIcon({ className: "", iconSize: [18, 18], iconAnchor: [9, 9],
-          html: `<svg class="arrow arrow-${k}" viewBox="0 0 18 18" width="18" height="18" style="transform:translate(${ox.toFixed(1)}px,${oy.toFixed(1)}px) rotate(${h.deg.toFixed(0)}deg)"><path d="M9 2 L15 14 L9 11 L3 14 Z"/></svg>` }),
-          keyboard: false, title: `${LEGS[legIdx(k)].name} mile ${mi.toFixed(1)}, heading this way` })
-          .bindPopup(`<b>${LEGS[legIdx(k)].name} mile ${mi.toFixed(1)}</b><br>Arrow shows direction of travel`).addTo(grp);
-      }
     });
     const seen = new Set();
     COURSE.points.forEach(([name, label, leg, mile, lat, lng]) => {
@@ -1162,7 +1169,7 @@ function initMap() {
     endMark(last("run"), "fin", "Race finish", "run");
     endMark(first("swim"), "go", "Race start", "all");
     endMark(last("run"), "fin", "Race finish", "all");
-    map.on("zoomend", showFineArrows);
+    map.on("zoomend", drawArrows);
     applyMapFilter(false);
   }
   bLayer = L.layerGroup().addTo(map);
