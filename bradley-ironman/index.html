@@ -203,7 +203,10 @@ td.num, th.num { text-align: right; }
 .dark-tiles .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.95) contrast(.9); }
 .pin { width: 28px; height: 28px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--ink); border: 2px solid var(--surface); display: grid; place-items: center; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
 .pin span { transform: rotate(45deg); color: var(--bg); font: 800 14px/1 var(--display); }
-.medot { width: 16px; height: 16px; border-radius: 50%; background: var(--me); border: 3px solid #fff; box-shadow: 0 0 0 6px color-mix(in srgb, var(--me) 25%, transparent); }
+/* "You are here": the familiar blue dot from phone maps, with a soft pulse and a circle for GPS accuracy. */
+.medot { width: 18px; height: 18px; border-radius: 50%; background: #1a73e8; border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.4); animation: mepulse 2s ease-out infinite; }
+@keyframes mepulse { 0% { box-shadow: 0 1px 4px rgba(0,0,0,.4), 0 0 0 0 rgba(26,115,232,.5); } 100% { box-shadow: 0 1px 4px rgba(0,0,0,.4), 0 0 0 14px rgba(26,115,232,0); } }
+.meacc { fill: #1a73e8; fill-opacity: .12; stroke: #1a73e8; stroke-opacity: .35; stroke-width: 1; }
 
 .empty { border: 1.5px dashed var(--line); border-radius: 10px; padding: 16px; color: var(--muted); }
 .banner { background: var(--ink); color: var(--bg); border-radius: 10px; padding: 12px 14px; display: grid; gap: 8px; }
@@ -994,7 +997,7 @@ function renderPlanProj(M) {
 /* ---------- map ---------- */
 // IRONMAN-style "M-dot" badge for the app's estimate.
 const IM_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="5" r="2.6" fill="#fff"/><path d="M3.5 21V9.5h3.6l4.9 6.2 4.9-6.2h3.6V21h-3.6v-6.3L12 19.8l-4.9-5.1V21z" fill="#fff"/></svg>';
-let map = null, spotLayer = null, bLayer = null, meMarker = null, pickFor = null;
+let map = null, spotLayer = null, bLayer = null, meMarker = null, meAcc = null, pickFor = null;
 const courseGroups = {}, courseBounds = {}, spotMarkers = {}, endGroups = {}, arrowGroups = {};
 let mapActive = false, mapFull = false;
 // Full screen is a fixed overlay rather than the Fullscreen API, which iPhone Safari doesn't support for pages.
@@ -1243,8 +1246,10 @@ function renderMap() {
       .addTo(bLayer).bindPopup(`<b>Bradley, estimated</b><br>${LEGS[cur.pos.i].dist ? posLabel(cur.pos.leg, cur.pos.mile) : "In " + LEGS[cur.pos.i].name}`);
   }
   if (ME) {
-    if (!meMarker) meMarker = L.marker([ME.lat, ME.lng], { icon: L.divIcon({ className: "", html: '<div class="medot"></div>', iconSize: [16, 16], iconAnchor: [8, 8] }), interactive: false }).addTo(map);
-    else meMarker.setLatLng([ME.lat, ME.lng]);
+    if (!meMarker) {
+      meAcc = L.circle([ME.lat, ME.lng], { radius: ME.acc || 30, className: "meacc", interactive: false }).addTo(map);
+      meMarker = L.marker([ME.lat, ME.lng], { zIndexOffset: 1100, title: "You", icon: L.divIcon({ className: "", html: '<div class="medot"></div>', iconSize: [18, 18], iconAnchor: [9, 9] }) }).bindPopup("<b>You</b>").addTo(map);
+    } else { meMarker.setLatLng([ME.lat, ME.lng]); meAcc.setLatLng([ME.lat, ME.lng]).setRadius(Math.min(ME.acc || 30, 500)); }
   }
 }
 
@@ -1353,7 +1358,7 @@ function addObs(o) {
 }
 function locate(prompted, cb) {
   if (!("geolocation" in navigator)) { toast("Location isn't available in this browser"); return; }
-  const ok = (p) => { ME = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy, t: Date.now() }; renderAll(); if (cb) { cb(); cb = null; } };
+  const ok = (p) => { ME = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy, t: Date.now() }; if (!S.locOK) { S.locOK = true; save(); } renderAll(); if (cb) { cb(); cb = null; } };
   const err = (e) => { if (prompted) toast(e.code === 1 ? "Location blocked. Allow it in your browser settings." : "Couldn't get your location"); };
   if (watchId == null) watchId = navigator.geolocation.watchPosition(ok, err, { enableHighAccuracy: true, maximumAge: 15000, timeout: 20000 });
   else navigator.geolocation.getCurrentPosition(ok, err, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
@@ -1724,7 +1729,9 @@ setInterval(() => { if (!document.hidden) checkVersion(); }, 3 * 60000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) checkVersion(); });
 checkVersion();
 setTimeout(refreshField, 5000);
-try { navigator.permissions?.query({ name: "geolocation" }).then((p) => { if (p.state === "granted") locate(false); }).catch(() => {}); } catch (e) {}
+// Show the blue dot without a tap once location has been allowed here before (iPhone Safari can't report the permission).
+if (S.locOK) locate(false);
+else try { navigator.permissions?.query({ name: "geolocation" }).then((p) => { if (p.state === "granted") locate(false); }).catch(() => {}); } catch (e) {}
 </script>
 </body>
 </html>
