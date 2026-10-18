@@ -61,6 +61,8 @@ button { cursor: pointer; }
 header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--bg); border-bottom: 1px solid var(--line); }
 header.top .wrap { display: flex; align-items: center; gap: 12px; padding-block: 10px; }
 .avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; flex: none; border: 2px solid var(--ink); background: var(--wash); }
+.avatarbtn { border: 0; padding: 0; background: none; border-radius: 50%; flex: none; }
+.photo { display: block; width: 100%; height: auto; max-height: 72vh; object-fit: contain; border-radius: 10px; background: var(--wash); }
 .who { flex: 1; min-width: 0; }
 .who h1 { margin: 0; font: 800 28px/1 var(--display); letter-spacing: .01em; text-transform: uppercase; }
 .who p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
@@ -196,7 +198,7 @@ td.num, th.num { text-align: right; }
 <body>
 <header class="top">
   <div class="wrap">
-    <img class="avatar" src="bradley.jpg" alt="Bradley" width="52" height="52">
+    <button class="avatarbtn" id="showPhoto" type="button" aria-label="Show full photo of Bradley"><img class="avatar" src="bradley.jpg" alt="Bradley" width="52" height="52"></button>
     <div class="who">
       <h1>Bradley</h1>
       <p><span id="nowclock"></span> · <span id="livepill" class="livepill"><i></i><span>Connecting to live timing</span></span></p>
@@ -1164,6 +1166,17 @@ document.addEventListener("click", (e) => {
   }
   const dr = t.closest("[data-directions]");
   if (dr) { e.preventDefault(); const sp = S.spots.find((s) => s.id === dr.dataset.directions); if (sp) openDirections(sp); return; }
+  if (t.closest("#showPhoto")) {
+    const sheet = $("#sheet");
+    sheet.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-label="Bradley">
+      <div class="row" style="justify-content:space-between"><h2>Spot Bradley</h2><button class="x" data-close aria-label="Close">×</button></div>
+      <img class="photo" src="bradley-full.jpg" alt="Bradley in his race kit">
+      <p class="small muted" style="margin:0">Race kit: white-to-blue Zoot top, dark blue palm-print shorts, black socks, yellow-soled shoes. Bib 1999.</p>
+    </div>`;
+    sheet.hidden = false;
+    sheet.onclick = (ev) => { if (ev.target === sheet || ev.target.closest("[data-close]")) sheet.hidden = true; };
+    return;
+  }
   if (t.closest("#mapLock")) { setMapActive(false); return; }
   if (t.closest("#mapFull")) { setMapFull(true); return; }
   if (t.closest("#mapExit")) { setMapFull(false); return; }
