@@ -228,7 +228,6 @@ td.num, th.num { text-align: right; }
     </div>
     <div class="seg" role="group" aria-label="Which estimate"><button type="button" data-est="ours" aria-pressed="false">Ours</button><button type="button" data-est="app" aria-pressed="false">IRONMAN</button><button type="button" data-est="both" aria-pressed="true">Both</button></div>
     <p class="small" id="estNote" hidden>The IRONMAN estimate shows up after his first timed split past the start (swim exit). The timing feed doesn't send one before that.</p>
-    <p class="small muted" id="mapHint">Tap the course to add a spot. It works out every time he passes there.</p>
     <div class="mapwrap">
       <div id="map"></div>
       <div class="maphint" id="mapTapHint">Tap the map to move or zoom it</div>
@@ -940,7 +939,6 @@ function renderPlanProj(M) {
 
 /* ---------- map ---------- */
 let map = null, spotLayer = null, bLayer = null, meMarker = null, pickFor = null;
-const MAP_HINT = "Tap the course to add a spot. It works out every time he passes there.";
 const courseGroups = {}, courseBounds = {}, spotMarkers = {};
 let mapActive = false, mapFull = false;
 // Full screen is a fixed overlay rather than the Fullscreen API, which iPhone Safari doesn't support for pages.
@@ -1031,17 +1029,14 @@ function initMap() {
   spotLayer = L.layerGroup().addTo(map);
   map.on("click", (e) => {
     if (!mapActive && !pickFor) { setMapActive(true); return; }
+    // Taps only set a spot's location when "Pick on map" was chosen in the spot editor.
+    if (!pickFor) return;
     const lat = +e.latlng.lat.toFixed(5), lng = +e.latlng.lng.toFixed(5);
     const found = snapPasses(lat, lng);
-    if (pickFor) {
-      const draft = pickFor; pickFor = null; $("#mapHint").textContent = MAP_HINT;
-      draft.lat = lat; draft.lng = lng;
-      if (found.length) draft.passes = found;
-      openSpot(draft, found.length ? `Found ${found.length} pass${found.length > 1 ? "es" : ""} on the course here.` : "");
-      return;
-    }
-    openSpot({ id: null, name: "", lat, lng, passes: found.length ? found : [{ leg: "run", mile: "" }] },
-      found.length ? `He passes here ${found.length} time${found.length > 1 ? "s" : ""}.` : "This spot isn't on the course. Enter the mile he'd be at, or tap closer to a course line.");
+    const draft = pickFor; pickFor = null; toast("Spot location set");
+    draft.lat = lat; draft.lng = lng;
+    if (found.length) draft.passes = found;
+    openSpot(draft, found.length ? `Found ${found.length} pass${found.length > 1 ? "es" : ""} on the course here.` : "");
   });
   renderMap();
 }
@@ -1145,7 +1140,7 @@ function openSpot(spot, note = "") {
         draw();
       });
     }
-    else if (t.closest("[data-pick]")) { pull(); pickFor = draft; sheet.hidden = true; go("map"); $("#mapHint").textContent = "Tap the course where this spot is."; }
+    else if (t.closest("[data-pick]")) { pull(); pickFor = draft; sheet.hidden = true; go("map"); toast("Tap the course where this spot is"); }
     else if (t.closest("[data-savespot]")) {
       pull();
       const passes = draft.passes.map((p) => ({ leg: p.leg, mile: parseFloat(p.mile) })).filter((p) => p.mile >= 0 && p.mile <= LEGS[legIdx(p.leg)].dist);
