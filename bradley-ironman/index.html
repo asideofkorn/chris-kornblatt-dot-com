@@ -1571,7 +1571,10 @@ const MAX_MPH = { swim: 6, bike: 40, run: 12 };
 // Fastest possible time between two course positions (cumulative miles), leg by leg.
 function minHours(c0, c) {
   const part = (a, b) => Math.max(0, Math.min(c, b) - Math.max(c0, a));
-  return part(0, 2.4) / MAX_MPH.swim + part(2.76, 114.8) / MAX_MPH.bike + part(114.96, 141.04) / MAX_MPH.run;
+  // Limits come from his own fast targets with headroom (a stray read can otherwise pass a generic human limit):
+  // run 20% faster than his fast pace, bike 40% faster than his fast speed.
+  const p = S.plan || {}, runMph = 60 / ((paceMin(p.run?.f) || 8.75) * 0.8), bikeMph = (+p.bike?.f || 19.5) * 1.4;
+  return part(0, 2.4) / MAX_MPH.swim + part(2.76, 114.8) / Math.min(MAX_MPH.bike, bikeMph) + part(114.96, 141.04) / Math.min(MAX_MPH.run, runMph);
 }
 function plausible(leg, mile, t, list = S.obs) {
   const c = toCum(leg, mile);

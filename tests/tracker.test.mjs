@@ -40,6 +40,18 @@ test("ignores a stray chip read that would need an impossible pace", async () =>
   await ctx.close();
 });
 
+test("ignores a stray read that a generic human limit would allow", async () => {
+  // At 4:12 pm the page jumped ~2 miles ahead of the IRONMAN app: a mile 11.4 read 44 minutes after mile 4.1
+  // is 10 mph, possible for an elite but not for him (his fast target is 8:45/mi).
+  const strayT = crossing("RUN3").t + 44 * 60;
+  const { page, ctx, errors } = await openAt(browser, { now: new Date((strayT + 300) * 1000), extra: [{ point: "RUN6", epochTime: String(strayT) }] });
+  const s = await readState(page);
+  assert.deepEqual(errors, []);
+  assert.ok(!s.mats.includes("RUN6"), "stray RUN6 read was accepted");
+  assert.ok(s.pos.mile < 10.5, `run mile ${s.pos.mile.toFixed(1)} is too far`);
+  await ctx.close();
+});
+
 test("drops a stray read already saved on a phone", async () => {
   const T = (p) => crossing(p).t * 1000;
   const saved = {
