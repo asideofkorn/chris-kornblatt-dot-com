@@ -1568,6 +1568,11 @@ let latestRow = null;
 // A crossing that would need a superhuman pace from his previous one (or puts him backwards) is a stray chip read,
 // e.g. a mat he ran near but not over. Mat lists can include these; his own feed filters them.
 const MAX_MPH = { swim: 6, bike: 40, run: 12 };
+// Fastest possible time between two course positions (cumulative miles), leg by leg.
+function minHours(c0, c) {
+  const part = (a, b) => Math.max(0, Math.min(c, b) - Math.max(c0, a));
+  return part(0, 2.4) / MAX_MPH.swim + part(2.76, 114.8) / MAX_MPH.bike + part(114.96, 141.04) / MAX_MPH.run;
+}
 function plausible(leg, mile, t, list = S.obs) {
   const c = toCum(leg, mile);
   const autos = list.filter((o) => o.src === "auto" && o.leg !== "start");
@@ -1576,10 +1581,7 @@ function plausible(leg, mile, t, list = S.obs) {
   if (prev) {
     const c0 = toCum(prev.leg, prev.mile), h = (t - prev.t) / 3.6e6;
     if (c - c0 < -0.05) return false;
-    // Fastest possible time between the two, leg by leg (a gap can span the bike and the run).
-    const part = (a, b) => Math.max(0, Math.min(c, b) - Math.max(c0, a));
-    const minH = part(0, 2.4) / MAX_MPH.swim + part(2.76, 114.8) / MAX_MPH.bike + part(114.96, 141.04) / MAX_MPH.run;
-    if (c - c0 > 0.3 && h < minH) return false;
+    if (c - c0 > 0.3 && h < minHours(c0, c)) return false;
   }
   if (next && toCum(next.leg, next.mile) < c - 0.05) return false;
   return true;
@@ -1690,9 +1692,12 @@ async function refreshField() {
     for (const name of FIELD_ORDER.slice(idx + 1, idx + 4)) {
       await sleep(400);
       const byPid = new Map((await fetchField(name)).map((r) => [r.pid, r.net]));
-      const deltas = peers.filter((p) => byPid.has(p.pid)).map((p) => byPid.get(p.pid) - p.net).filter((d) => d > 0);
-      if (deltas.length < 8) break;
       const [leg, mile] = POINTS[name];
+      // Mat lists include stray reads (a chip picked up from a nearby stretch of course), so drop impossible times,
+      // and only use a mat most of his peers have reached: the early arrivals alone are the fast ones.
+      const minSec = minHours(toCum(P.leg, P.mile), toCum(leg, mile)) * 3600;
+      const deltas = peers.filter((p) => byPid.has(p.pid)).map((p) => byPid.get(p.pid) - p.net).filter((d) => d > minSec);
+      if (deltas.length < 8 || deltas.length < peers.length * 0.6) break;
       qs.push({ point: name, leg, mile, n: deltas.length, p10: P.t + quantile(deltas, 0.1) * 1000, p50: P.t + quantile(deltas, 0.5) * 1000, p90: P.t + quantile(deltas, 0.9) * 1000 });
     }
     // Place by net time among everyone through this mat so far (later starters can still slot in ahead).

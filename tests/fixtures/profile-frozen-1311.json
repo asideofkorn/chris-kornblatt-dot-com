@@ -1,0 +1,181 @@
+{
+ "note": "Bradley's own split feed as it stood all afternoon: frozen at bike mile 84 (1:11 pm). Trimmed to timing fields.",
+ "list": [
+  {
+   "point": "START",
+   "label": "Race Start",
+   "epochTime": "1792334845.521",
+   "pid": "RL78MBN2"
+  },
+  {
+   "point": "SWIM",
+   "label": "Swim",
+   "epochTime": "1792338246.495",
+   "netTime": "00:56:40.974",
+   "etfp": "FINISH~11:03:54~6:51 pm",
+   "pid": "RL78MBN2"
+  },
+  {
+   "point": "T1",
+   "label": "Bike Start",
+   "epochTime": "1792338783.567",
+   "netTime": "01:05:38.046",
+   "etnp": "BIKE1~01:27:42~9:15 am",
+   "etfp": "FINISH~11:03:54~6:51 pm",
+   "pid": "RL78MBN2"
+  },
+  {
+   "point": "BIKE0",
+   "label": "Bike 100m",
+   "epochTime": "1792338806.88",
+   "netTime": "01:06:01.359",
+   "etnp": "BIKE1~01:27:42~9:15 am",
+   "etfp": "FINISH~11:03:54~6:51 pm",
+   "pid": "RL78MBN2"
+  },
+  {
+   "point": "BIKE1",
+   "label": "Bike 7.6mi | 12.3km",
+   "epochTime": "1792340107.00",
+   "netTime": "01:27:41.479",
+   "etnp": "BIKE2~01:50:19~9:37 am",
+   "etfp": "FINISH~11:03:54~6:51 pm",
+   "pid": "RL78MBN2"
+  },
+  {
+   "point": "BIKE2",
+   "label": "Bike 14.9mi | 24.1km",
+   "epochTime": "1792341464.00",
+   "netTime": "01:50:18.479",
+   "etnp": "BIKE3~02:03:33~9:50 am",
+   "etfp": "FINISH~11:03:54~6:51 pm",
+   "pid": "RL78MBN2"
+  },
+  {
+   "point": "BIKE3",
+   "label": "Bike 19.9mi | 32.1km",
+   "epochTime": "1792342258.00",
+   "netTime": "02:03:32.479",
+   "etnp": "BIKE4~02:22:20~10:09 am",
+   "etfp": "FINISH~11:03:54~6:51 pm",
+   "pid": "RL78MBN2"
+  },
+  {
+   "point": "BIKE4",
+   "label": "Bike 25.6mi | 41.1km",
+   "epochTime": "1792343385.00",
+   "netTime": "02:22:19.479",
+   "etnp": "BIKE5~02:29:42~10:17 am",
+   "etfp": "FINISH~11:03:54~6:51 pm",
+   "pid": "RL78MBN2"
+  },
+  {
+   "point": "BIKE5",
+   "label": "Bike 28.1mi | 45.1km",
+   "epochTime": "1792343827.501",
+   "netTime": "02:29:41.98",
+   "etnp": "BIKE6~02:38:20~10:25 am",
+   "etfp": "FINISH~11:03:54~6:51 pm",
+   "pid": "RL78MBN2"
+  },
+  {
+   "point": "BIKE6",
+   "label": "Bike 30.5mi | 49.1km",
+   "epochTime": "1792344345.00",
+   "netTime": "02:38:19.479",
+   "etnp": "BIKE7~02:55:15~10:42 am",
+   "etfp": "FINISH~11:03:54~6:51 pm",
+   "pid": "RL78MBN2"
+  },
+  {
+   "point": "BIKE7",
+   "label": "Bike 36.1mi | 58.1km",
+   "epochTime": "1792345360.00",
+   "netTime": "02:55:14.479",
+   "etnp": "BIKE8~03:08:03~10:55 am",
+   "etfp": "FINISH~11:03:54~6:51 pm",
+   "pid": "RL78MBN2"
+  },
+  {
+   "point": "BIKE8",
+   "label": "Bike 41.1mi | 66.1km",
+   "epochTime": "1792346128.00",
+   "netTime": "03:08:02.479",
+   "etnp": "BIKE9~03:30:35~11:18 am",
+   "etfp": "FINISH~11:03:54~6:51 pm",
+   "pid": "RL78MBN2"
+  },
+  {
+   "point": "BIKE9",
+   "label": "Bike 48.4mi | 77.9km",
+   "epochTime": "1792347480.00",
+   "netTime": "03:30:34.479",
+   "etnp": "BIKE10~03:50:24~11:37 am",
+   "etfp": "FINISH~11:03:54~6:51 pm",
+   "pid": "RL78MBN2"
+  },
+  {
+   "point": "BIKE10",
+   "label": "Bike 56mi | 90.2km",
+   "epochTime": "1792348669.46",
+   "netTime": "03:50:23.939",
+   "etnp": "BIKE12~04:15:10~12:02 pm",
+   "etfp": "FINISH~11:03:54~6:51 pm",
+   "pid": "RL78MBN2"
+  },
+  {
+   "point": "BIKE11",
+   "label": "Bike 56mi | 90.2km",
+   "epochTime": "1792348692.00",
+   "netTime": "03:50:46.479",
+   "etnp": "BIKE12~04:15:10~12:02 pm",
+   "etfp": "FINISH~11:03:54~6:51 pm",
+   "pid": "RL78MBN2"
+  },
+  {
+   "point": "BIKE12",
+   "label": "Bike 63.6mi | 102km",
+   "epochTime": "1792350155.00",
+   "netTime": "04:15:09.479",
+   "etnp": "BIKE13~04:41:22~12:28 pm",
+   "etfp": "FINISH~11:03:54~6:51 pm",
+   "pid": "RL78MBN2"
+  },
+  {
+   "point": "BIKE13",
+   "label": "Bike 71mi | 114.3km",
+   "epochTime": "1792351727.00",
+   "netTime": "04:41:21.479",
+   "etnp": "BIKE14~04:55:15~12:42 pm",
+   "etfp": "FINISH~11:03:54~6:51 pm",
+   "pid": "RL78MBN2"
+  },
+  {
+   "point": "BIKE14",
+   "label": "Bike 75.9mi | 122km",
+   "epochTime": "1792352560.00",
+   "netTime": "04:55:14.479",
+   "etnp": "BIKE15~05:15:59~1:03 pm",
+   "etfp": "FINISH~11:03:54~6:51 pm",
+   "pid": "RL78MBN2"
+  },
+  {
+   "point": "BIKE15",
+   "label": "Bike 81.6mi | 131km",
+   "epochTime": "1792353804.00",
+   "netTime": "05:15:58.479",
+   "etnp": "BIKE16~05:24:02~1:11 pm",
+   "etfp": "FINISH~11:03:54~6:51 pm",
+   "pid": "RL78MBN2"
+  },
+  {
+   "point": "BIKE16",
+   "label": "Bike 84.1mi | 135km",
+   "epochTime": "1792354287.00",
+   "netTime": "05:24:01.479",
+   "etnp": "BIKE17~05:33:27~1:20 pm",
+   "etfp": "FINISH~11:03:54~6:51 pm",
+   "pid": "RL78MBN2"
+  }
+ ]
+}
