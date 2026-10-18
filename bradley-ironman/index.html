@@ -98,6 +98,8 @@ h3 { margin: 0; font: 700 18px/1.1 var(--display); text-transform: uppercase; le
 .kv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .kv div { min-width: 0; }
 .kv b { display: block; font: 700 24px/1.1 var(--display); }
+.kv b .unit { font-size: 14px; font-weight: 600; }
+.kv2 { padding-top: 10px; border-top: 1px solid var(--line); }
 
 /* Ribbon */
 .ribbon svg { display: block; width: 100%; height: 44px; }
@@ -703,9 +705,9 @@ function passCard(item, now, compact) {
 // His speed between his last two official mats on the current leg, plus his average for the leg so far.
 function lastSpeed(M) {
   const o = M.obs.filter((x) => x.src === "auto" && x.leg !== "start").sort((p, q) => p.t - q.t);
-  const b = o[o.length - 1]; if (!b || !LEGS[legIdx(b.leg)].dist) return "";
+  const b = o[o.length - 1]; if (!b || !LEGS[legIdx(b.leg)].dist) return null;
   const same = o.filter((x) => x.leg === b.leg && x.mile < b.mile - 0.2);
-  const a = same[same.length - 1]; if (!a) return "";
+  const a = same[same.length - 1]; if (!a) return null;
   const first = same[0];
   const fmt = (mi, sec) => {
     if (b.leg === "bike") return `${(mi / (sec / 3600)).toFixed(1)} mph`;
@@ -714,7 +716,7 @@ function lastSpeed(M) {
   };
   const seg = fmt(b.mile - a.mile, (b.t - a.t) / 1000);
   const avg = first !== a ? fmt(b.mile - first.mile, (b.t - first.t) / 1000) : "";
-  return `<div class="small"><b>Last stretch: ${seg}</b> <span class="muted">(${posLabel(a.leg, a.mile)} → ${b.mile.toFixed(1)}, official)</span>${avg ? ` · ${LEGS[legIdx(b.leg)].name.toLowerCase()} average <b>${avg}</b>` : ""}</div>`;
+  return { seg, avg, leg: LEGS[legIdx(b.leg)].name.toLowerCase() };
 }
 
 function renderNow(M, now) {
@@ -741,7 +743,7 @@ function renderNow(M, now) {
       <div class="range">${range}</div>`;
   }
   const a = M.anchor;
-  const speedHtml = lastSpeed(M);
+  const sp = lastSpeed(M);
   const basis = a ? `Based on <b>${posLabel(a.leg, a.mile)}</b> at ${clockHtml(a.t)} (${dur((now - a.t) / 1000)} ago)${M.obs.length > 1 ? ` and ${M.obs.length - 1} earlier point${M.obs.length > 2 ? "s" : ""}` : ""}.` : "Based on the pace plan only. Log a split or sighting to sharpen this.";
   const fin = M.predict(M.UT);
   const planFin = M.actualStart + M.UT * 1000;
@@ -755,10 +757,14 @@ function renderNow(M, now) {
     </div>` : "";
   const pl = S.field && S.field.place;
   const ord = (n) => n + (["th", "st", "nd", "rd"][(n % 100 - 20) % 10] || ["th", "st", "nd", "rd"][n % 100] || "th");
-  const placeHtml = pl ? `<div class="small"><b>Place at ${POINTS[pl.point] ? posLabel(POINTS[pl.point][0], POINTS[pl.point][1]) : esc(pl.point)}:</b> ${ord(pl.place)} of ${pl.total.toLocaleString()} through so far${pl.div ? ` · ${esc(pl.div)}: ${ord(pl.divPlace)} of ${pl.divTotal}` : ""}</div>` : "";
   const ap = appPosition(now);
-  const appEst = (ap ? `<div class="small muted">IRONMAN app puts him at <b>${ap.leg === "t1" || ap.leg === "t2" ? "the transition" : posLabel(ap.leg, ap.mile)}</b>, next mat ${esc(posLabel(POINTS[S.appEst.to][0], POINTS[S.appEst.to][1]))} at ${clockTxt(S.appEst.toT)}${S.appEst.approx ? ` <span class="muted">(approximation: median of the ${S.appEst.n} athletes through that mat so far)</span>` : ""}.</div>` : "")
-    + (LIVE.etfp ? `<div class="small muted">IRONMAN app's own finish estimate: ${esc(LIVE.etfp)}</div>` : "");
+  // Second row of quick stats: speed, place, last official mat. The IRONMAN app's view goes on one line under it.
+  const cells = [];
+  if (sp) cells.push(`<div><span class="label">Speed</span><b>${sp.seg.replace(/ mph$/, "")}<span class="unit">${/mph$/.test(sp.seg) ? " mph" : ""}</span></b><span class="small muted">last stretch${sp.avg ? ` · ${sp.leg} avg ${sp.avg.replace(/ mph$/, "")}` : ""}</span></div>`);
+  if (pl && pl.total) cells.push(`<div><span class="label">Place</span><b>${ord(pl.place)}</b><span class="small muted">of ${pl.total.toLocaleString()} so far${pl.div ? ` · ${esc(pl.div)} ${ord(pl.divPlace)}` : ""}</span></div>`);
+  if (a) cells.push(`<div><span class="label">Last mat</span><b>${a.leg === "start" ? "Start" : posLabel(a.leg, a.mile).replace(/^(Bike|Run|Swim) mi /, "Mi ")}</b><span class="small muted">${clockTxt(a.t)} · ${dur((now - a.t) / 1000)} ago</span></div>`);
+  const stats2 = cells.length ? `<div class="kv kv2">${cells.join("")}</div>` : `<div class="small muted">${basis}</div>`;
+  const appLine = ap || LIVE.etfp ? `<div class="small muted">IRONMAN app: ${ap ? `${ap.leg === "t1" || ap.leg === "t2" ? "in transition" : posLabel(ap.leg, ap.mile).replace(/^(Bike|Run|Swim) /, "")} now` : ""}${ap && LIVE.etfp ? " · " : ""}${LIVE.etfp ? `finish ~${esc(LIVE.etfp)}` : ""}${S.appEst && S.appEst.approx ? " (our approximation)" : ""}</div>` : "";
   const el = $("#tab-now");
   el.innerHTML = `
     <div class="status">${hero}${ribbon(M, cur.pre ? null : cur)}
@@ -767,7 +773,7 @@ function renderNow(M, now) {
         <div><span class="label">Finish time</span><b>${fin.past ? "" : '<span class="approx">~</span>'}${hms((fin.x - M.actualStart) / 1000).slice(0, -3)}</b><span class="small muted">${fin.past ? "official" : "projected"} h:mm</span></div>
         <div><span class="label">Vs plan</span><b style="font-size:19px">${deltaTxt}</b></div>
       </div>
-      ${speedHtml}<div class="small muted">${basis}</div>${placeHtml}${appEst}
+      ${stats2}${appLine}
     </div>${fieldHtml}
     ${spotsHtml(M, now)}`;
 }
