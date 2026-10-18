@@ -1,0 +1,35 @@
+name: Race recorder
+
+# Saves Bradley's IRONMAN California 2026 splits every 2 minutes to the race-data branch,
+# independent of any phone. Each run records for ~14 minutes; the schedule chains runs together.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: race-recorder
+  cancel-in-progress: false
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out race-data branch
+        uses: actions/checkout@v4
+        with:
+          ref: race-data
+      - name: Get recorder script from main
+        run: git fetch -q --depth 1 origin main && git show origin/main:.github/scripts/race-recorder.mjs > /tmp/race-recorder.mjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Record
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          node /tmp/race-recorder.mjs
