@@ -1506,7 +1506,8 @@ function appPosition(now) {
   const A = S.appEst; if (!A || !POINTS[A.from] || !POINTS[A.to] || !(A.toT > A.fromT)) return null;
   const c0 = toCum(...POINTS[A.from]), c1 = toCum(...POINTS[A.to]);
   if (c1 <= c0) return null;
-  return fromCum(Math.min(141.04, c0 + (c1 - c0) * Math.max(0, now - A.fromT) / (A.toT - A.fromT)));
+  // Stop at the next mat: past it, the estimate is stale until his next time comes in.
+  return fromCum(Math.min(141.04, c0 + (c1 - c0) * Math.min(1, Math.max(0, now - A.fromT) / (A.toT - A.fromT))));
 }
 function syncEstButtons() {
   const v = S.estShow || "both";
@@ -1582,6 +1583,9 @@ function takeSplits(rows) {
   if (lr && nx && POINTS[nx[0]] && parseNet(nx[1]) != null && parseNet(lr.netTime) != null) {
     const fromT = parseFloat(lr.epochTime) * 1000;
     S.appEst = { from: lr.point, fromT, to: nx[0], toT: fromT + (parseNet(nx[1]) - parseNet(lr.netTime)) * 1000, label: nx[2] || "" };
+  } else if (lr && !nx && (!S.appEst || S.appEst.from !== lr.point)) {
+    // Mat lists don't carry IRONMAN's estimate, so from a mat seen only there, approximate it from the field.
+    approxAppEst(lr);
   }
   if (fresh.length) save();
   return fresh;
@@ -1620,7 +1624,7 @@ async function fetchField(point) {
     const list = j.list || [];
     list.forEach((r) => { const net = parseNet(r.netTime), t = parseFloat(r.epochTime) * 1000; if (net != null && t > 0) rows.push({ pid: r.pid || r.bib, net, t, div: r.division || r.agegroup || r.category || r.race || "" }); });
     const mine = list.filter((r) => r.pid === RT.pid);
-    if (mine.length) { const fresh = takeSplits(mine); if (fresh.length) { renderAll(); toast("Official time: " + posLabel(fresh[0].leg, fresh[0].mile) + " at " + clockTxt(fresh[0].t)); } }
+    if (mine.length) { const fresh = takeSplits(mine); if (fresh.length) { caughtUp = true; renderAll(); toast("Official time: " + posLabel(fresh[0].leg, fresh[0].mile) + " at " + clockTxt(fresh[0].t)); } }
     if (list.length < 1000) break;
     await sleep(400);
   }
@@ -1645,9 +1649,12 @@ async function approxAppEst(lr) {
     save(); renderAll();
   } catch (e) {}
 }
-let fieldBusy = false;
+// When a field pull turns up a newer crossing of his, pull again from that mat straight away, so after the page has
+// been asleep it catches up mat by mat in seconds rather than one step every 4 minutes.
+let fieldBusy = false, caughtUp = false, catchUps = 0;
 async function refreshField() {
   if (fieldBusy) return;
+  caughtUp = false;
   const autos = S.obs.filter((o) => o.src === "auto" && o.point && o.point !== "START" && o.net != null).sort((a, b) => b.t - a.t);
   const P = autos[0]; if (!P) return;
   const same = (n) => POINTS[n] && POINTS[n][0] === P.leg && POINTS[n][1] === P.mile;
@@ -1677,7 +1684,10 @@ async function refreshField() {
     save(); renderAll();
   } catch (e) {
     // Field data is a bonus; the page keeps working from Bradley's own splits.
-  } finally { fieldBusy = false; }
+  } finally {
+    fieldBusy = false;
+    if (caughtUp && catchUps < 12) { catchUps++; setTimeout(refreshField, 800); } else catchUps = 0;
+  }
 }
 
 /* ---------- main loop ---------- */
@@ -1716,7 +1726,9 @@ pollBradley();
 loadStarted(); setInterval(loadStarted, 30 * 60000);
 setInterval(() => { if (!document.hidden) pollBradley(); }, 75000);
 setInterval(() => { if (!document.hidden) refreshField(); }, 4 * 60000);
-document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - LIVE.at > 30000) pollBradley(); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - LIVE.at > 30000) { pollBradley(); refreshField(); } });
+// His own feed can lag the mats, so check the mats ahead of him on load too.
+setTimeout(refreshField, 3000);
 
 // New-version banner: the deploy stamps BUILD with a hash of this page's code and writes version.json alongside.
 const BUILD = "__BUILD__";
