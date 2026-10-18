@@ -6,10 +6,10 @@ import { dirname } from "node:path";
 
 const out = process.argv[2] || "weather.json";
 const DAY = "2026-10-18";
-const result = { fetchedAt: new Date().toISOString(), day: DAY, station: null, model: {} };
+const result = { fetchedAt: new Date().toISOString(), day: DAY, station: null, model: {}, river: null };
 
 async function json(url, headers = {}) {
-  const r = await fetch(url, { headers: { "User-Agent": "chriskornblatt.com race charts (chris.kornblatt@gmail.com)", Accept: "application/geo+json, application/json", ...headers } });
+  const r = await fetch(url, { headers: { "User-Agent": "chriskornblatt.com race charts (https://chriskornblatt.com/bradley-ironman/)", Accept: "application/geo+json, application/json", ...headers } });
   if (!r.ok) throw new Error(`${r.status} ${url}`);
   return r.json();
 }
@@ -36,6 +36,20 @@ for (const [name, [lat, lng]] of Object.entries(points)) {
   } catch (e) { console.log("Open-Meteo", name, e.message); }
 }
 
+// River flow during the swim (American River into the Sacramento): USGS gauges, 15-minute readings.
+// 00060 discharge in cubic feet per second, 00065 gauge height in feet, 72255 mean water velocity in ft/s.
+try {
+  const j = await json(`https://waterservices.usgs.gov/nwis/iv/?format=json&sites=11446500,11447500,11447650&parameterCd=00060,00065,72255&startDT=${DAY}T05:00-07:00&endDT=${DAY}T12:00-07:00`);
+  const sites = {};
+  for (const ts of j.value?.timeSeries || []) {
+    const id = ts.sourceInfo?.siteCode?.[0]?.value, code = ts.variable?.variableCode?.[0]?.value;
+    const s = (sites[id] ||= { id, name: ts.sourceInfo?.siteName, lat: ts.sourceInfo?.geoLocation?.geogLocation?.latitude, lng: ts.sourceInfo?.geoLocation?.geogLocation?.longitude });
+    s[{ "00060": "cfs", "00065": "stageFt", "72255": "velocityFtS" }[code] || code] = (ts.values?.[0]?.value || []).map((v) => ({ t: v.dateTime, v: parseFloat(v.value) })).filter((v) => v.v > -999);
+  }
+  result.river = Object.values(sites);
+} catch (e) { console.log("USGS:", e.message); }
+
 mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, JSON.stringify(result));
+for (const r of result.river || []) console.log(r.id, r.name, "cfs", r.cfs?.at(-1)?.v, "ft/s", r.velocityFtS?.at(-1)?.v);
 console.log(`${out}: station obs ${result.station?.obs.length ?? 0}, model ${Object.keys(result.model).join(", ") || "none"}`);
