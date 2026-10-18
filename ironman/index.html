@@ -255,11 +255,19 @@ const DEFAULTS = () => ({
 let S = load();
 let ME = null; // {lat,lng,acc,t}
 let watchId = null;
+let startArmed = false;
 
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) { const d = JSON.parse(raw); if (d && d.v === 1) return Object.assign(DEFAULTS(), d); }
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (d && d.v === 1) {
+        // Nothing real happens before 6am on race day; drop accidental early taps (e.g. a test "in the water" at 3am).
+        d.obs = (d.obs || []).filter((o) => o.t >= clockToMs("06:00"));
+        return Object.assign(DEFAULTS(), d);
+      }
+    }
   } catch (e) {}
   return DEFAULTS();
 }
@@ -494,7 +502,9 @@ function renderNow(M, now) {
     hero = `<div class="label">Not started</div>
       <div class="where">Starts in ${dur((clockToMs(st.x) - now) / 1000)}</div>
       <div class="range">Rolling swim start. He'll likely enter the water between <b>${clockHtml(clockToMs(st.f))}</b> and <b>${clockHtml(clockToMs(st.s))}</b>. Tap "He's in the water" when he starts.</div>
-      <div class="row"><button class="btn primary" id="startNow" type="button">He's in the water now</button></div>`;
+      ${now >= clockToMs(st.f) - 30 * 60000
+        ? `<div class="row"><button class="btn primary" id="startNow" type="button">${startArmed ? "Tap again to confirm" : "He's in the water now"}</button>${startArmed ? `<button class="btn ghost" id="startCancel" type="button">Cancel</button>` : ""}</div>`
+        : `<div class="small muted">The start button appears at ${clockTxt(clockToMs(st.f) - 30 * 60000)}.</div>`}`;
   } else if (cur.done) {
     hero = `<div class="label">Projected</div><div class="where">Finished</div><div class="range">Estimated finish ${clockHtml(M.predict(M.UT).x)}. Log his official finish on the Log tab.</div>`;
   } else {
@@ -811,7 +821,14 @@ function go(tab) {
 document.addEventListener("click", (e) => {
   const t = e.target;
   const g = t.closest("[data-go]"); if (g) { go(g.dataset.go); return; }
-  if (t.closest("#startNow")) { addObs({ leg: "start", mile: 0, t: Date.now(), src: "start" }); toast("Start logged at " + clockTxt(Date.now())); return; }
+  if (t.closest("#startCancel")) { startArmed = false; renderAll(); return; }
+  if (t.closest("#startNow")) {
+    if (!startArmed) { startArmed = true; renderAll(); return; }
+    startArmed = false;
+    addObs({ leg: "start", mile: 0, t: Date.now(), src: "start" });
+    toast("Start logged at " + clockTxt(Date.now()) + ". Remove it on the Log tab if that was a mistake.");
+    return;
+  }
   const md = t.closest("[data-mode]"); if (md) { S.mode = md.dataset.mode; save(); renderAll(); return; }
   if (t.closest("[data-locate]") || t.closest("#mapLocate")) {
     locate(true, () => { if (map && ME) map.setView([ME.lat, ME.lng], 15); });
