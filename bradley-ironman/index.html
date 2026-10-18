@@ -77,7 +77,7 @@ header.top .wrap { display: flex; align-items: center; gap: 12px; padding-block:
 
 /* Tabs */
 nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
-nav.tabs .row { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: repeat(6, 1fr); }
+nav.tabs .row { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); }
 nav.tabs button { background: none; border: 0; padding: 10px 0 12px; font: 700 15px/1 var(--display); letter-spacing: .03em; text-transform: uppercase; color: var(--muted); border-top: 3px solid transparent; }
 nav.tabs button[aria-selected="true"] { color: var(--ink); border-top-color: var(--ink); }
 
@@ -217,7 +217,6 @@ td.num, th.num { text-align: right; }
 <main class="wrap">
   <div id="importBanner" hidden></div>
   <section id="tab-now" data-tab="now"></section>
-  <section id="tab-spots" data-tab="spots" hidden></section>
   <section id="tab-map" data-tab="map" hidden>
     <div class="row" style="justify-content:space-between">
       <h2>Map</h2>
@@ -273,7 +272,6 @@ td.num, th.num { text-align: right; }
 <nav class="tabs" aria-label="Sections">
   <div class="row" role="tablist">
     <button role="tab" data-go="now" aria-selected="true">Now</button>
-    <button role="tab" data-go="spots" aria-selected="false">Spots</button>
     <button role="tab" data-go="map" aria-selected="false">Map</button>
     <button role="tab" data-go="log" aria-selected="false">Log</button>
     <button role="tab" data-go="plan" aria-selected="false">Plan</button>
@@ -704,8 +702,6 @@ function renderNow(M, now) {
   const planFin = M.actualStart + M.UT * 1000;
   const delta = (fin.x - planFin) / 1000;
   const deltaTxt = M.obs.length > 1 ? (Math.abs(delta) < 90 ? "On plan" : dur(Math.abs(delta)) + (delta > 0 ? " behind plan" : " ahead of plan")) : "Plan pace";
-  const items = allPasses(M, now).filter((it) => !it.info.passed).sort((p, q) => p.info.p.x - q.info.p.x);
-  const next = items.slice(0, 4);
   const F = S.field;
   const fieldHtml = F && F.qs && now - F.at < 20 * 60000 ? `<div class="panel">
       <h3>Next timing mats</h3>
@@ -728,25 +724,23 @@ function renderNow(M, now) {
       </div>
       <div class="small muted">${basis}</div>${placeHtml}${appEst}
     </div>${fieldHtml}
-    <div class="row" style="justify-content:space-between"><h2>Next places to see him</h2>${modeSeg()}</div>
-    ${ME ? "" : `<div class="row"><button class="btn" data-locate type="button">Use my location for travel times</button></div>`}
-    <div class="passes">${next.length ? next.map((it) => passCard(it, now, true)).join("") : `<div class="empty">No upcoming spots. Add one on the Spots or Map tab.</div>`}</div>
-    <div class="row"><button class="btn" data-go="log" type="button">Log a split from the app</button><button class="btn ghost" data-go="spots" type="button">All spots</button></div>`;
+    ${spotsHtml(M, now)}`;
 }
 
 function modeSeg() {
   return `<div class="seg" role="group" aria-label="How you're getting around">${Object.keys(SPEED).map((m) => `<button type="button" data-mode="${m}" aria-pressed="${S.mode === m}">${m === "ride" ? "Ride" : m === "run" ? "Jog" : "Walk"}</button>`).join("")}</div>`;
 }
 
-function renderSpots(M, now) {
+// Every saved spot, soonest pass first; passed ones drop to the bottom.
+function spotsHtml(M, now) {
   const items = allPasses(M, now);
   const upcoming = items.filter((i) => !i.info.passed).sort((p, q) => p.info.p.x - q.info.p.x);
   const past = items.filter((i) => i.info.passed).sort((p, q) => q.info.p.x - p.info.p.x);
-  $("#tab-spots").innerHTML = `
-    <div class="row" style="justify-content:space-between"><h2>Spots</h2><button class="btn primary slim" data-newspot type="button">Add spot</button></div>
+  return `
+    <div class="row" style="justify-content:space-between"><h2>Places to see him</h2><button class="btn primary slim" data-newspot type="button">Add spot</button></div>
     <div class="row">${modeSeg()}<button class="btn slim" data-locate type="button">${ME ? "Location on · ±" + Math.round(ME.acc) + " m" : "Use my location"}</button></div>
     <p class="small muted">Times show when he passes each spot, from the earliest to the latest likely time. Travel assumes streets add about 30% to the straight-line distance, plus a 3 minute buffer.</p>
-    <div class="passes">${upcoming.map((it) => passCard(it, now, false)).join("") || `<div class="empty">Nothing upcoming.</div>`}</div>
+    <div class="passes">${upcoming.map((it) => passCard(it, now, false)).join("") || `<div class="empty">No upcoming spots. Add one here or tap the course on the Map tab.</div>`}</div>
     ${past.length ? `<h3>Already passed</h3><div class="passes">${past.map((it) => passCard(it, now, "past")).join("")}</div>` : ""}`;
 }
 
@@ -1454,7 +1448,6 @@ function renderAll(skipPlanForm) {
   const M = buildModel(), now = Date.now();
   $("#nowclock").innerHTML = clockHtml(now);
   renderNow(M, now);
-  renderSpots(M, now);
   if (!document.activeElement || !$("#tab-log").contains(document.activeElement)) renderLog(M);
   renderPlanProj(M);
   renderMap();
