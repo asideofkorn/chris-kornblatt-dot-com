@@ -1565,11 +1565,31 @@ let polling = false;
 // His own splits, from the profile feed or from a mat's field list. The profile feed can lag the mats by half an
 // hour, so field pulls feed his crossings in too. The latest row also sets the IRONMAN app's dot and finish estimate.
 let latestRow = null;
+// A crossing that would need a superhuman pace from his previous one (or puts him backwards) is a stray chip read,
+// e.g. a mat he ran near but not over. Mat lists can include these; his own feed filters them.
+const MAX_MPH = { swim: 6, bike: 40, run: 12 };
+function plausible(leg, mile, t, list = S.obs) {
+  const c = toCum(leg, mile);
+  const autos = list.filter((o) => o.src === "auto" && o.leg !== "start");
+  const prev = autos.filter((o) => o.t < t).sort((a, b) => b.t - a.t)[0];
+  const next = autos.filter((o) => o.t > t).sort((a, b) => a.t - b.t)[0];
+  if (prev) {
+    const c0 = toCum(prev.leg, prev.mile), h = (t - prev.t) / 3.6e6;
+    if (c - c0 < -0.05) return false;
+    // Fastest possible time between the two, leg by leg (a gap can span the bike and the run).
+    const part = (a, b) => Math.max(0, Math.min(c, b) - Math.max(c0, a));
+    const minH = part(0, 2.4) / MAX_MPH.swim + part(2.76, 114.8) / MAX_MPH.bike + part(114.96, 141.04) / MAX_MPH.run;
+    if (c - c0 > 0.3 && h < minH) return false;
+  }
+  if (next && toCum(next.leg, next.mile) < c - 0.05) return false;
+  return true;
+}
 function takeSplits(rows) {
   const fresh = [];
-  for (const row of rows) {
+  for (const row of [...rows].sort((a, b) => parseFloat(a.epochTime) - parseFloat(b.epochTime))) {
     const def = POINTS[row.point]; const t = parseFloat(row.epochTime) * 1000;
     if (!def || !(t > 0)) continue;
+    if (!plausible(def[0], def[1], t)) continue;
     if (!latestRow || t > parseFloat(latestRow.epochTime) * 1000) latestRow = row;
     const id = "rt:" + def[0] + ":" + def[1];
     if (S.obs.some((o) => o.id === id)) continue;
@@ -1716,6 +1736,8 @@ function importFromHash() {
   $("#impNo").onclick = () => (b.hidden = true);
 }
 
+// Drop stray chip reads saved before the plausibility check existed (oldest first, so good times stay).
+S.obs = S.obs.sort((a, b) => a.t - b.t).reduce((keep, o) => (o.src !== "auto" || o.leg === "start" || plausible(o.leg, o.mile, o.t, keep) ? keep.concat(o) : keep), []);
 renderPlanForm();
 syncEstButtons();
 importFromHash();
