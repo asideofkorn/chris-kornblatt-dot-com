@@ -19,7 +19,7 @@ async function register() {
 }
 async function get(path, params = {}, retry = true) {
   token ??= await register();
-  await sleep(700); // stay gentle: well under 2 requests a second
+  await sleep(1000); // stay gentle: about 1 request a second
   const j = await (await fetch(`${RT.base}${path}?${new URLSearchParams({ appid: RT.app, token, ...params })}`)).json();
   if (j?.error?.type === "not_authorized" && retry) { token = null; return get(path, params, false); }
   if (j?.error?.type === "no_results") return { list: [] };
