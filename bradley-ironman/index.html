@@ -582,11 +582,14 @@ function buildModel() {
   const fs = formSegs(), sw = fs.reduce((s, g) => s + g.w, 0);
   const rAll = sw ? fs.reduce((s, g) => s + g.w * g.r, 0) / sw : 1;
   const rForm = clamp(1 + 0.5 * (rAll - 1), 0.92, 1.08);
-  const W0 = 1200;
+  // Bike pace says little about run pace, so the run doesn't inherit bike form: it starts from his plan
+  // and follows his own run splits (and runners at his pace) quickly once they come in.
+  const W0 = 1200, W0_RUN = 400;
   const R = LEGS.map((_, i) => {
     const ss = segs.filter((g) => g.i === i);
     const w = ss.reduce((s, g) => s + g.w, 0);
-    return (ss.reduce((s, g) => s + g.w * g.r, 0) + W0 * rForm) / (w + W0);
+    const w0 = LEGS[i].k === "run" ? W0_RUN : W0, prior = LEGS[i].k === "run" || LEGS[i].k === "t2" ? 1 : rForm;
+    return (ss.reduce((s, g) => s + g.w * g.r, 0) + w0 * prior) / (w + w0);
   });
 
   const anchor = obs.length ? obs[obs.length - 1] : null;
