@@ -681,6 +681,10 @@ function passCard(item, now, compact) {
 function renderNow(M, now) {
   const cur = currentState(M, now);
   const st = S.plan.start;
+  // Official start (or a logged one) with the race clock running from it.
+  const so = M.obs.find((o) => o.leg === "start");
+  const startLine = so ? `<div class="range"><b>Started ${clockHtml(so.t)}</b> · race time <b>${hms((now - so.t) / 1000).slice(0, -3)}</b>${so.src === "auto" ? "" : ` <span class="small muted">(${so.src === "start" ? "logged by hand" : "logged"})</span>`}</div>`
+    : M.anchor ? `<div class="range small muted">No official start time; started about ${clockTxt(M.actualStart)} judging by his first split.</div>` : "";
   let hero = "";
   if (cur.pre) {
     hero = `<div class="label">Not started</div>
@@ -694,6 +698,7 @@ function renderNow(M, now) {
     const range = L.dist ? `Somewhere between <b>${posLabel(cur.near.leg, cur.near.mile)}</b> and <b>${posLabel(cur.far.leg, cur.far.mile)}</b>` : "Transition";
     hero = `<div class="label"><i class="legdot" style="background:${L.color}"></i>Estimated now</div>
       <div class="where"><span class="leg">${L.dist ? "On the " + L.name : ""}</span>${big}</div>
+      ${startLine}
       <div class="range">${range}</div>`;
   }
   const a = M.anchor;
