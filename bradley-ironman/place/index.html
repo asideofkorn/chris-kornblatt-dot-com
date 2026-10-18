@@ -68,7 +68,7 @@ th { font: 700 11px/1 var(--body); letter-spacing: .1em; text-transform: upperca
 
   <figure class="fig" id="f-place">
     <h2>Place through the day</h2>
-    <p>Higher is better. Shown as "top X%" so the overall field and his age group share one scale; hover a point for the exact place.</p>
+    <p>Higher on the chart means closer to the front. Each point is his place at that mat as "top X%" of everyone who started, so the overall field and his age group share one scale. Tap a point for the exact place.</p>
     <div class="legend"><span><i style="background:var(--overall)"></i>Overall</span><span><i style="background:var(--ag)"></i><span id="agName">Age group</span></span></div>
     <div class="plot"></div>
   </figure>
@@ -81,7 +81,7 @@ th { font: 700 11px/1 var(--body); letter-spacing: .1em; text-transform: upperca
   <section>
     <h2>Reading the data</h2>
     <ul class="notes">
-      <li>Place at a mat is by race time from each athlete's own start (the swim was a rolling start), among everyone timed at that mat.</li>
+      <li>Place at a mat is by race time from each athlete's own start (the swim was a rolling start), out of everyone who started; athletes who haven't reached that mat yet, or dropped out before it, count as behind him.</li>
       <li>Before everyone has passed a mat, places are "so far": later starters with faster race times can still move ahead. Final places come after the course closes.</li>
       <li>Mats where Bradley's chip wasn't read are skipped.</li>
       <li>Source: official timing-mat crossings (RTRT.me). Other athletes are anonymous.</li>
@@ -112,11 +112,14 @@ function compute(d) {
   d.mats.forEach((m, i) => {
     if (!mine.has(i) || m.cum === 0) return;
     const myNet = mine.get(i);
-    let n = 0, ahead = 0, agN = 0, agAhead = 0;
+    // Out of everyone who started, not just those through this mat so far: anyone who hasn't reached it yet
+    // (or dropped out before it) is behind him there. Otherwise later mats look worse only because the
+    // slower half of the field hasn't arrived yet.
+    let ahead = 0, agAhead = 0;
+    const n = d.athletes.length, agN = myDiv != null ? d.athletes.filter((a, j) => d.div[j] === myDiv).length : 0;
     d.athletes.forEach((a, j) => {
       for (let k = 2; k < a.length; k += 2) if (a[k] === i) {
-        n++; if (a[k + 1] < myNet) ahead++;
-        if (myDiv != null && d.div[j] === myDiv) { agN++; if (a[k + 1] < myNet) agAhead++; }
+        if (a[k + 1] < myNet) { ahead++; if (myDiv != null && d.div[j] === myDiv) agAhead++; }
         break;
       }
     });
@@ -136,7 +139,7 @@ function chart() {
   const X = (cum) => m.l + xFrac(cum) * pw, Y = (pct) => m.t + pct / yMax * ph;
   const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Bradley's overall and age-group place at each timing mat" }, host);
   BANDS.forEach((b, k) => { if (k % 2) return; el("rect", { x: X(b.from), y: m.t, width: X(b.to) - X(b.from), height: ph, fill: "var(--band)" }, svg); if (b.label) el("text", { x: (X(b.from) + X(b.to)) / 2, y: H - 8, "text-anchor": "middle" }, svg).textContent = b.label; });
-  for (let v = 0; v <= yMax; v += yMax > 50 ? 20 : 10) { el("line", { x1: m.l, x2: m.l + pw, y1: Y(v), y2: Y(v), stroke: "var(--grid)" }, svg); el("text", { x: m.l - 6, y: Y(v) + 4, "text-anchor": "end" }, svg).textContent = v === 0 ? "1st" : `Top ${v}%`; }
+  for (let v = 0; v <= yMax; v += yMax > 50 ? 20 : 10) { el("line", { x1: m.l, x2: m.l + pw, y1: Y(v), y2: Y(v), stroke: "var(--grid)" }, svg); el("text", { x: m.l - 6, y: Y(v) + 4, "text-anchor": "end" }, svg).textContent = v === 0 ? "Front" : v === 100 ? "Back" : `Top ${v}%`; }
   const series = [["pct", "var(--overall)", "Overall"], ["agPct", "var(--ag)", "Age group"]];
   series.forEach(([key, color]) => {
     const pts = P.filter((p) => p[key] != null);
