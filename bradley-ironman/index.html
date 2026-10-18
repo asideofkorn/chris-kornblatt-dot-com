@@ -746,7 +746,7 @@ function renderNow(M, now) {
     <div class="status">${hero}${ribbon(M, cur.pre ? null : cur)}
       <div class="kv">
         <div><span class="label">Finish</span><b>${fin.past ? clockHtml(fin.x) : estHtml(fin.x)}</b><span class="small muted">${clockTxt(fin.e)}–${clockTxt(fin.l)}</span></div>
-        <div><span class="label">Race time</span><b>${hms((fin.x - M.actualStart) / 1000).slice(0, -3)}</b><span class="small muted">h:mm</span></div>
+        <div><span class="label">Finish time</span><b>${fin.past ? "" : '<span class="approx">~</span>'}${hms((fin.x - M.actualStart) / 1000).slice(0, -3)}</b><span class="small muted">${fin.past ? "official" : "projected"} h:mm</span></div>
         <div><span class="label">Vs plan</span><b style="font-size:19px">${deltaTxt}</b></div>
       </div>
       <div class="small muted">${basis}</div>${placeHtml}${appEst}
