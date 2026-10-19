@@ -156,7 +156,8 @@ function draw() {
   const starts = D.athletes.map((a) => a[1]);
   const lastT = Math.max(...D.athletes.map((a) => a[1] + a[a.length - 1]));
   const t0 = Math.floor((Math.min(...starts) - 900) / 1800) * 1800;
-  const t1 = Math.min(D.courseClose + 1800, Math.ceil((Math.max(lastT, D.asOf) + 900) / 1800) * 1800);
+  // The axis always runs to the course close, so the finish window is in view and later pulls fill it in.
+  const t1 = Math.max(D.courseClose + 1800, Math.ceil((lastT + 900) / 1800) * 1800);
   const X = (t) => pad.l + (t - t0) / (t1 - t0) * pw, Y = (cum) => pad.t + yFrac(cum) * ph;
   const C = { ink: css("--ink"), muted: css("--muted"), line: css("--line"), wash: css("--wash"), drop: css("--drop"), me: css("--me"), surface: css("--surface") };
   g.clearRect(0, 0, W, H);
@@ -183,6 +184,14 @@ function draw() {
     g.fillStyle = C.muted; g.fillText(fmtClock(t), x, pad.t - 10);
   }
 
+  // While the race is on: shade the time no pull has covered yet, with the snapshot moment marked.
+  if (D.asOf < D.courseClose && D.asOf < t1) {
+    const x = X(D.asOf);
+    g.fillStyle = C.muted; g.globalAlpha = 0.07; g.fillRect(x, pad.t, pad.l + pw - x, ph); g.globalAlpha = 1;
+    g.strokeStyle = C.muted; g.setLineDash([4, 4]); g.lineWidth = 1.2; g.beginPath(); g.moveTo(x, pad.t); g.lineTo(x, pad.t + ph); g.stroke(); g.setLineDash([]);
+    g.fillStyle = C.muted; g.font = `700 10px ${css("--body")}`; g.textAlign = "left"; g.textBaseline = "middle";
+    g.fillText(`Data to ${fmtClock(D.asOf)}`, x + 5, pad.t + ph / 2 - 7); g.fillText("Still on course →", x + 5, pad.t + ph / 2 + 7);
+  }
   // Athlete lines
   const visible = (s) => show === "all" || (show === "fin" ? s === 0 : s === 1);
   const n = D.athletes.length;
