@@ -79,7 +79,7 @@ test("ignores a stray chip read that would need an impossible pace", async () =>
   const s = await readState(page);
   assert.deepEqual(errors, []);
   assert.ok(!s.mats.includes("RUN9"), "stray RUN9 read was accepted");
-  assert.equal(s.lastMat.point, "RUN3");
+  assert.equal(s.lastMat.point, "RUN4");
   assert.ok(s.pos.mile < 8, `run mile ${s.pos.mile.toFixed(1)} is too far`);
   const pace = s.speedText.match(/(\d+):(\d\d)\/mi/);
   if (pace) assert.ok(+pace[1] + pace[2] / 60 >= 5, `shown pace ${pace[0]} is impossible`);
@@ -144,8 +144,8 @@ test("run projection doesn't inherit bike speed", async () => {
 test("IRONMAN dot never runs past the next mat", async () => {
   const { page, ctx } = await openAt(browser, { now: at("15:35") });
   const s = await readState(page);
-  // The next mat after mi 4.1 that has readings in the data (a mat nobody was read at is skipped).
-  const nextLive = await page.evaluate(() => FIELD_ORDER[FIELD_ORDER.indexOf("RUN3") + 1 + [...DEAD].filter((d) => FIELD_ORDER.indexOf(d) > FIELD_ORDER.indexOf("RUN3")).length]);
+  // The next mat after his latest one that has readings in the data (a mat nobody was read at is skipped).
+  const nextLive = await page.evaluate((last) => FIELD_ORDER.slice(FIELD_ORDER.indexOf(last) + 1).find((n) => !DEAD.has(n)), s.lastMat.point);
   const limit = 114.96 + (await page.evaluate((n) => POINTS[n][1], nextLive));
   assert.ok(s.app == null || s.app <= limit + 0.01, `IRONMAN dot at ${s.app?.toFixed(2)} is past the next mat ${nextLive}`);
   await ctx.close();

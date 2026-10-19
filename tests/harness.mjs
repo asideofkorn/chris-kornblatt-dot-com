@@ -7,8 +7,8 @@ import { dirname, join } from "node:path";
 
 const here = dirname(fileURLToPath(import.meta.url));
 export const PAGE = "file://" + join(here, "..", "bradley-ironman", "index.html");
-// Anonymized field data at 4:36 pm (mats placed by the race-day definitions).
-export const FIELD = JSON.parse(readFileSync(join(here, "fixtures", "field-1636.json"), "utf8"));
+// Anonymized field data pulled at 5:03 pm, built with the race-day mat definitions.
+export const FIELD = JSON.parse(readFileSync(process.env.FIELD_FILE || join(here, "fixtures", "field-1703.json"), "utf8"));
 export const FEED_POINTS = JSON.parse(readFileSync(join(here, "fixtures", "points-raceday.json"), "utf8")).list;
 export const PROFILE_FROZEN = JSON.parse(readFileSync(join(here, "fixtures", "profile-frozen-1311.json"), "utf8")).list;
 export const PID = "RL78MBN2";
