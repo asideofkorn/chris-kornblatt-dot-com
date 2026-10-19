@@ -100,7 +100,9 @@ let rows = [], B = null, D = null;
 
 function derive(d) {
   const idx = (cum) => d.mats.findIndex((m) => Math.abs(m.cum - cum) < 0.005);
-  const iSwim = idx(2.4), iT1 = idx(2.76), iBike = idx(114.8), iT2 = idx(114.96), iFin = d.mats.length - 1;
+  // Mats by name first: the feed's T1 and bike-finish positions moved by a few hundredths of a mile mid-race.
+  const byName = (n, cum) => { const i = d.mats.findIndex((m) => m.name === n); return i >= 0 ? i : idx(cum); };
+  const iSwim = byName("SWIM", 2.4), iT1 = byName("T1", 2.76), iBike = byName("BIKE", 114.8), iT2 = byName("T2", 114.96), iFin = d.mats.length - 1;
   return d.athletes.map((a, n) => {
     const t = new Map(); for (let k = 2; k < a.length; k += 2) t.set(a[k], a[1] + a[k + 1]);
     const r = { n, status: a[0], me: n === d.bradley };
