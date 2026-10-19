@@ -160,7 +160,7 @@ function draw() {
   const dpr = window.devicePixelRatio || 1;
   cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + "px";
   const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const pad = { l: 52, r: W < 520 ? 44 : 70, t: 30, b: 26 };
+  const pad = { l: 52, r: W < 520 ? 44 : 70, t: 30, b: 56 };
   const pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
   const starts = D.athletes.map((a) => a[1]);
   const lastT = Math.max(...D.athletes.map((a) => a[1] + a[a.length - 1]));
@@ -182,7 +182,7 @@ function draw() {
   });
   // Mile ticks inside bike and run
   g.font = `500 10px ${css("--body")}`; g.fillStyle = C.muted; g.textAlign = "right";
-  [[2.76, 0, 112, 20, "bike"], [114.96, 0, 26, 5, "run"]].forEach(([base, a, b, step]) => {
+  [[2.76, 0, 112, 20, "bike"], [114.96, 0, 25, 5, "run"]].forEach(([base, a, b, step]) => {
     for (let m = a + step; m < b; m += step) { const y = Y(base + m); g.fillText(m + " mi", pad.l - 6, y); g.strokeStyle = C.line; g.globalAlpha = .6; g.beginPath(); g.moveTo(pad.l, y); g.lineTo(pad.l + pw, y); g.stroke(); g.globalAlpha = 1; }
   });
   // Time grid
@@ -231,8 +231,10 @@ function draw() {
   if (show !== "dnf") {
     const yf = Y(D.mats[D.mats.length - 1].cum);
     g.strokeStyle = C.ink; g.globalAlpha = 0.12; g.lineWidth = 1; g.beginPath();
-    for (const a of D.athletes) { if (a[0] !== 0) continue; const x = X(a[1] + a[a.length - 1]); g.moveTo(x, yf + 4); g.lineTo(x, yf + 14); }
+    for (const a of D.athletes) { if (a[0] !== 0) continue; const x = X(a[1] + a[a.length - 1]); g.moveTo(x, yf + 16); g.lineTo(x, yf + 30); }
     g.stroke(); g.globalAlpha = 1;
+    g.fillStyle = C.muted; g.font = `600 10px ${css("--body")}`; g.textAlign = "left"; g.textBaseline = "middle"; g.fillText("Each finish", pad.l + 4, yf + 40);
+    g.fillStyle = C.ink; g.font = `700 11px ${css("--display")}`; g.textAlign = "right"; g.fillText("FINISH", pad.l - 6, yf);
   }
   const final = D.asOf >= D.courseClose;
   const lastFin = Math.max(0, ...D.athletes.filter((a) => a[0] === 0).map((a) => a[1] + a[a.length - 1]));
