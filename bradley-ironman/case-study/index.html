@@ -23,7 +23,7 @@
     .hyp { margin: 28px 0 0; padding: 22px 24px; border: 1px solid var(--line); background: var(--paper); }
     .hyp h3 { margin-top: 0; }
     .verdict { display: inline-block; margin-left: 8px; padding: 1px 9px; border-radius: 999px; font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; vertical-align: 3px; border: 1px solid currentColor; }
-    .verdict.no { color: #9a3412; } .verdict.wait { color: var(--muted); }
+    .verdict.no { color: #9a3412; } .verdict.wait { color: var(--muted); } .verdict.yes { color: #166534; }
     .hyp dl { display: grid; grid-template-columns: 110px 1fr; gap: 6px 16px; margin: 14px 0 0; }
     .hyp dt { color: var(--muted); font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding-top: 3px; }
     .hyp dd { margin: 0; }
@@ -191,13 +191,38 @@
         </div>
 
         <div class="hyp">
-          <h3>3. On repeated roads, his own first lap is the best guide <span class="verdict wait">Pending</span></h3>
+          <h3>3. On repeated roads, his own first lap is the best guide <span class="verdict yes">Supported on the bike</span> <span class="verdict no">Not on the run</span></h3>
           <dl>
             <dt>Hypothesis</dt><dd>Where the course repeats, predicting each stretch from his own time on the same road last lap, scaled by how this lap is going, beats the current model.</dd>
-            <dt>Early signal</dt><dd>0.9 vs 1.4 min average miss, but on only 2 stretches. Too few to act on mid-race.</dd>
-            <dt>Test</dt><dd>After the finish: bike lap 2 (miles 56–112) and run lap 2 (miles 16–25.7, a repeat of miles 4.1–13.8). The run's first 16 miles have no earlier lap to learn from.</dd>
+            <dt>Test</dt><dd>After the finish, on his real splits: bike lap 2 (miles 56–112, 10 stretches) and run lap 2 (miles 16–25.7, 7 stretches). Each approach predicted the next mat and was scored against when he actually reached it.</dd>
+          </dl>
+          <div class="tablewrap"><table class="results">
+            <thead><tr><th>Leg</th><th class="n">Own first lap<br>avg miss</th><th class="n">Race-day model<br>avg miss</th><th class="n">Stretches</th></tr></thead>
+            <tbody>
+              <tr class="best"><td>Bike lap 2</td><td class="n">1.0 min</td><td class="n">1.9 min</td><td class="n">10</td></tr>
+              <tr><td>Run lap 2</td><td class="n">2.0 min</td><td class="n">1.2 min</td><td class="n">7</td></tr>
+            </tbody>
+          </table></div>
+          <dl>
+            <dt>Why</dt><dd>The bike's out-and-back repeats the same wind on the same road, so his own first lap carries that. The run's second lap came after 16 miles of fatigue; his lap-1 pace was the wrong baseline, and athletes at his pace who had just run the stretch were a better one.</dd>
+            <dt>Decision</dt><dd>Worth adding for the bike only, next race. Not shipped mid-race on two data points, which was the right call: the run result would have made the forecast worse.</dd>
           </dl>
         </div>
+
+        <h3>How the forecasts did</h3>
+        <p>He finished at 7:12 pm, 11:24:59, 13 minutes under the pre-race plan's 7:25 pm. Three forecasts were scored at every one of the 45 timing mats he crossed, each replayed from exactly the data it had at that moment. The <a class="text-link" href="../accuracy/">prediction accuracy page</a> has the full record.</p>
+        <div class="tablewrap"><table class="results">
+          <thead><tr><th>Forecast of his finish</th><th class="n">Out of the water<br>8:44 am</th><th class="n">Average miss<br>on the bike</th><th class="n">Off the bike<br>2:34 pm</th><th class="n">Average miss<br>on the run</th><th class="n">Within 10 min<br>from</th></tr></thead>
+          <tbody>
+            <tr><td>Pre-race plan</td><td class="n">7:25 pm</td><td class="n">13 min</td><td class="n">7:25 pm</td><td class="n">13 min</td><td class="n">—</td></tr>
+            <tr class="best"><td>This tracker, race day</td><td class="n">6:08 pm</td><td class="n">28 min</td><td class="n">6:45 pm</td><td class="n">10 min</td><td class="n">4:58 pm, run mi 13.8</td></tr>
+            <tr><td>IRONMAN app</td><td class="n">5:45 pm</td><td class="n">70 min</td><td class="n">6:17 pm</td><td class="n">23 min</td><td class="n">5:45 pm, run mi 18.1</td></tr>
+          </tbody>
+        </table></div>
+        <p>Two findings from the record. First, the one-hour miss at the swim exit was a bug, not the model: the T1 mat sits 50 yards into the bike course, so the stretch from swim exit to T1 was charged to the bike leg, and his peers' quick transitions read as "bike 17% faster than plan". With that fixed and replayed on the same data, the swim-exit forecast is 7:09 pm, three minutes off. It's covered by a test now. Second, the remaining miss was the run: everyone's forecast, including the plan, assumed a 4:02 marathon and he ran 4:29. No bike data predicts that, which is why the model deliberately doesn't carry bike form into the run.</p>
+
+        <h3>What broke on race day</h3>
+        <ul class="tight"><li><strong>IRONMAN renamed the run timing mats during the race.</strong> RUN5 was mile 7.5 before the start and 6.2 after; three mats were new. For 90 minutes our marker ran a mile ahead of the official app, and two wrong fixes shipped before the right one: load mat positions from the feed on every open and cross-check them against GPS.</li><li><strong>The feed's mat list is paged.</strong> The first fix asked for the list without a page size and got 25 mats, none on the run. The tests passed because the test harness served the whole list; it now pages like the real API.</li><li><strong>Phones kept the old build.</strong> Safari served the stale page from cache, so a fix wasn't a fix until every phone had it. The page now shows its build id, upgrades itself on open, and a short link always loads fresh.</li></ul>
 
         <h3>What this shows</h3>
         <ul class="tight"><li><strong>Freeze the baseline first.</strong> Keeping the pre-race forecast is what makes every later change measurable.</li><li><strong>Backtest on data you already have.</strong> Recording every split and every estimate turned questions into experiments that took minutes.</li><li><strong>Don't ship on two data points.</strong> A promising signal goes on the list to test, not straight into the model a spectator is relying on.</li></ul>
@@ -211,7 +236,7 @@
         <p>I worked as product owner with Claude Code as the engineer, in a cloud session, mostly from my phone. I set the problem, the priorities and the constraints, reviewed screenshots, and caught issues from real use: a key-gated map, an athlete list that quietly stopped short of the full field, and a confirm button nobody needed once official times were flowing. Each fix went live on this site within minutes.</p>
         <p>The first thing written was a product brief, not code. It defined the job, the users and the failure that mattered most: missing him. It meant the 5 am work was the right work.</p>
         <h3>What's next</h3>
-        <ul class="tight"><li><strong>Prediction accuracy:</strong> our estimates vs the official app's vs what actually happened, measured after he finishes and the overnight data pull lands, including hypothesis 3.</li><li><strong>A full-race replay</strong> built from the recorded estimates.</li><li><strong>The remaining charts</strong> once the field finishes.</li></ul>
+        <ul class="tight"><li><strong>Own-first-lap pacing on the bike</strong> (hypothesis 3), for the next race.</li><li><strong>A full-race replay</strong> built from the recorded estimates.</li><li><strong>The remaining charts</strong> (pacing and fade) from the final data pull.</li></ul>
         <p><a class="text-link" href="../">Open the live tracker →</a> · <a class="text-link" href="../race/">Race timetable →</a></p>
       </article></div>
       <nav class="case-nav" aria-label="Section navigation"><a href="#experiments">← Previous: Experiments</a><a href="../../projects.html">All projects →</a></nav>

@@ -280,7 +280,7 @@ td.num, th.num { text-align: right; }
         <h3>Race timetable (Marey chart)</h3>
         <p>Every athlete's day as one line, time across and course down, with where people dropped out and the cutoffs.</p>
       </a>
-      <div class="chartcard soon"><span class="chip na">Planned</span><h3>Prediction accuracy</h3><p>Our estimate vs the IRONMAN app's vs what actually happened, through the day.</p></div>
+      <a class="chartcard" href="accuracy/"><span class="chip go">Live</span><h3>Prediction accuracy</h3><p>Our finish estimate vs the IRONMAN app's vs what actually happened, at every mat through the day.</p></a>
       <a class="chartcard" href="transitions/"><span class="chip go">Live</span><h3>Transitions</h3><p>T1 and T2 times across the field, whether T1 slowed when it got crowded, and where Bradley lands.</p></a>
       <div class="chartcard soon"><span class="chip na">Planned</span><h3>Pacing and fade</h3><p>Bike lap 2 vs lap 1 and run lap 2 vs lap 1 for every finisher.</p></div>
       <a class="chartcard" href="wind/"><span class="chip go">Live</span><h3>Wind on the bike</h3><p>Wind speed and direction through the day, and rider speeds on the same road going south vs coming back north.</p></a>
@@ -568,7 +568,9 @@ function buildModel() {
     if (du < 60) continue;
     const r = (q.t - p.t) / 1000 / du;
     if (!(r > 0.5 && r < 2)) { bad.push(q.id); continue; }
-    segs.push({ i: legAt(q.u - 1), r, w: du });
+    // Charge the stretch to the leg holding most of it: the T1 mat sits at bike mile 0.03, so a stretch ending there is
+    // transition time, not bike time (charging it to the bike made a quick transition look like bike form).
+    segs.push({ i: legAt((p.u + q.u) / 2), r, w: du });
   }
   // Form for later legs comes from the bike and run only: the river current sped up the whole field's swim (his 56:41 was the
   // field median), and a quick transition says nothing about his legs.
@@ -581,7 +583,7 @@ function buildModel() {
     const q = F.qs[F.qs.length - 1];
     const du = posToU(q.leg, q.mile) - uP;
     const r = du > 60 ? (q.p50 - F.Pt) / 1000 / du : 0;
-    if (r > 0.5 && r < 2) segs.push({ i: legAt(uP + du - 1), r, w: du * 2 });
+    if (r > 0.5 && r < 2) segs.push({ i: legAt(uP + du / 2), r, w: du * 2 });
   }
   const fs = formSegs(), sw = fs.reduce((s, g) => s + g.w, 0);
   const rAll = sw ? fs.reduce((s, g) => s + g.w * g.r, 0) / sw : 1;

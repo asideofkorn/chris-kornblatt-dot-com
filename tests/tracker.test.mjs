@@ -144,6 +144,21 @@ test("plausibility check: real gaps pass, impossible jumps don't", async () => {
   await ctx.close();
 });
 
+test("a quick transition doesn't become bike form", async () => {
+  // The T1 mat sits at bike mile 0.03. On race day the stretch swim-exit → T1 was charged to the bike leg, so his
+  // peers' 10-minute T1 against a 13-minute plan read as "bike 17% faster than plan" and the finish forecast at
+  // 8:45 am was 6:08 pm (actual 7:12 pm). Transition time must stay with the transition.
+  const { page, ctx, errors } = await openAt(browser, { now: new Date((crossing("SWIM").t + 90) * 1000), settle: 15000 });
+  const r = await page.evaluate(() => { const M = buildModel(); return { R: M.R, finish: M.predict(M.posToU(...POINTS.FINISH)).x, hasField: !!(S.field && S.field.qs && S.field.qs.length) }; });
+  assert.deepEqual(errors, []);
+  assert.ok(r.hasField, "field comparison (peers' T1 times) didn't load");
+  assert.ok(Math.abs(r.R[2] - 1) < 0.01, `bike ratio ${r.R[2].toFixed(3)} moved before any bike split`);
+  assert.ok(r.R[1] < 1, `T1 ratio ${r.R[1].toFixed(3)} should reflect the quicker transitions`);
+  const fin = new Date(r.finish).toLocaleTimeString("en-US", { timeZone: "America/Los_Angeles", hour12: false });
+  assert.ok(fin >= "18:40", `finish forecast ${fin} out of the water is too optimistic`);
+  await ctx.close();
+});
+
 test("run projection doesn't inherit bike speed", async () => {
   // At 3:20 pm, after run miles 0.6 and 2.3, he should be shown near mile 4, not miles ahead.
   const { page, ctx } = await openAt(browser, { now: at("15:20") });

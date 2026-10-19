@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Prediction Accuracy · IRONMAN California 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Same system as the other chart pages: two categorical colors (ours / IRONMAN), the pre-race forecast in a
+   dashed neutral, the actual finish as a solid neutral line. */
+:root {
+  --bg: #f2f3ef; --surface: #ffffff; --ink: #14171b; --muted: #5d656e; --line: #d8dbd4; --grid: #e6e8e3;
+  --ours: #7a3ff2; --im: #c2410c;
+  --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "Barlow", "Helvetica Neue", Arial, system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #0e1114; --surface: #171b20; --ink: #eef1f4; --muted: #9aa3ad; --line: #2a3038; --grid: #222830; --ours: #8f66f0; --im: #dd5c1a; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #0e1114; --surface: #171b20; --ink: #eef1f4; --muted: #9aa3ad; --line: #2a3038; --grid: #222830; --ours: #8f66f0; --im: #dd5c1a; color-scheme: dark; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.45 var(--body); font-variant-numeric: tabular-nums; }
+.wrap { max-width: 900px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; display: grid; gap: 18px; }
+h1 { margin: 0; font: 800 clamp(34px, 7vw, 56px)/0.95 var(--display); text-transform: uppercase; letter-spacing: .01em; }
+h2 { margin: 0; font: 700 22px/1.1 var(--display); text-transform: uppercase; letter-spacing: .03em; }
+.eyebrow { font: 700 12px/1.2 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.lede { margin: 6px 0 0; max-width: 62ch; color: var(--muted); }
+.muted { color: var(--muted); } .small { font-size: 13px; }
+a { color: inherit; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(max(165px, 30%), 1fr)); gap: 10px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.tile b { display: block; font: 800 30px/1 var(--display); }
+.tile span { font: 700 11px/1.2 var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.tile small { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; }
+.tile.ours b { color: var(--ours); } .tile.im b { color: var(--im); }
+.fig { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 8px; margin: 0; position: relative; }
+.fig p { margin: 0; color: var(--muted); font-size: 14px; max-width: 70ch; }
+.fig svg { display: block; width: 100%; height: auto; overflow: visible; }
+.fig svg text { fill: var(--muted); font: 500 11px var(--body); }
+.fig svg .lbl { font-weight: 700; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; }
+.legend i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+.empty { border: 1.5px dashed var(--line); border-radius: 10px; padding: 16px; color: var(--muted); }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 13px; padding: 6px 9px; border-radius: 6px; white-space: nowrap; z-index: 5; transform: translate(-50%, calc(-100% - 12px)); }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font: 700 11px/1.2 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+td.n, th.n { text-align: right; }
+.notes { margin: 0; padding-left: 18px; color: var(--muted); font-size: 14px; display: grid; gap: 4px; max-width: 70ch; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <nav aria-label="Breadcrumb" class="small" style="margin:0 0 10px;font-weight:600"><a href="../">Bradley's tracker</a> › <a href="../#charts">Charts</a> › <span aria-current="page" style="font-weight:500">Prediction accuracy</span></nav>
+    <div class="eyebrow">IRONMAN California · Sacramento · Oct 18, 2026</div>
+    <h1>Prediction accuracy</h1>
+    <p class="lede">What each forecast said Bradley's finish would be, at every timing mat he crossed, against the finish that happened. Three forecasts: the pre-race plan from his own targets, this tracker's live model, and the IRONMAN app's own estimate.</p>
+  </header>
+
+  <section class="tiles" id="tiles" aria-label="Finish forecasts"></section>
+
+  <figure class="fig" id="f-finish">
+    <h2>Finish forecast through the day</h2>
+    <p>Each point is a forecast made at that moment. The flat line is the finish that happened; closer to it is better. The band is the tracker's early–late range.</p>
+    <div class="legend"><span><i style="background:var(--ours)"></i>This tracker, as it ran on race day</span><span><i style="background:repeating-linear-gradient(90deg,var(--ours) 0 5px,transparent 5px 9px)"></i>Same model after the post-race fix</span><span><i style="background:var(--im)"></i>IRONMAN app</span><span><i style="background:repeating-linear-gradient(90deg,var(--muted) 0 5px,transparent 5px 9px)"></i>Pre-race plan</span><span><i style="background:var(--ink)"></i>Actual finish</span></div>
+    <div class="plot"></div>
+  </figure>
+
+  <figure class="fig" id="f-next">
+    <h2>How far off the next mat was</h2>
+    <p>At each mat, the tracker predicted when he'd reach the next one. Bars show that prediction minus the real crossing: above zero it expected him later than he came, below zero earlier.</p>
+    <div class="plot"></div>
+  </figure>
+
+  <section class="fig">
+    <h2>Table view</h2>
+    <div class="tablewrap" id="table"></div>
+  </section>
+
+  <section>
+    <h2>Reading the data</h2>
+    <ul class="notes">
+      <li>Pre-race plan: his own targets (about 1:10 swim with the current, 18–19 mph bike, 9:15/mi run) with transition times from past years, counted from his actual 7:47 am start.</li>
+      <li>This tracker: its forecast is replayed at each mat from the data it had at that moment, with the timing feed's quirks of the day reproduced (his own split list froze at bike mile 84; the per-mat lists did not).</li>
+      <li>After the fix: the T1 mat sits 50 yards into the bike course, so the race-day model charged the swim-exit-to-T1 stretch to the bike. His peers' 10-minute transitions against a 13-minute plan read as "bike 17% faster than plan", which is why the forecast out of the water was an hour early. Found in this review; the dashed line is the corrected model replayed on the same data.</li>
+      <li>IRONMAN app: its finish estimate as published in the timing feed, recorded every two minutes through the day. It publishes only a finish and a next-mat time, so it has no range.</li>
+      <li>Source: official timing-mat crossings (RTRT.me). Only Bradley is identified.</li>
+    </ul>
+  </section>
+</main>
+<script>
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const NS = "http://www.w3.org/2000/svg";
+const el = (tag, attrs, parent) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); parent && parent.appendChild(n); return n; };
+const fmtClock = (sec) => { const d = new Date(sec * 1000); let h = d.getHours(); const m = d.getMinutes(); const ap = h >= 12 ? "pm" : "am"; h = h % 12 || 12; return h + ":" + String(m).padStart(2, "0") + " " + ap; };
+const fmtDur = (sec) => { const s = Math.round(Math.abs(sec)); return `${Math.floor(s / 3600)}:${String(Math.floor(s % 3600 / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; };
+const signed = (sec) => sec == null ? "—" : (Math.abs(sec) < 30 ? "±0" : (sec > 0 ? "+" : "−") + Math.round(Math.abs(sec) / 60) + " min");
+const LEG_NAME = { swim: "Swim", bike: "Bike", run: "Run" };
+const matLabel = (r) => r.point === "FINISH" ? "Finish" : r.point === "T1" ? "T1" : r.point === "T2" ? "T2" : `${LEG_NAME[r.leg]} mi ${(+r.mile).toFixed(1).replace(/\.0$/, "")}`;
+function frame(host, label, hMin = 240) {
+  const W = Math.max(300, host.clientWidth || 860), H = Math.round(Math.min(340, Math.max(hMin, W * 0.4))), m = { l: 52, r: 14, t: 16, b: 28 };
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": label }, host);
+  return { svg, W, H, m, pw: W - m.l - m.r, ph: H - m.t - m.b };
+}
+function tipFor(fig) { let t = $(".tip", fig); if (!t) { t = document.createElement("div"); t.className = "tip"; t.hidden = true; fig.appendChild(t); } return t; }
+function hover(fig, svg, W, pts, html) {
+  const tip = tipFor(fig);
+  svg.addEventListener("pointermove", (e) => {
+    const r = svg.getBoundingClientRect(), k = W / r.width, px = (e.clientX - r.left) * k, py = (e.clientY - r.top) * k;
+    let best = null, bd = 26; for (const p of pts) { const d = Math.hypot(p.x - px, (p.y - py) * 0.5); if (d < bd) { bd = d; best = p; } }
+    if (!best) { tip.hidden = true; return; }
+    const fr = fig.getBoundingClientRect(); tip.innerHTML = html(best); tip.style.left = (r.left - fr.left + best.x / k) + "px"; tip.style.top = (r.top - fr.top + best.y / k) + "px"; tip.hidden = false;
+  });
+  svg.addEventListener("pointerleave", () => (tip.hidden = true));
+}
+let D = null;
+function render() {
+  const rows = D.rows, fin = D.finish;
+  const swimRow = rows.find((r) => r.point === "SWIM"), bikeRow = rows.find((r) => r.point === "BIKE"), halfRun = rows.find((r) => r.point === "RUN10");
+  const tile = (label, val, sub, cls = "") => `<div class="tile ${cls}"><b>${val}</b><span>${label}</span>${sub ? `<small>${sub}</small>` : ""}</div>`;
+  const err = (t) => fin && t ? signed(t - fin) : "—";
+  $("#tiles").innerHTML = [
+    tile("Actual finish", fin ? fmtClock(fin) : "—", fin ? `${fmtDur(fin - D.start)} after his 7:47 start` : "Not finished yet"),
+    tile("Pre-race plan", D.prerace.FINISH ? fmtClock(D.prerace.FINISH) : "—", fin ? `${err(D.prerace.FINISH)} vs actual` : ""),
+    tile("Tracker, out of the water", swimRow && swimRow.ours ? fmtClock(swimRow.ours) : "—", swimRow && fin ? `${err(swimRow.ours)} · at 8:44 am` : "", "ours"),
+    tile("Tracker, off the bike", bikeRow && bikeRow.ours ? fmtClock(bikeRow.ours) : "—", bikeRow && fin ? `${err(bikeRow.ours)} · at ${fmtClock(bikeRow.t)}` : "", "ours"),
+    tile("IRONMAN, off the bike", bikeRow && bikeRow.ironman ? fmtClock(bikeRow.ironman) : "—", bikeRow && bikeRow.ironman && fin ? `${err(bikeRow.ironman)} · at ${fmtClock(bikeRow.t)}` : "", "im"),
+    tile("Both at halfway on the run", halfRun ? `${halfRun.ours ? fmtClock(halfRun.ours) : "—"} · ${halfRun.ironman ? fmtClock(halfRun.ironman) : "—"}` : "—", halfRun && fin ? `tracker ${err(halfRun.ours)} · IRONMAN ${err(halfRun.ironman)}` : ""),
+  ].join("");
+
+  // 1. Finish forecast through the day
+  {
+    const fig = $("#f-finish"), host = $(".plot", fig); host.innerHTML = "";
+    const ours = rows.filter((r) => r.ours), im = D.ironmanTimeline.filter((e) => e.finish && e.finish > D.start + 6 * 3600 && e.finish < D.start + 16 * 3600);
+    if (!ours.length) { host.innerHTML = `<div class="empty">No forecasts recorded yet.</div>`; }
+    else {
+      const { svg, W, H, m, pw, ph } = frame(host, "Finish forecast through the day", 260);
+      const t0 = Math.floor(D.start / 3600) * 3600, t1 = Math.ceil(((fin || ours.at(-1).t) + 600) / 3600) * 3600;
+      const ys = [...ours.map((r) => r.ours), ...im.map((e) => e.finish), D.prerace.FINISH, fin].filter(Boolean);
+      const y0 = Math.floor((Math.min(...ys) - 600) / 1800) * 1800, y1 = Math.ceil((Math.max(...ys) + 600) / 1800) * 1800;
+      const X = (t) => m.l + (t - t0) / (t1 - t0) * pw, Y = (v) => m.t + ph - (v - y0) / (y1 - y0) * ph;
+      for (let v = y0; v <= y1; v += 1800) { el("line", { x1: m.l, x2: m.l + pw, y1: Y(v), y2: Y(v), stroke: "var(--grid)" }, svg); el("text", { x: m.l - 6, y: Y(v) + 4, "text-anchor": "end" }, svg).textContent = fmtClock(v); }
+      for (let t = t0; t <= t1; t += 3600 * (W < 520 ? 2 : 1)) el("text", { x: X(t), y: H - 8, "text-anchor": "middle" }, svg).textContent = fmtClock(t).replace(":00", "");
+      // Leg bands along the bottom
+      const legStart = { swim: D.start, bike: rows.find((r) => r.point === "T1")?.t, run: rows.find((r) => r.point === "T2")?.t };
+      [["swim", legStart.swim, legStart.bike], ["bike", legStart.bike, legStart.run], ["run", legStart.run, fin || t1]].forEach(([k, a, b]) => { if (!a || !b) return; el("text", { x: X((a + b) / 2), y: m.t + 10, "text-anchor": "middle", class: "lbl" }, svg).textContent = LEG_NAME[k]; el("line", { x1: X(a), x2: X(a), y1: m.t, y2: m.t + ph, stroke: "var(--line)" }, svg); });
+      if (D.prerace.FINISH) el("line", { x1: m.l, x2: m.l + pw, y1: Y(D.prerace.FINISH), y2: Y(D.prerace.FINISH), stroke: "var(--muted)", "stroke-dasharray": "5 4", "stroke-width": 1.5 }, svg);
+      if (fin) el("line", { x1: m.l, x2: m.l + pw, y1: Y(fin), y2: Y(fin), stroke: "var(--ink)", "stroke-width": 2 }, svg);
+      const pts = [];
+      // IRONMAN: a step line, its estimate held until it changed.
+      if (im.length) {
+        let dpath = ""; im.forEach((e, i) => { const nx = im[i + 1] ? im[i + 1].t : (fin || t1); dpath += `${i ? "L" : "M"}${X(e.t).toFixed(1)},${Y(e.finish).toFixed(1)}L${X(Math.min(nx, t1)).toFixed(1)},${Y(e.finish).toFixed(1)}`; pts.push({ x: X(e.t), y: Y(e.finish), who: "IRONMAN app", t: e.t, v: e.finish }); });
+        el("path", { d: dpath, fill: "none", stroke: "var(--im)", "stroke-width": 2 }, svg);
+      }
+      // Ours: range band then line and points.
+      el("path", { d: "M" + ours.map((r) => `${X(r.t).toFixed(1)},${Y(r.oursEarly).toFixed(1)}`).join("L") + "L" + [...ours].reverse().map((r) => `${X(r.t).toFixed(1)},${Y(r.oursLate).toFixed(1)}`).join("L") + "Z", fill: "var(--ours)", "fill-opacity": 0.12, stroke: "none" }, svg);
+      el("path", { d: "M" + ours.map((r) => `${X(r.t).toFixed(1)},${Y(r.ours).toFixed(1)}`).join("L"), fill: "none", stroke: "var(--ours)", "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+      const fx = rows.filter((r) => r.oursFixed);
+      if (fx.length) { el("path", { d: "M" + fx.map((r) => `${X(r.t).toFixed(1)},${Y(r.oursFixed).toFixed(1)}`).join("L"), fill: "none", stroke: "var(--ours)", "stroke-width": 1.5, "stroke-dasharray": "5 4", "stroke-linejoin": "round" }, svg); fx.forEach((r) => pts.push({ x: X(r.t), y: Y(r.oursFixed), who: "Tracker after the fix, at " + matLabel(r), t: r.t, v: r.oursFixed })); }
+      ours.forEach((r) => { el("circle", { cx: X(r.t), cy: Y(r.ours), r: 3, fill: "var(--ours)", stroke: "var(--surface)", "stroke-width": 1.5 }, svg); pts.push({ x: X(r.t), y: Y(r.ours), who: "Tracker at " + matLabel(r), t: r.t, v: r.ours, lo: r.oursEarly, hi: r.oursLate }); });
+      const lx = m.l + pw - 4;
+      if (fin) { const t = el("text", { x: lx, y: Y(fin) - 5, "text-anchor": "end", class: "lbl" }, svg); t.style.fill = "var(--ink)"; t.textContent = "Finished " + fmtClock(fin); }
+      if (D.prerace.FINISH) { const t = el("text", { x: lx, y: Y(D.prerace.FINISH) - 5, "text-anchor": "end" }, svg); t.textContent = "Pre-race plan " + fmtClock(D.prerace.FINISH); }
+      hover(fig, svg, W, pts, (p) => `<b>${p.who}</b> · ${fmtClock(p.t)}<br>finish ${fmtClock(p.v)}${p.lo ? ` (${fmtClock(p.lo)}–${fmtClock(p.hi)})` : ""}${fin ? ` · ${signed(p.v - fin)}` : ""}`);
+    }
+  }
+
+  // 2. Next-mat error bars
+  {
+    const fig = $("#f-next"), host = $(".plot", fig); host.innerHTML = "";
+    const ne = D.nextErr;
+    if (!ne.length) host.innerHTML = `<div class="empty">Needs at least two mats.</div>`;
+    else {
+      const { svg, W, H, m, pw, ph } = frame(host, "Next-mat prediction error at each mat", 220);
+      const lim = Math.max(120, ...ne.map((e) => Math.abs(e.err))) * 1.15;
+      const bw = pw / ne.length, Y = (v) => m.t + ph / 2 - v / lim * (ph / 2);
+      for (const v of [-lim, -lim / 2, 0, lim / 2, lim].map((x) => Math.round(x / 60) * 60)) { el("line", { x1: m.l, x2: m.l + pw, y1: Y(v), y2: Y(v), stroke: v === 0 ? "var(--muted)" : "var(--grid)" }, svg); el("text", { x: m.l - 6, y: Y(v) + 4, "text-anchor": "end" }, svg).textContent = (v > 0 ? "+" : "") + Math.round(v / 60) + " min"; }
+      const pts = [];
+      ne.forEach((e, i) => {
+        const x = m.l + i * bw + 1, y = Math.min(Y(0), Y(e.err)), h = Math.abs(Y(0) - Y(e.err));
+        const to = rows.find((r) => r.point === e.to);
+        el("rect", { x, y, width: Math.max(1, bw - 2), height: Math.max(1, h), fill: to && to.leg === "run" ? "var(--im)" : "var(--ours)", "fill-opacity": 0.85 }, svg);
+        pts.push({ x: x + bw / 2, y: Y(e.err), e, to });
+      });
+      const first = rows.find((r) => r.point === ne[0].to), firstRun = ne.findIndex((e) => rows.find((r) => r.point === e.to)?.leg === "run");
+      el("text", { x: m.l + 4, y: H - 8 }, svg).textContent = "Swim · bike";
+      if (firstRun > 0) { el("line", { x1: m.l + firstRun * bw, x2: m.l + firstRun * bw, y1: m.t, y2: m.t + ph, stroke: "var(--line)" }, svg); el("text", { x: m.l + firstRun * bw + 4, y: H - 8 }, svg).textContent = "Run"; }
+      el("text", { x: m.l + 6, y: m.t + 10 }, svg).textContent = "Predicted later than he came";
+      el("text", { x: m.l + 6, y: m.t + ph - 4 }, svg).textContent = "Predicted earlier than he came";
+      hover(fig, svg, W, pts, (p) => `<b>${matLabel(rows.find((r) => r.point === p.e.from))} → ${matLabel(p.to)}</b><br>${signed(p.e.err)}`);
+    }
+  }
+
+  // Table
+  $("#table").innerHTML = `<table><thead><tr><th>Mat</th><th>Time</th><th class="n">Tracker's finish</th><th class="n">vs actual</th><th class="n">After the fix</th><th class="n">IRONMAN's finish</th><th class="n">vs actual</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${matLabel(r)}</td><td>${fmtClock(r.t)}</td><td class="n">${r.ours ? fmtClock(r.ours) : "—"}</td><td class="n">${fin && r.ours ? signed(r.ours - fin) : "—"}</td><td class="n">${r.oursFixed ? `${fmtClock(r.oursFixed)}${fin ? ` (${signed(r.oursFixed - fin)})` : ""}` : "—"}</td><td class="n">${r.ironman ? fmtClock(r.ironman) : "—"}</td><td class="n">${fin && r.ironman ? signed(r.ironman - fin) : "—"}</td></tr>`).join("")}</tbody></table>`;
+}
+fetch("accuracy.json", { cache: "no-cache" }).then((r) => r.json()).then((d) => { D = d; render(); })
+  .catch(() => { $("#tiles").innerHTML = `<p class="muted">The forecast record isn't available yet.</p>`; });
+let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => D && render(), 150); });
+</script>
+</body>
+</html>

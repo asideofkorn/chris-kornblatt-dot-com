@@ -69,6 +69,26 @@ Written during and after the race so the post-mortem isn't reconstructed from me
 - **Fix:** one long-running job loops hourly itself; the schedule only restarts it.
 - **Rule:** cron is best-effort. Anything that must happen on time needs its own loop and a visible "as of".
 
+### 8. Forecast out of the water was an hour early (found in the post-race review)
+- **Symptom:** at 8:45 am the tracker said 6:08 pm; he finished 7:12 pm. The forecast only settled once his own
+  bike splits arrived.
+- **Cause:** the T1 mat sits 50 yards into the bike course (bike mile 0.03), and a stretch was charged to the
+  leg where it ends. The swim-exit-to-T1 stretch, for him and for his peers, became "bike time", so quick
+  transitions against a 13-minute plan read as bike form 0.83.
+- **Fix:** charge a stretch to the leg holding most of it. Replayed on the same data, the swim-exit forecast is
+  7:09 pm. A test now opens the page 90 s after his swim exit and checks the bike ratio hasn't moved.
+- **Rule:** a mat's leg is where it is on the course, not what it marks the end of. When a forecast jumps on
+  data that can't logically speak to that leg, trace the attribution before trusting the number.
+
+## Results
+- Finished 7:12:25 pm (11:24:59): swim 56:40, T1 8:58, bike 5:41:20, T2 9:00, run 4:29:01. Pre-race plan 7:25 pm.
+- Finish forecast, average miss across the bike's 21 mats: tracker 28 min (23 after fix 8), IRONMAN app 70 min.
+  Across the run's 20 mats: tracker 10 min, IRONMAN 23 min. The tracker stayed within 10 minutes from run
+  mile 13.8 (4:58 pm); IRONMAN from mile 18.1 (5:45 pm). IRONMAN's feed briefly published "3:54 am" at T1.
+- The remaining bike-phase miss was the run itself: every forecast assumed about 4:02 and he ran 4:29.
+- Hypothesis 3 (own first lap on repeated roads): bike lap 2 miss 1.0 min vs the model's 1.9 (10 stretches),
+  supported; run lap 2 2.0 vs 1.2 (7 stretches), rejected. Bike-only candidate for next time.
+
 ## What worked
 - Freezing the pre-race forecast first, so every change since is measurable.
 - Recording every split and estimate (race recorder, forecast snapshots, hourly pulls), which turned each
@@ -78,6 +98,5 @@ Written during and after the race so the post-mortem isn't reconstructed from me
 - Being a light load on the timing feed: nothing was throttled all day.
 
 ## Open items
-- Prediction accuracy: ours vs IRONMAN's vs actual at every mat, after the finish.
-- Hypothesis 3: own first lap on repeated roads (bike lap 2, run miles 16–25.7).
-- Case study: add incidents 3, 5 and 6 to the Experiments section.
+- Own-first-lap pacing for bike lap 2 (hypothesis 3), for the next race.
+- Pacing-and-fade chart from the final data pull.
