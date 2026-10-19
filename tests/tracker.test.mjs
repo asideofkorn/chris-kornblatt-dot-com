@@ -45,6 +45,18 @@ test("every mat's GPS position agrees with the mile the feed gives it", async ()
   await ctx.close();
 });
 
+test("at 5:16 pm he's just past the T2 mat heading south, as seen in person", async () => {
+  // Chris stood at the T2 mat (run mile 15.4) and saw him pass southbound at 5:15; the feed has RUN11 at 5:15:26.
+  const { page, ctx, errors } = await openAt(browser, { now: at("17:16") });
+  const s = await readState(page);
+  const heading = await page.evaluate(() => { const h = headingAt("run", currentState(buildModel(), Date.now()).pos.mile); return h && h.deg; });
+  assert.deepEqual(errors, []);
+  assert.equal(s.lastMat.point, "RUN11");
+  assert.ok(s.pos.leg === "run" && s.pos.mile > 15.42 && s.pos.mile < 15.8, `run mile ${s.pos.mile.toFixed(2)}`);
+  assert.ok(heading > 120 && heading < 240, `heading ${heading}° is not southbound`);
+  await ctx.close();
+});
+
 test("old saved times move to the corrected mat positions on reload", async () => {
   const T = (p) => crossing(p).t * 1000;
   const saved = {
