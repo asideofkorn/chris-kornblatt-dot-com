@@ -1388,7 +1388,7 @@ const TABS = ["now", "map", "log", "plan", "charts"];
 function go(tab) {
   S.tab = tab; save();
   // Keep the tab in the URL so links like ../#charts and the browser's back button land on the right tab.
-  history.replaceState(null, "", location.pathname + location.search + (tab === "now" ? "" : "#" + tab));
+  history.replaceState(null, "", location.pathname + (tab === "now" ? "" : "#" + tab));
   document.querySelectorAll("main section[data-tab]").forEach((s) => (s.hidden = s.dataset.tab !== tab));
   document.querySelectorAll("nav.tabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.go === tab));
   if (tab === "map") { initMap(); setTimeout(() => map && map.invalidateSize(), 50); }
@@ -1843,11 +1843,18 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden && Da
 setTimeout(refreshField, 3000);
 
 // New-version banner: the deploy stamps BUILD with a hash of this page's code and writes version.json alongside.
-async function checkVersion() {
+// Safari can open the page from its cache long after a new version is published. On load, if the published
+// build differs, go straight to a fresh URL (once per build, so a bad deploy can't loop); later during use,
+// just offer the banner so nobody loses their place.
+async function checkVersion(onLoad) {
   if (BUILD.includes("BUILD") || !$("#updateBar").hidden) return;
   try {
     const v = await (await fetch("version.json?t=" + Date.now(), { cache: "no-store" })).json();
-    if (v.build && v.build !== BUILD) { newBuild = v.build; $("#updateBar").hidden = false; }
+    if (!v.build || v.build === BUILD) return;
+    newBuild = v.build;
+    let tried = null; try { tried = sessionStorage.getItem("upgraded-to"); } catch (e) {}
+    if (onLoad && tried !== v.build) { try { sessionStorage.setItem("upgraded-to", v.build); } catch (e) {} location.replace(location.pathname + "?b=" + v.build + location.hash); return; }
+    $("#updateBar").hidden = false;
   } catch (e) {}
 }
 // Navigate with a fresh query string rather than reload(): iPhone Safari can serve a reload from its cache.
@@ -1855,7 +1862,7 @@ let newBuild = null;
 $("#updateBtn").onclick = () => location.replace(location.pathname + "?b=" + (newBuild || Date.now()) + location.hash);
 setInterval(() => { if (!document.hidden) checkVersion(); }, 3 * 60000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) checkVersion(); });
-checkVersion();
+checkVersion(true);
 setTimeout(refreshField, 5000);
 // Show the blue dot without a tap once location has been allowed here before (iPhone Safari can't report the permission).
 if (S.locOK) locate(false);
