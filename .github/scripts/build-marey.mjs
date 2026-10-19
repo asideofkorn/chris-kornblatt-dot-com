@@ -68,6 +68,8 @@ const registered = (d.profiles || []).filter((p) => (!p.course || p.course === C
 const athletes = [], divCodes = [], divs = [];
 let bradley = -1;
 for (const [pid, times] of byPid) {
+  // A chip with no start and only a mat or two (one crossed the finish line alone at 12:19 am) is not a race.
+  if (!times.has(0) && times.size < 3) continue;
   const idx = [...times.keys()].sort((a, b) => a - b);
   const start = times.get(0) ?? Math.min(...times.values());
   const lastT = Math.max(...times.values());
