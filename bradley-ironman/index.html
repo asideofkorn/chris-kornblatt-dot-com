@@ -1658,17 +1658,24 @@ async function fetchField(point) {
   }
   return rows;
 }
+const DEAD = new Set(); // mats that have reported no crossings at all
 let approxAt = 0;
 async function approxAppEst(lr) {
   if (Date.now() - approxAt < 3 * 60000 && S.appEst && S.appEst.from === lr.point) return;
   approxAt = Date.now();
   const def = POINTS[lr.point];
   const idx = FIELD_ORDER.findIndex((n) => POINTS[n][0] === def[0] && POINTS[n][1] === def[1]);
-  const next = FIELD_ORDER[idx + 1] || FIELD_ORDER[0];
-  if (!next || idx + 1 >= FIELD_ORDER.length) return;
+  if (idx + 1 >= FIELD_ORDER.length) return;
   try {
-    const rows = await fetchField(next);
-    if (rows.length < 5) return;
+    // The next mat with readings: a mat nobody has been read at is skipped.
+    let next = null, rows = [];
+    for (const name of FIELD_ORDER.slice(idx + 1, idx + 5)) {
+      if (DEAD.has(name)) continue;
+      rows = await fetchField(name);
+      if (rows.length) { next = name; break; }
+      DEAD.add(name);
+    }
+    if (!next || rows.length < 5) return;
     const fromNet = parseNet(lr.netTime) || 0;
     // Drop stray reads (impossibly quick from his mat to the next).
     const minSec = minHours(toCum(...def), toCum(...POINTS[next])) * 3600;
@@ -1699,10 +1706,15 @@ async function refreshField() {
     const qs = [];
     // Always look at the next few mats (that's also how his own crossings are found when his feed is stuck, and
     // he can miss a mat); only the comparison with peers stops at the first mat too few of them have reached.
-    let qsOk = true;
-    for (const name of FIELD_ORDER.slice(idx + 1, idx + 4)) {
-      await sleep(400);
-      const byPid = new Map((await fetchField(name)).map((r) => [r.pid, r.net]));
+    // A mat that reads nobody (RUN4 and RUN8 reported no one all day) is skipped, not treated as "not reached yet".
+    let qsOk = true, looked = 0;
+    for (const name of FIELD_ORDER.slice(idx + 1, idx + 7)) {
+      if (qs.length >= 3 || looked >= 5) break;
+      if (DEAD.has(name)) continue;
+      await sleep(400); looked++;
+      const at = await fetchField(name);
+      if (!at.length) { DEAD.add(name); continue; }
+      const byPid = new Map(at.map((r) => [r.pid, r.net]));
       const [leg, mile] = POINTS[name];
       // Mat lists include stray reads (a chip picked up from a nearby stretch of course), so drop impossible times,
       // and only use a mat most of his peers have reached: the early arrivals alone are the fast ones.

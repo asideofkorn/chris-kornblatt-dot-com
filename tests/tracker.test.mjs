@@ -134,7 +134,10 @@ test("run projection doesn't inherit bike speed", async () => {
 test("IRONMAN dot never runs past the next mat", async () => {
   const { page, ctx } = await openAt(browser, { now: at("15:35") });
   const s = await readState(page);
-  assert.ok(s.app == null || s.app <= run(4.86) + 0.01, `IRONMAN dot at ${s.app?.toFixed(2)} is past the next mat`);
+  // The next mat after mi 4.1 that has readings in the data (a mat nobody was read at is skipped).
+  const nextLive = await page.evaluate(() => FIELD_ORDER[FIELD_ORDER.indexOf("RUN3") + 1 + [...DEAD].filter((d) => FIELD_ORDER.indexOf(d) > FIELD_ORDER.indexOf("RUN3")).length]);
+  const limit = 114.96 + (await page.evaluate((n) => POINTS[n][1], nextLive));
+  assert.ok(s.app == null || s.app <= limit + 0.01, `IRONMAN dot at ${s.app?.toFixed(2)} is past the next mat ${nextLive}`);
   await ctx.close();
 });
 
