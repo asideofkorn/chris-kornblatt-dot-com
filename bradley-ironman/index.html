@@ -1105,6 +1105,22 @@ function drawArrows() {
     g.addTo(map);
   });
 }
+// Timing-mat markers, one per physical spot, from the feed's GPS positions.
+let matLayers = [];
+function drawMats() {
+  if (!map || !COURSE) return;
+  matLayers.forEach((l) => l.remove()); matLayers = [];
+  const groupOf = { swim: "swim", t1: "bike", bike: "bike", t2: "run", run: "run" };
+  const seen = new Set();
+  COURSE.points.forEach(([name, label, leg, mile, lat, lng]) => {
+    const key = lat.toFixed(4) + "," + lng.toFixed(4);
+    const same = COURSE.points.filter((p) => p[4].toFixed(4) + "," + p[5].toFixed(4) === key).map((p) => posLabel(p[2] === "swim" && p[3] === 0 ? "start" : p[2], p[3]));
+    if (seen.has(key)) return; seen.add(key);
+    const m = L.circleMarker([lat, lng], { radius: 5, weight: 2, fillOpacity: 1, className: "mat" }).addTo(courseGroups[groupOf[leg]] || courseGroups.run)
+      .bindPopup("<b>Timing mat</b><br>" + [...new Set(same)].join("<br>"));
+    matLayers.push(m);
+  });
+}
 function applyMapFilter(fit) {
   if (!map) return;
   const f = S.mapLeg || "all";
@@ -1160,14 +1176,7 @@ function initMap() {
       } else line.addTo(courseGroups[groupOf[k]]);
       courseBounds[groupOf[k]] = courseBounds[groupOf[k]] ? courseBounds[groupOf[k]].extend(line.getBounds()) : line.getBounds();
     });
-    const seen = new Set();
-    COURSE.points.forEach(([name, label, leg, mile, lat, lng]) => {
-      const key = lat.toFixed(4) + "," + lng.toFixed(4);
-      const same = COURSE.points.filter((p) => p[4].toFixed(4) + "," + p[5].toFixed(4) === key).map((p) => posLabel(p[2] === "swim" && p[3] === 0 ? "start" : p[2], p[3]));
-      if (seen.has(key)) return; seen.add(key);
-      L.circleMarker([lat, lng], { radius: 5, weight: 2, fillOpacity: 1, className: "mat" }).addTo(courseGroups[groupOf[leg]])
-        .bindPopup("<b>Timing mat</b><br>" + [...new Set(same)].join("<br>"));
-    });
+    drawMats();
     // Start and finish of each sport, marked differently so the order is clear where the course overlaps.
     // With all sports showing, only the race's own start and finish are marked; one sport shows its own ends.
     ["all", "swim", "bike", "run"].forEach((k) => (endGroups[k] = L.layerGroup()));
@@ -1776,6 +1785,7 @@ function remapObs() {
   });
 }
 // The timing feed's own mat list is the source of truth for where each mat is.
+const MAT_WARN = [];
 async function loadPoints() {
   try {
     const j = await rt(`/events/${RT.ev}/points`);
@@ -1784,6 +1794,26 @@ async function loadPoints() {
     for (const p of list) {
       const m = +p.miles;
       POINTS[p.name] = p.name === "START" ? ["start", 0] : m <= 2.45 ? ["swim", +m.toFixed(2)] : m < 114.9 ? ["bike", +Math.max(0, m - 2.76).toFixed(2)] : ["run", +Math.max(0, m - 114.96).toFixed(2)];
+    }
+    // Place each mat on the map at the GPS position the feed gives it, and check that position agrees with the
+    // mile the feed gives it: a mat whose coordinates fall somewhere else on the course is flagged (MAT_WARN) and
+    // its position is taken from the GPS instead.
+    if (COURSE) {
+      const pts = [];
+      for (const p of list) {
+        const lat = +p.coords?.lat, lng = +p.coords?.lng; if (!lat || !lng) continue;
+        const [leg, mile] = POINTS[p.name];
+        if (leg !== "start" && leg !== "swim" && LEGS[legIdx(leg)].dist) {
+          const near = snapPasses(lat, lng, 80).filter((x) => x.leg === leg);
+          if (near.length && !near.some((x) => Math.abs(x.mile - mile) < 0.3)) {
+            const best = near.reduce((a, b) => (Math.abs(b.mile - mile) < Math.abs(a.mile - mile) ? b : a));
+            MAT_WARN.push(`${p.name}: feed says ${leg} mi ${mile}, its GPS is at mi ${best.mile}`);
+            POINTS[p.name] = [leg, best.mile];
+          }
+        }
+        pts.push([p.name, p.label || p.name, POINTS[p.name][0] === "start" ? "swim" : POINTS[p.name][0], POINTS[p.name][1], lat, lng]);
+      }
+      if (pts.length > 20) { COURSE.points = pts; if (map) drawMats(); }
     }
     const order = list.filter((p) => !["START", "ANNOUNCER", "BIKE0", "BIKE21"].includes(p.name)).sort((a, b) => a.miles - b.miles);
     FIELD_ORDER.length = 0;

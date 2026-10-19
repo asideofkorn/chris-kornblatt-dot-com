@@ -35,6 +35,16 @@ test("at 4:12 pm he's shown near run mile 9, where the IRONMAN app had him", asy
   await ctx.close();
 });
 
+test("every mat's GPS position agrees with the mile the feed gives it", async () => {
+  // Catches a renamed or moved mat: the feed's coordinates must fall on the course within 0.3 mi of the feed's mile.
+  const { page, ctx } = await openAt(browser, { now: at("16:00"), settle: 3000 });
+  const warn = await page.evaluate(() => MAT_WARN);
+  assert.deepEqual(warn, []);
+  const pts = await page.evaluate(() => COURSE.points.filter((p) => p[2] === "run").map((p) => p[0] + "@" + p[3]));
+  assert.ok(pts.includes("RUN6@7.45") && pts.includes("RUN19@25.71"), pts.join(" "));
+  await ctx.close();
+});
+
 test("old saved times move to the corrected mat positions on reload", async () => {
   const T = (p) => crossing(p).t * 1000;
   const saved = {
