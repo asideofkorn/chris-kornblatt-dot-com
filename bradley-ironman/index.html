@@ -1790,9 +1790,11 @@ function remapObs() {
 const MAT_WARN = [];
 async function loadPoints() {
   try {
-    const j = await rt(`/events/${RT.ev}/points`);
+    // The feed pages this list (a request without max gets only the first page), so ask for all of it and
+    // only trust a list that runs all the way to the finish.
+    const j = await rt(`/events/${RT.ev}/points`, { max: 200 });
     const list = (j.list || []).filter((p) => p.name && p.miles != null && (!p.course || p.course === "ironman"));
-    if (list.length < 20) return;
+    if (list.length < 20 || !list.some((p) => p.name === "FINISH")) return;
     for (const p of list) {
       const m = +p.miles;
       POINTS[p.name] = p.name === "START" ? ["start", 0] : m <= 2.45 ? ["swim", +m.toFixed(2)] : m < 114.9 ? ["bike", +Math.max(0, m - 2.76).toFixed(2)] : ["run", +Math.max(0, m - 114.96).toFixed(2)];

@@ -73,7 +73,8 @@ export async function openAt(browser, opts) {
     const u = new URL(r.request().url());
     let body;
     if (u.pathname === "/register") body = { token: "TEST" };
-    else if (/\/events\/[^/]+\/points$/.test(u.pathname)) body = { list: opts.points || FEED_POINTS };
+    // Like the real API, the mat list is paged: without max only the first page (25) comes back.
+    else if (/\/events\/[^/]+\/points$/.test(u.pathname)) body = { list: (opts.points || FEED_POINTS).slice(0, +(u.searchParams.get("max") || 25)) };
     else if (u.pathname.includes("/profiles/")) body = { list: (opts.profile || PROFILE_FROZEN).filter((x) => +x.epochTime <= cut) };
     else {
       const m = u.pathname.match(/points\/(\w+)\/splits/), st = +(u.searchParams.get("start") || 1), mx = +(u.searchParams.get("max") || 1000);
