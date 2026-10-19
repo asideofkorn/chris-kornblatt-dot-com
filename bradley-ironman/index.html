@@ -308,6 +308,7 @@ td.num, th.num { text-align: right; }
 <script src="course.js"></script>
 <script>
 "use strict";
+const BUILD = "__BUILD__"; // stamped by the deploy with a hash of this page
 const RACE_DATE = "2026-10-18";
 const KEY = "bradley-imca-2026-v1";
 const LEGS = [
@@ -1570,7 +1571,8 @@ function setLive(state, msg) {
   LIVE.state = state; LIVE.msg = msg;
   const el = $("#livepill"); if (!el) return;
   el.className = "livepill" + (state === "ok" ? " ok" : state === "err" ? " err" : "");
-  el.lastElementChild.textContent = msg;
+  // The build id is shown so a phone that is stuck on an old version can be spotted from a screenshot.
+  el.lastElementChild.textContent = msg + (BUILD.includes("BUILD") ? "" : " · v" + BUILD.slice(0, 6));
 }
 
 let polling = false;
@@ -1839,15 +1841,16 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden && Da
 setTimeout(refreshField, 3000);
 
 // New-version banner: the deploy stamps BUILD with a hash of this page's code and writes version.json alongside.
-const BUILD = "__BUILD__";
 async function checkVersion() {
   if (BUILD.includes("BUILD") || !$("#updateBar").hidden) return;
   try {
     const v = await (await fetch("version.json?t=" + Date.now(), { cache: "no-store" })).json();
-    if (v.build && v.build !== BUILD) $("#updateBar").hidden = false;
+    if (v.build && v.build !== BUILD) { newBuild = v.build; $("#updateBar").hidden = false; }
   } catch (e) {}
 }
-$("#updateBtn").onclick = () => location.reload();
+// Navigate with a fresh query string rather than reload(): iPhone Safari can serve a reload from its cache.
+let newBuild = null;
+$("#updateBtn").onclick = () => location.replace(location.pathname + "?b=" + (newBuild || Date.now()) + location.hash);
 setInterval(() => { if (!document.hidden) checkVersion(); }, 3 * 60000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) checkVersion(); });
 checkVersion();
