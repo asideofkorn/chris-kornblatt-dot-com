@@ -44,8 +44,14 @@ a { color: inherit; }
 :focus-visible { outline: 3px solid var(--me); outline-offset: 2px; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
 .legend i { display: inline-block; width: 16px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
-.chart { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.chart { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; position: relative; cursor: zoom-in; }
 canvas { display: block; width: 100%; }
+.chart .hint { display: block; text-align: center; font: 600 12px var(--body); color: var(--muted); padding: 6px 0 8px; pointer-events: none; }
+.chart .close { display: none; position: absolute; right: max(10px, env(safe-area-inset-right)); top: max(10px, env(safe-area-inset-top)); width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 700 18px/1 var(--body); cursor: pointer; z-index: 2; }
+/* Tap to expand: the chart fills the screen (turn the phone sideways for a wider timeline). */
+.chart.full { position: fixed; inset: 0; z-index: 50; border: 0; border-radius: 0; overflow: auto; cursor: zoom-out; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+.chart.full .hint { display: none; } .chart.full .close { display: block; }
+body.lock { overflow: hidden; }
 .stages { display: grid; gap: 8px; }
 .stage { display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 1fr) 48px; gap: 10px; align-items: center; font-size: 15px; }
 .stage .bar { height: 14px; border-radius: 3px; background: var(--drop); min-width: 2px; }
@@ -79,6 +85,8 @@ canvas { display: block; width: 100%; }
 
   <figure class="chart" style="margin:0">
     <canvas id="marey" role="img" aria-label="Marey chart of every athlete's progress through the course by time of day"></canvas>
+    <figcaption class="hint">Tap the chart to expand it. Turn your phone sideways for a wider timeline.</figcaption>
+    <button class="close" type="button" aria-label="Close full screen">×</button>
   </figure>
 
   <section class="panel">
@@ -147,11 +155,12 @@ function summarize() {
 }
 
 function draw() {
-  const cv = $("#marey"), W = cv.parentElement.clientWidth, H = Math.round(Math.max(720, Math.min(1400, W * 1.5)));
+  const cv = $("#marey"), fig = cv.parentElement, full = fig.classList.contains("full");
+  const W = fig.clientWidth, H = full ? Math.max(fig.clientHeight, 420) : Math.round(Math.max(720, Math.min(1400, W * 1.5)));
   const dpr = window.devicePixelRatio || 1;
   cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + "px";
   const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const pad = { l: 52, r: W < 520 ? 44 : 70, t: 30, b: 14 };
+  const pad = { l: 52, r: W < 520 ? 44 : 70, t: 30, b: 26 };
   const pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
   const starts = D.athletes.map((a) => a[1]);
   const lastT = Math.max(...D.athletes.map((a) => a[1] + a[a.length - 1]));
@@ -178,7 +187,7 @@ function draw() {
   });
   // Time grid
   g.textAlign = "center"; g.textBaseline = "alphabetic";
-  const step = (t1 - t0) / 3600 > 10 ? 7200 : 3600;
+  const hours = (t1 - t0) / 3600, step = hours > 14 && W < 520 ? 10800 : hours > 10 ? 7200 : 3600;
   for (let t = Math.ceil(t0 / step) * step; t <= t1; t += step) {
     const x = X(t); g.strokeStyle = C.line; g.beginPath(); g.moveTo(x, pad.t); g.lineTo(x, pad.t + ph); g.stroke();
     g.fillStyle = C.muted; g.fillText(fmtClock(t), x, pad.t - 10);
@@ -195,11 +204,11 @@ function draw() {
   // Athlete lines
   const visible = (s) => show === "all" || (show === "fin" ? s === 0 : s === 1);
   const n = D.athletes.length;
-  const baseAlpha = Math.max(0.05, Math.min(0.35, 120 / Math.max(60, n)));
+  const baseAlpha = Math.max(0.06, Math.min(0.35, 150 / Math.max(60, n)));
   for (const pass of [0, 2, 1]) {
     if (!visible(pass) && !(show === "all")) continue;
     if (!visible(pass)) continue;
-    g.strokeStyle = pass === 1 ? C.drop : C.ink; g.globalAlpha = pass === 1 ? Math.min(0.7, baseAlpha * 5) : baseAlpha; g.lineWidth = 0.8;
+    g.strokeStyle = pass === 1 ? C.drop : C.ink; g.globalAlpha = pass === 1 ? Math.min(0.7, Math.max(0.3, baseAlpha * 5)) : baseAlpha; g.lineWidth = 0.8;
     g.beginPath();
     for (const a of D.athletes) {
       if (a[0] !== pass) continue;
@@ -218,7 +227,19 @@ function draw() {
   // Cutoffs and course close
   g.strokeStyle = C.drop; g.fillStyle = C.drop; g.lineWidth = 2; g.font = `700 10px ${css("--body")}`; g.textAlign = "right"; g.textBaseline = "middle";
   CUTOFFS.forEach((c) => { if (c.t > t1) return; const x = X(c.t), y = Y(c.cum); g.beginPath(); g.moveTo(x, y - 9); g.lineTo(x, y + 9); g.stroke(); g.fillText(c.label, x - 5, y - 12); });
-  if (D.courseClose <= t1) { const x = X(D.courseClose); g.setLineDash([4, 4]); g.lineWidth = 1.2; g.beginPath(); g.moveTo(x, pad.t); g.lineTo(x, pad.t + ph); g.stroke(); g.setLineDash([]); g.save(); g.translate(x - 5, pad.t + 8); g.rotate(-Math.PI / 2); g.textAlign = "right"; g.fillText("Course closes", 0, 0); g.restore(); }
+  // Every finish as a tick under the finish line, so the finishing field after Bradley is visible on its own.
+  if (show !== "dnf") {
+    const yf = Y(D.mats[D.mats.length - 1].cum);
+    g.strokeStyle = C.ink; g.globalAlpha = 0.12; g.lineWidth = 1; g.beginPath();
+    for (const a of D.athletes) { if (a[0] !== 0) continue; const x = X(a[1] + a[a.length - 1]); g.moveTo(x, yf + 4); g.lineTo(x, yf + 14); }
+    g.stroke(); g.globalAlpha = 1;
+  }
+  const final = D.asOf >= D.courseClose;
+  const lastFin = Math.max(0, ...D.athletes.filter((a) => a[0] === 0).map((a) => a[1] + a[a.length - 1]));
+  // The cutoff is 17 hours from each athlete's own start, so finishes ran past midnight: once the data is final the
+  // line marks the last finisher instead of the nominal midnight close.
+  const closeT = final && lastFin ? lastFin : D.courseClose, closeLabel = final && lastFin ? "Last finisher " + fmtClock(lastFin) : "Course closes";
+  if (closeT <= t1) { const x = X(closeT); g.setLineDash([4, 4]); g.lineWidth = 1.2; g.beginPath(); g.moveTo(x, pad.t); g.lineTo(x, pad.t + ph); g.stroke(); g.setLineDash([]); g.save(); g.translate(x - 5, pad.t + 8); g.rotate(-Math.PI / 2); g.textAlign = "right"; g.fillText(closeLabel, 0, 0); g.restore(); }
 
   // Bradley
   if (D.bradley >= 0) {
@@ -229,7 +250,7 @@ function draw() {
     const lx = X(a[1] + a[a.length - 1]), ly = Y(D.mats[a[a.length - 2]].cum);
     g.fillStyle = C.me; g.beginPath(); g.arc(lx, ly, 4.5, 0, Math.PI * 2); g.fill();
     g.font = `800 13px ${css("--display")}`; g.textAlign = lx > pad.l + pw - 80 ? "right" : "left"; g.textBaseline = "middle";
-    g.fillText("BRADLEY " + (a[0] === 0 ? fmtClock(a[1] + a[a.length - 1]) : ""), lx + (g.textAlign === "left" ? 8 : -8), ly);
+    g.fillText("BRADLEY " + (a[0] === 0 ? fmtClock(a[1] + a[a.length - 1]) : ""), lx + (g.textAlign === "left" ? 8 : -8), a[0] === 0 ? ly - 12 : ly);
   }
 
   // Dropout strip: athletes whose last timed mat was here
@@ -248,6 +269,17 @@ document.addEventListener("click", (e) => {
   const b = e.target.closest("[data-show]"); if (!b) return;
   show = b.dataset.show; document.querySelectorAll("[data-show]").forEach((x) => x.setAttribute("aria-pressed", x === b)); draw();
 });
+// Tap the chart to fill the screen; tap again, the × or Escape to leave.
+function setFull(on) {
+  const fig = $("#marey").parentElement;
+  fig.classList.toggle("full", on); document.body.classList.toggle("lock", on);
+  if (on && fig.requestFullscreen) fig.requestFullscreen().catch(() => {}); else if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  draw();
+}
+$("#marey").addEventListener("click", () => setFull(!$("#marey").parentElement.classList.contains("full")));
+$(".chart .close").addEventListener("click", (e) => { e.stopPropagation(); setFull(false); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") setFull(false); });
+document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && $("#marey").parentElement.classList.contains("full")) setFull(false); });
 let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(draw, 120); });
 matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", draw);
 
