@@ -3,9 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="robots" content="noindex, nofollow">
-<title>Moved to /bradley-ironman/</title>
-<script>location.replace("/bradley-ironman/" + location.search + location.hash);</script>
+<title>Bradley's IRONMAN tracker</title>
+<!-- Short link that always loads a fresh copy of the tracker: Safari can serve a cached page on reload, so
+     the target gets a one-time query string. The tracker drops it from the address bar once loaded. -->
+<script>location.replace("/bradley-ironman/?b=" + Date.now() + location.hash);</script>
 <meta http-equiv="refresh" content="0; url=/bradley-ironman/">
 </head>
-<body><p>This tracker moved to <a href="/bradley-ironman/">/bradley-ironman/</a>.</p></body>
+<body><p>Opening <a href="/bradley-ironman/">the tracker</a>…</p></body>
 </html>
