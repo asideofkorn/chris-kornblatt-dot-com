@@ -58,6 +58,13 @@ body.lock { overflow: hidden; }
 .stage b { text-align: right; }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 12px; }
 .notes { margin: 0; padding-left: 18px; color: var(--muted); font-size: 14px; display: grid; gap: 4px; max-width: 70ch; }
+
+/* Same bottom tab bar as the tracker, so a chart page is never a dead end; Charts is the current section. */
+body { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+nav.tabs .row { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); }
+nav.tabs a { display: block; text-align: center; text-decoration: none; padding: 10px 0 12px; font: 700 15px/1 var(--display); letter-spacing: .03em; text-transform: uppercase; color: var(--muted); border-top: 3px solid transparent; }
+nav.tabs a[aria-current="page"] { color: var(--ink); border-top-color: var(--ink); }
 </style>
 </head>
 <body>
@@ -288,5 +295,14 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", draw);
 fetch("marey.json", { cache: "no-cache" }).then((r) => r.json()).then((d) => { D = d; summarize(); draw(); })
   .catch(() => { $("#tiles").innerHTML = `<p class="muted">The race data isn't available yet. It's published after the evening data pull.</p>`; });
 </script>
+<nav class="tabs" aria-label="Sections">
+  <div class="row">
+    <a href="../">Now</a>
+    <a href="../#map">Map</a>
+    <a href="../#log">Log</a>
+    <a href="../#plan">Plan</a>
+    <a href="../#charts" aria-current="page">Charts</a>
+  </div>
+</nav>
 </body>
 </html>
