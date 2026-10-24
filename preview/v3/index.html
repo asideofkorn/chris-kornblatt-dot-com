@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f4f2ee"><title>Chris Kornblatt — Editorial Precision Preview</title>
 <style>
-:root{font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;color:#202525;background:#f4f2ee}*{box-sizing:border-box}body{margin:0}button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}.app{min-height:100dvh;position:relative;overflow:hidden;background:radial-gradient(ellipse at 95% 95%,#d8e1e4 0%,transparent 56%),#f4f2ee}.shell{max-width:1240px;margin:auto;padding:clamp(22px,5vw,72px)}header{display:flex;justify-content:space-between;align-items:center;gap:16px}.brand{font-size:12px;font-weight:650;letter-spacing:.12em;text-transform:uppercase}.nav{display:flex;gap:25px}.nav button{border:0;background:none;color:#666;padding:8px 0;font-size:13px}.nav button[aria-current=page]{color:#151a1a;border-bottom:1px solid}.page{min-height:calc(100dvh - 165px);display:none;opacity:0;transform:translateY(10px)}.page.active{display:block;animation:enter .32s cubic-bezier(.2,.8,.2,1) forwards}
-.page.leaving{display:block;position:absolute;left:0;right:0;top:0;pointer-events:none;animation:leave .16s ease-in forwards}
-@keyframes leave{to{opacity:0;transform:translateY(-7px)}}
+:root{font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;color:#202525;background:#f4f2ee}*{box-sizing:border-box}body{margin:0}button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}.app{min-height:100dvh;position:relative;overflow:hidden;background:radial-gradient(ellipse at 95% 95%,#d8e1e4 0%,transparent 56%),#f4f2ee}.shell{max-width:1240px;margin:auto;padding:clamp(22px,5vw,72px)}header{display:flex;justify-content:space-between;align-items:center;gap:16px}.brand{font-size:12px;font-weight:650;letter-spacing:.12em;text-transform:uppercase}.nav{display:flex;gap:25px}.nav button{border:0;background:none;color:#666;padding:8px 0;font-size:13px}.nav button[aria-current=page]{color:#151a1a;border-bottom:1px solid}.page{min-height:calc(100dvh - 165px);display:none;opacity:0;transform:translateY(10px)}.page.active{display:block;animation:enter .26s cubic-bezier(.2,.8,.2,1) forwards}
+.page.leaving{display:block;position:absolute;left:0;right:0;top:0;width:100%;pointer-events:none;animation:leave .26s ease-out forwards}
+@keyframes leave{to{opacity:0;transform:translateY(-4px)}}
 main{position:relative}
 .entry[data-go],.feature-link{transition:background .18s ease,color .18s ease}
 .entry[data-go]:hover,.entry[data-go]:focus-visible,.feature-link:hover{background:#e7eceb}
@@ -40,17 +40,20 @@ function show(id,animate=true){
  if(!document.getElementById(id))id='home';
  if(current===id){resetScroll();return}
  clearTimeout(transitionTimer);
- pages.forEach(p=>{p.classList.remove('leaving');if(p.id!==current)p.classList.remove('active')});
- const old=document.getElementById(current),next=document.getElementById(id);
- const finish=()=>{
-   if(old){old.classList.remove('active','leaving');old.style.display=''}
-   next.classList.add('active');
-   current=id;
-   nav.forEach(b=>{if(b.dataset.go===(id==='case'?'work':id))b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
-   resetScroll();
- };
- if(old&&animate&&!reduced){old.classList.add('leaving');transitionTimer=setTimeout(finish,155)}
- else finish();
+ const old=current?document.getElementById(current):null;
+ const next=document.getElementById(id);
+ pages.forEach(p=>{if(p!==old&&p!==next){p.classList.remove('active','leaving');p.style.display=''}});
+ if(old){old.classList.remove('leaving');old.style.display=''}
+ next.classList.remove('leaving','active');
+ // Mount the new content in the same frame before fading out the old.
+ next.classList.add('active');
+ current=id;
+ nav.forEach(b=>{if(b.dataset.go===(id==='case'?'work':id))b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+ resetScroll();
+ if(old&&animate&&!reduced){
+   old.classList.add('leaving');
+   transitionTimer=setTimeout(()=>{old.classList.remove('active','leaving');old.style.display=''},270);
+ }else if(old){old.classList.remove('active','leaving');old.style.display=''}
 }
 document.querySelectorAll('[data-go]').forEach(el=>el.addEventListener('click',e=>{
  e.preventDefault();const id=el.dataset.go;
