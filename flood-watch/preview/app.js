@@ -69,3 +69,36 @@
     stamp.textContent = "Data snapshot unavailable.";
   }
 })();
+
+(async () => {
+  const target = document.getElementById("forecast-periods");
+  const source = document.getElementById("forecast-source");
+  if (!target) return;
+  try {
+    const response = await fetch("../data/forecast.json", {cache:"no-store"});
+    if (!response.ok) throw new Error("Forecast snapshot unavailable");
+    const forecast = await response.json();
+    const periods = (forecast.periods || []).slice(0,14);
+    if (!periods.length) throw new Error("No forecast periods");
+    target.replaceChildren();
+    for (const period of periods) {
+      const row = document.createElement("div");
+      row.className = "row";
+      const label = document.createElement("span");
+      label.textContent = (period.name || "Period") + " · " + (period.short_forecast || "No summary");
+      const detail = document.createElement("span");
+      detail.className = "meta";
+      const probability = period.precipitation_probability_pct;
+      detail.textContent = (probability == null ? "Precipitation probability unavailable" : probability + "% chance of precipitation") +
+        (period.temperature_f == null ? "" : " · " + period.temperature_f + "°F");
+      row.append(label,detail);
+      target.append(row);
+    }
+    source.textContent = "NWS forecast for " + forecast.location + " · Updated " +
+      (forecast.updated_at ? new Date(forecast.updated_at).toLocaleString() : "time unavailable") +
+      ". These are point forecasts, not statewide precipitation totals or flood probabilities. Days 8–14 outlook not yet connected.";
+  } catch {
+    target.textContent = "Forecast snapshot not yet published. See the NWS forecast center below.";
+    source.textContent = "Forecast data unavailable; do not infer safe conditions. Use official NWS alerts.";
+  }
+})();
