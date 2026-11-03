@@ -20,7 +20,7 @@ jobs:
       - run: python scripts/flood-watch/update_reservoirs.py
       - name: Record published data revision
         run: |
-          python -c 'import json,subprocess,pathlib; sha=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip(); pathlib.Path("flood-watch/data/build.json").write_text(json.dumps({"commit_short":sha[:7],"source_commit":sha},indent=2)+"\\n")'
+          python -c 'import json,subprocess,pathlib; sha=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip(); pathlib.Path("flood-watch/data/build.json").write_text(json.dumps({"commit_short":sha[:7],"source_commit":sha},indent=2)+"\n")'
       - name: Commit changed data
         run: |
           git config user.name "github-actions[bot]"
