@@ -1,0 +1,36 @@
+{
+  "generated_at": "2026-11-03T03:13:19.373089+00:00",
+  "source": "California Data Exchange Center (CDEC), daily sensor 15",
+  "reservoirs": [
+    {
+      "station_id": "SHA",
+      "name": "Shasta Lake",
+      "observed_at": "20261101 0000",
+      "storage_af": 2267801.0,
+      "change_1d_af": -5111,
+      "change_7d_af": -37735,
+      "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=SHA&SensorNums=15&dur_code=D&Start=2026-10-21&End=2026-11-04",
+      "status": "ok"
+    },
+    {
+      "station_id": "ORO",
+      "name": "Lake Oroville",
+      "observed_at": "20261031 0000",
+      "storage_af": 1466844.0,
+      "change_1d_af": -2585,
+      "change_7d_af": -17379,
+      "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=ORO&SensorNums=15&dur_code=D&Start=2026-10-21&End=2026-11-04",
+      "status": "ok"
+    },
+    {
+      "station_id": "FOL",
+      "name": "Folsom Lake",
+      "observed_at": "20261101 0000",
+      "storage_af": 371632.0,
+      "change_1d_af": -719,
+      "change_7d_af": -10182,
+      "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=FOL&SensorNums=15&dur_code=D&Start=2026-10-21&End=2026-11-04",
+      "status": "ok"
+    }
+  ]
+}
