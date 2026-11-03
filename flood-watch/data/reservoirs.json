@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-03T03:20:36.390693+00:00",
+  "generated_at": "2026-11-03T03:47:52.248399+00:00",
   "source": "California Data Exchange Center (CDEC), daily sensor 15",
   "reservoirs": [
     {
@@ -10,6 +10,56 @@
       "change_1d_af": -5111,
       "change_7d_af": -37735,
       "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=SHA&SensorNums=15&dur_code=D&Start=2026-10-21&End=2026-11-04",
+      "history": [
+        {
+          "observed_at": "20261021 0000",
+          "storage_af": 2330709.0
+        },
+        {
+          "observed_at": "20261022 0000",
+          "storage_af": 2325643.0
+        },
+        {
+          "observed_at": "20261023 0000",
+          "storage_af": 2319151.0
+        },
+        {
+          "observed_at": "20261024 0000",
+          "storage_af": 2312221.0
+        },
+        {
+          "observed_at": "20261025 0000",
+          "storage_af": 2305536.0
+        },
+        {
+          "observed_at": "20261026 0000",
+          "storage_af": 2300482.0
+        },
+        {
+          "observed_at": "20261027 0000",
+          "storage_af": 2294081.0
+        },
+        {
+          "observed_at": "20261028 0000",
+          "storage_af": 2286738.0
+        },
+        {
+          "observed_at": "20261029 0000",
+          "storage_af": 2279839.0
+        },
+        {
+          "observed_at": "20261030 0000",
+          "storage_af": 2275908.0
+        },
+        {
+          "observed_at": "20261031 0000",
+          "storage_af": 2272912.0
+        },
+        {
+          "observed_at": "20261101 0000",
+          "storage_af": 2267801.0
+        }
+      ],
       "status": "ok"
     },
     {
@@ -20,6 +70,52 @@
       "change_1d_af": -2585,
       "change_7d_af": -17379,
       "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=ORO&SensorNums=15&dur_code=D&Start=2026-10-21&End=2026-11-04",
+      "history": [
+        {
+          "observed_at": "20261021 0000",
+          "storage_af": 1499558.0
+        },
+        {
+          "observed_at": "20261022 0000",
+          "storage_af": 1494491.0
+        },
+        {
+          "observed_at": "20261023 0000",
+          "storage_af": 1489354.0
+        },
+        {
+          "observed_at": "20261024 0000",
+          "storage_af": 1484223.0
+        },
+        {
+          "observed_at": "20261025 0000",
+          "storage_af": 1479456.0
+        },
+        {
+          "observed_at": "20261026 0000",
+          "storage_af": 1476509.0
+        },
+        {
+          "observed_at": "20261027 0000",
+          "storage_af": 1474178.0
+        },
+        {
+          "observed_at": "20261028 0000",
+          "storage_af": 1472710.0
+        },
+        {
+          "observed_at": "20261029 0000",
+          "storage_af": 1471501.0
+        },
+        {
+          "observed_at": "20261030 0000",
+          "storage_af": 1469429.0
+        },
+        {
+          "observed_at": "20261031 0000",
+          "storage_af": 1466844.0
+        }
+      ],
       "status": "ok"
     },
     {
@@ -30,6 +126,56 @@
       "change_1d_af": -719,
       "change_7d_af": -10182,
       "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=FOL&SensorNums=15&dur_code=D&Start=2026-10-21&End=2026-11-04",
+      "history": [
+        {
+          "observed_at": "20261021 0000",
+          "storage_af": 387643.0
+        },
+        {
+          "observed_at": "20261022 0000",
+          "storage_af": 385821.0
+        },
+        {
+          "observed_at": "20261023 0000",
+          "storage_af": 384085.0
+        },
+        {
+          "observed_at": "20261024 0000",
+          "storage_af": 382949.0
+        },
+        {
+          "observed_at": "20261025 0000",
+          "storage_af": 381814.0
+        },
+        {
+          "observed_at": "20261026 0000",
+          "storage_af": 380412.0
+        },
+        {
+          "observed_at": "20261027 0000",
+          "storage_af": 378684.0
+        },
+        {
+          "observed_at": "20261028 0000",
+          "storage_af": 376769.0
+        },
+        {
+          "observed_at": "20261029 0000",
+          "storage_af": 374789.0
+        },
+        {
+          "observed_at": "20261030 0000",
+          "storage_af": 373204.0
+        },
+        {
+          "observed_at": "20261031 0000",
+          "storage_af": 372351.0
+        },
+        {
+          "observed_at": "20261101 0000",
+          "storage_af": 371632.0
+        }
+      ],
       "status": "ok"
     }
   ]

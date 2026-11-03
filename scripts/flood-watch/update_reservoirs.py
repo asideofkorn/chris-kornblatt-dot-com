@@ -34,7 +34,7 @@ for station, name in STATIONS.items():
         results.append({"station_id": station, "name": name, **latest,
                         "change_1d_af": round(latest["storage_af"]-previous["storage_af"]) if previous else None,
                         "change_7d_af": round(latest["storage_af"]-week["storage_af"]) if week else None,
-                        "source_url": url, "status": "ok"})
+                        "source_url": url, "history": observations[-14:], "status": "ok"})
     except Exception as exc:
         results.append({"station_id": station, "name": name, "status": "unavailable", "error": str(exc)[:140]})
 if not any(r["status"] == "ok" for r in results):
