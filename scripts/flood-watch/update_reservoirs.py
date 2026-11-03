@@ -4,6 +4,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 STATIONS = {"SHA": "Shasta Lake", "ORO": "Lake Oroville", "FOL": "Folsom Lake"}
+# Published capacity references: USBR (SHA/FOL), DWR updated 2024 rating curve (ORO).
+CAPACITY_AF = {"SHA": 4552000, "ORO": 3424753, "FOL": 977000}
 # CDEC daily sensor 15 reports reservoir storage in acre-feet.
 BASE = "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet"
 results = []
@@ -34,7 +36,7 @@ for station, name in STATIONS.items():
         results.append({"station_id": station, "name": name, **latest,
                         "change_1d_af": round(latest["storage_af"]-previous["storage_af"]) if previous else None,
                         "change_7d_af": round(latest["storage_af"]-week["storage_af"]) if week else None,
-                        "source_url": url, "history": observations[-14:], "status": "ok"})
+                        "source_url": url, "history": observations[-14:], "capacity_af": CAPACITY_AF[station], "percent_full": round(100 * latest["storage_af"] / CAPACITY_AF[station], 2), "status": "ok"})
     except Exception as exc:
         results.append({"station_id": station, "name": name, "status": "unavailable", "error": str(exc)[:140]})
 if not any(r["status"] == "ok" for r in results):
