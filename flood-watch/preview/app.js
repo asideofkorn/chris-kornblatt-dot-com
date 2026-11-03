@@ -158,3 +158,43 @@
     source.textContent = "Forecast data unavailable; do not infer safe conditions. Use official NWS alerts.";
   }
 })();
+
+(async () => {
+  const target=document.getElementById("flow-data");
+  if (!target) return;
+  try {
+    const response=await fetch("../data/flows.json",{cache:"no-store"});
+    if (!response.ok) throw new Error("Flow snapshot not published");
+    const data=await response.json();
+    target.replaceChildren();
+    for (const station of data.stations || []) {
+      const section=document.createElement("section");
+      const heading=document.createElement("h3");
+      heading.style.fontSize="1.15rem";
+      heading.textContent=station.name;
+      section.append(heading);
+      const row=document.createElement("div");
+      row.className="row";
+      for (const [key,label] of [["inflow_cfs","Inflow"],["outflow_cfs","Outflow"]]) {
+        const field=document.createElement("div");
+        field.style.flex="1";
+        const metric=station[key];
+        const value=metric && metric.status==="ok" && metric.latest ? Math.round(metric.latest.value_cfs).toLocaleString()+" cfs" : "Unavailable";
+        const date=metric && metric.latest ? metric.latest.observed_at : "No verified observation";
+        const name=document.createElement("strong");name.textContent=label;
+        const reading=document.createElement("div");reading.textContent=value;
+        const observed=document.createElement("small");observed.className="meta";observed.textContent="Observed: "+date;
+        field.append(name,reading,observed);
+        row.append(field);
+      }
+      section.append(row);
+      target.append(section);
+    }
+    const footer=document.createElement("p");
+    footer.className="meta";
+    footer.textContent="CDEC daily flow readings. Snapshot generated "+new Date(data.generated_at).toLocaleString()+".";
+    target.append(footer);
+  } catch {
+    target.textContent="Flow measurements not yet published. Check the USACE report or CDEC directly.";
+  }
+})();
