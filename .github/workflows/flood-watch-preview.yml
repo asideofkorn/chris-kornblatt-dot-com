@@ -6,6 +6,7 @@ on:
       - 'scripts/flood-watch/update_forecast.py'
       - 'scripts/flood-watch/update_reservoirs.py'
       - 'scripts/flood-watch/update_flows.py'
+      - 'scripts/flood-watch/update_flood_control.py'
       - '.github/workflows/flood-watch-preview.yml'
   schedule:
     - cron: '43 */6 * * *'
@@ -26,6 +27,9 @@ jobs:
       - name: Update reservoir flows
         run: python scripts/flood-watch/update_flows.py
         continue-on-error: true
+      - name: Update flood-control requirements
+        run: python scripts/flood-watch/update_flood_control.py
+        continue-on-error: true
       - name: Update forecast
         run: python scripts/flood-watch/update_forecast.py
       - name: Validate generated JSON
@@ -36,4 +40,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add flood-watch/data/reservoirs.json flood-watch/data/forecast.json
           if [ -f flood-watch/data/flows.json ]; then python -m json.tool flood-watch/data/flows.json > /dev/null && git add flood-watch/data/flows.json; fi
+          if [ -f flood-watch/data/flood_control.json ]; then python -m json.tool flood-watch/data/flood_control.json > /dev/null && git add flood-watch/data/flood_control.json; fi
           git diff --cached --quiet || (git commit -m "Update Flood Watch preview observations" && git push origin HEAD:main)
