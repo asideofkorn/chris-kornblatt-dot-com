@@ -1,1 +1,71 @@
-(async()=>{const summary=document.getElementById("summary"),timeline=document.getElementById("timeline"),stamp=document.getElementById("timestamp");try{const res=await fetch("../../flood-watch/data/reservoirs.json",{cache:"no-store"});if(!res.ok)throw Error("Data not available");const data=await res.json();const good=data.reservoirs.filter(r=>r.status==="ok");if(!good.length)throw Error("No valid observations");summary.innerHTML="";for(const r of good){const div=document.createElement("div");div.className="row";const change=r.change_7d_af==null?"7-day change unavailable":(r.change_7d_af>0?"+":"")+Math.round(r.change_7d_af).toLocaleString()+" acre-ft in 7 days";const a=document.createElement("span");a.textContent=r.name+" · "+Math.round(r.storage_af).toLocaleString()+" acre-ft";const b=document.createElement("span");b.className="meta";b.textContent=change;div.append(a,b);summary.append(div)}stamp.textContent="Snapshot generated "+new Date(data.generated_at).toLocaleString()+" · Daily CDEC storage; not flood-control capacity.";timeline.innerHTML="";for(let i=6;i>=0;i--){const date=new Date();date.setDate(date.getDate()-i);const div=document.createElement("div");div.className="day";const day=document.createElement("strong");day.textContent=date.toLocaleDateString(undefined,{weekday:"short"});const detail=document.createElement("small");detail.textContent="Reservoir trend only";div.append(day,detail);timeline.append(div)}}catch(e){summary.textContent="Reservoir trend unavailable; live data is not yet verified for this preview.";timeline.textContent="No daily timeline data available.";stamp.textContent="No current snapshot available."}})();
+(async () => {
+  const summary = document.getElementById("summary");
+  const timeline = document.getElementById("timeline");
+  const stamp = document.getElementById("timestamp");
+  try {
+    const response = await fetch("../data/reservoirs.json", { cache: "no-store" });
+    if (!response.ok) throw new Error("Snapshot unavailable");
+    const data = await response.json();
+    const stations = (data.reservoirs || []).filter(r => r.status === "ok" && Number.isFinite(r.storage_af));
+    if (!stations.length) throw new Error("No valid stations");
+    summary.replaceChildren();
+    for (const station of stations) {
+      const line = document.createElement("div");
+      line.className = "row";
+      const label = document.createElement("span");
+      label.textContent = station.name + " · " + Math.round(station.storage_af).toLocaleString() + " acre-ft";
+      const trend = document.createElement("span");
+      trend.className = "meta";
+      trend.textContent = station.change_7d_af == null ? "7-day change unavailable" :
+        (station.change_7d_af > 0 ? "+" : "") + Math.round(station.change_7d_af).toLocaleString() + " acre-ft / 7 days";
+      line.append(label, trend);
+      summary.append(line);
+    }
+    const time = new Date(data.generated_at);
+    stamp.textContent = "Snapshot generated " + (Number.isNaN(time.getTime()) ? data.generated_at : time.toLocaleString()) + " · CDEC daily storage, not designated flood-control space.";
+    timeline.replaceChildren();
+    const withHistory = stations.filter(r => Array.isArray(r.history) && r.history.length > 1);
+    if (!withHistory.length) {
+      timeline.style.display = "block";
+      timeline.textContent = "Daily history is not yet included in the published snapshot. The verified 7-day changes above are available.";
+      return;
+    }
+    timeline.style.display = "block";
+    for (const station of withHistory) {
+      const section = document.createElement("section");
+      const heading = document.createElement("h3");
+      heading.textContent = station.name;
+      heading.style.fontSize = "1.1rem";
+      section.append(heading);
+      const observations = station.history.slice(-7);
+      const min = Math.min(...observations.map(o => o.storage_af));
+      const max = Math.max(...observations.map(o => o.storage_af));
+      const chart = document.createElement("div");
+      chart.style.cssText = "display:flex;align-items:end;gap:8px;height:130px;margin:12px 0 25px";
+      for (const observation of observations) {
+        const bar = document.createElement("div");
+        bar.style.cssText = "flex:1;min-width:0;text-align:center";
+        const visual = document.createElement("div");
+        visual.style.cssText = "background:#167454;border-radius:3px 3px 0 0;margin:auto;width:100%;";
+        visual.style.height = (20 + 80 * (max === min ? 0.5 : (observation.storage_af - min) / (max - min))) + "px";
+        visual.title = observation.observed_at + ": " + Math.round(observation.storage_af).toLocaleString() + " acre-ft";
+        const label = document.createElement("small");
+        label.style.cssText = "display:block;font-size:10px;overflow:hidden";
+        label.textContent = observation.observed_at.slice(4,8);
+        bar.append(visual,label);
+        chart.append(bar);
+      }
+      section.append(chart);
+      timeline.append(section);
+    }
+    const explanation = document.createElement("p");
+    explanation.className = "meta";
+    explanation.textContent = "Bar heights show relative variation within each reservoir over its last seven recorded observations; they do not compare absolute capacity across reservoirs.";
+    timeline.append(explanation);
+  } catch (error) {
+    summary.textContent = "Current observations unavailable. Consult California Water Watch.";
+    timeline.style.display = "block";
+    timeline.textContent = "Daily history unavailable.";
+    stamp.textContent = "Data snapshot unavailable.";
+  }
+})();
