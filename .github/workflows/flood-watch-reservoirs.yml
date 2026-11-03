@@ -1,6 +1,10 @@
 name: Update Flood Watch reservoirs
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/flood-watch/update_reservoirs.py'
+      - '.github/workflows/flood-watch-reservoirs.yml'
   schedule:
     - cron: '17 */6 * * *'
 permissions:
