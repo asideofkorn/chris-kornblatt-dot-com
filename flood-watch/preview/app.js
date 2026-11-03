@@ -198,3 +198,35 @@
     target.textContent="Flow measurements not yet published. Check the USACE report or CDEC directly.";
   }
 })();
+
+(async()=>{
+  const el=document.getElementById("flood-control-status");
+  if(!el)return;
+  try {
+    const response=await fetch("../data/flood_control.json",{cache:"no-store"});
+    if(!response.ok)throw Error("No verified report");
+    const report=await response.json();
+    el.replaceChildren();
+    const date=document.createElement("span");
+    date.textContent="USACE report "+report.report_date+": ";
+    el.append(date);
+    for(const name of ["Shasta","Oroville","Folsom Lake"]){
+      const reservoir=report.reservoirs?.[name];
+      const line=document.createElement("div");
+      line.style.marginTop="8px";
+      if(reservoir?.status==="ok"){
+        const signed=reservoir.above_target_af;
+        line.textContent=name+": "+Math.abs(signed).toLocaleString()+" acre-feet "+(signed>0?"above":signed<0?"below":"at")+" top-of-conservation target ("+reservoir.top_conservation_af.toLocaleString()+" acre-feet).";
+      }else{
+        line.textContent=name+": target comparison unavailable.";
+      }
+      el.append(line);
+    }
+    const caution=document.createElement("div");
+    caution.style.marginTop="8px";
+    caution.textContent="Top of conservation is an operating limit, not total reservoir capacity or a guarantee of flood safety.";
+    el.append(caution);
+  }catch{
+    el.textContent="Official target data not yet verified. Open the USACE report for current requirements.";
+  }
+})();
