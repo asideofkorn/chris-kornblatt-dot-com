@@ -44,8 +44,9 @@
       unit.className = "meta";
       unit.textContent = "Reservoir storage (acre-feet) · daily CDEC readings";
       section.append(unit);
+      const capacity = station.capacity_af || ({SHA:4552000,ORO:3424753,FOL:977000})[station.station_id];
       const chart = document.createElement("div");
-      chart.style.cssText = "display:grid;grid-template-columns:76px minmax(0,1fr);gap:8px;align-items:stretch;margin:12px 0 26px";
+      chart.style.cssText = "display:grid;grid-template-columns:76px minmax(0,1fr) 44px;gap:8px;align-items:stretch;margin:12px 0 26px";
       const axis = document.createElement("div");
       axis.style.cssText = "height:152px;display:flex;flex-direction:column;justify-content:space-between;text-align:right;font-size:11px;color:#66716b";
       const formatAxis = n => (n / 1000000).toFixed(3) + "M";
@@ -71,18 +72,51 @@
         bar.append(visual,label);
         plot.append(bar);
       }
-      chart.append(axis,plot);
+      const percentAxis = document.createElement("div");
+      percentAxis.style.cssText = "height:152px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;font-size:11px;color:#b66c20";
+      const topPercent = document.createElement("span");
+      topPercent.textContent = "100%";
+      const bottomPercent = document.createElement("span");
+      bottomPercent.textContent = "0%";
+      percentAxis.append(topPercent,bottomPercent);
+      plot.style.position = "relative";
+      const svgNS = "http://www.w3.org/2000/svg";
+      const line = document.createElementNS(svgNS,"svg");
+      line.setAttribute("viewBox","0 0 700 152");
+      line.setAttribute("preserveAspectRatio","none");
+      line.style.cssText = "position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none";
+      const points = observations.map((o,i) => {
+        const pct = Math.max(0,Math.min(100,100*o.storage_af/capacity));
+        return [((i+.5)/observations.length)*700,152-pct*1.52];
+      });
+      const polyline = document.createElementNS(svgNS,"polyline");
+      polyline.setAttribute("points",points.map(p=>p.join(",")).join(" "));
+      polyline.setAttribute("fill","none");
+      polyline.setAttribute("stroke","#b66c20");
+      polyline.setAttribute("stroke-width","3");
+      polyline.setAttribute("vector-effect","non-scaling-stroke");
+      line.append(polyline);
+      points.forEach(([x,y],i) => {
+        const dot=document.createElementNS(svgNS,"circle");
+        dot.setAttribute("cx",x);dot.setAttribute("cy",y);dot.setAttribute("r","4");
+        dot.setAttribute("fill","#b66c20");
+        dot.setAttribute("vector-effect","non-scaling-stroke");
+        line.append(dot);
+      });
+      plot.append(line);
+      chart.append(axis,plot,percentAxis);
       section.append(chart);
       const range = document.createElement("p");
       range.className = "meta";
       range.style.marginTop = "24px";
       range.textContent = "Range: " + Math.round(min).toLocaleString() + "–" + Math.round(max).toLocaleString() + " acre-feet. Axis labels in millions of acre-feet (M).";
       section.append(range);
+      const legend=document.createElement("p");legend.className="meta";legend.textContent="Green bars: storage (acre-feet, left axis) · Orange line: % of total capacity (right axis) · Capacity: "+Math.round(capacity).toLocaleString()+" acre-feet";section.append(legend);
       timeline.append(section);
     }
     const explanation = document.createElement("p");
     explanation.className = "meta";
-    explanation.textContent = "Bar heights show relative variation within each reservoir over its last seven recorded observations; they do not compare absolute capacity across reservoirs.";
+    explanation.textContent = "The orange line uses the 0–100% right axis; the green bars use a zoomed storage axis. Percent full is total storage divided by published capacity, NOT flood-control capacity. The two series describe the same water volume in different units.";
     timeline.append(explanation);
   } catch (error) {
     summary.textContent = "Current observations unavailable. Consult California Water Watch.";
