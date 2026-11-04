@@ -1,28 +1,19 @@
 {
-  "generated_at": "2026-11-03T23:38:55.172079+00:00",
-  "issued_at": "2026-11-03T23:34:26+00:00",
+  "generated_at": "2026-11-04T06:57:04.255804+00:00",
+  "issued_at": "2026-11-04T03:23:02+00:00",
   "updated_at": "2026-11-03T21:01:01+00:00",
   "location": "Sacramento, CA (representative point; not statewide)",
   "source": "National Weather Service",
   "source_url": "https://api.weather.gov/gridpoints/STO/41,68/forecast",
   "periods": [
     {
-      "name": "This Afternoon",
-      "start_time": "2026-11-03T15:00:00-08:00",
-      "end_time": "2026-11-03T18:00:00-08:00",
-      "temperature_f": 60,
-      "precipitation_probability_pct": 40,
-      "short_forecast": "Chance Light Rain",
-      "detailed_forecast": "A chance of rain. Partly sunny. High near 60, with temperatures falling to around 58 in the afternoon. East northeast wind around 6 mph. Chance of precipitation is 40%. New rainfall amounts between a tenth and quarter of an inch possible."
-    },
-    {
       "name": "Tonight",
-      "start_time": "2026-11-03T18:00:00-08:00",
+      "start_time": "2026-11-03T19:00:00-08:00",
       "end_time": "2026-11-04T06:00:00-08:00",
       "temperature_f": 49,
-      "precipitation_probability_pct": 18,
-      "short_forecast": "Slight Chance Light Rain then Partly Cloudy",
-      "detailed_forecast": "A slight chance of rain before 7pm. Partly cloudy, with a low around 49. North wind 3 to 8 mph. Chance of precipitation is 20%. New rainfall amounts less than a tenth of an inch possible."
+      "precipitation_probability_pct": 10,
+      "short_forecast": "Partly Cloudy",
+      "detailed_forecast": "Partly cloudy, with a low around 49. North wind 3 to 8 mph. New rainfall amounts less than a tenth of an inch possible."
     },
     {
       "name": "Wednesday",
@@ -58,7 +49,7 @@
       "temperature_f": 47,
       "precipitation_probability_pct": 0,
       "short_forecast": "Mostly Clear",
-      "detailed_forecast": "Mostly clear, with a low around 47."
+      "detailed_forecast": "Mostly clear, with a low around 47. North wind around 2 mph."
     },
     {
       "name": "Friday",
@@ -131,6 +122,15 @@
       "precipitation_probability_pct": 1,
       "short_forecast": "Partly Cloudy",
       "detailed_forecast": "Partly cloudy, with a low around 49."
+    },
+    {
+      "name": "Tuesday",
+      "start_time": "2026-11-10T06:00:00-08:00",
+      "end_time": "2026-11-10T18:00:00-08:00",
+      "temperature_f": 71,
+      "precipitation_probability_pct": 6,
+      "short_forecast": "Mostly Sunny",
+      "detailed_forecast": "Mostly sunny, with a high near 71."
     }
   ]
 }
