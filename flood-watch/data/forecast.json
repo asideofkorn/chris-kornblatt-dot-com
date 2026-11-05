@@ -1,20 +1,11 @@
 {
-  "generated_at": "2026-11-04T19:59:58.827501+00:00",
-  "issued_at": "2026-11-04T19:00:52+00:00",
-  "updated_at": "2026-11-04T18:31:19+00:00",
+  "generated_at": "2026-11-05T07:21:17.922166+00:00",
+  "issued_at": "2026-11-05T02:27:31+00:00",
+  "updated_at": "2026-11-04T21:00:52+00:00",
   "location": "Sacramento, CA (representative point; not statewide)",
   "source": "National Weather Service",
   "source_url": "https://api.weather.gov/gridpoints/STO/41,68/forecast",
   "periods": [
-    {
-      "name": "Today",
-      "start_time": "2026-11-04T11:00:00-08:00",
-      "end_time": "2026-11-04T18:00:00-08:00",
-      "temperature_f": 68,
-      "precipitation_probability_pct": 1,
-      "short_forecast": "Sunny",
-      "detailed_forecast": "Sunny. High near 68, with temperatures falling to around 66 in the afternoon. North northwest wind 2 to 9 mph, with gusts as high as 20 mph."
-    },
     {
       "name": "Tonight",
       "start_time": "2026-11-04T18:00:00-08:00",
@@ -40,7 +31,7 @@
       "temperature_f": 45,
       "precipitation_probability_pct": 0,
       "short_forecast": "Mostly Clear",
-      "detailed_forecast": "Mostly clear, with a low around 45. North northeast wind around 2 mph."
+      "detailed_forecast": "Mostly clear. Low around 45, with temperatures rising to around 47 overnight. North northeast wind around 2 mph."
     },
     {
       "name": "Friday",
@@ -58,7 +49,7 @@
       "temperature_f": 46,
       "precipitation_probability_pct": 0,
       "short_forecast": "Mostly Clear",
-      "detailed_forecast": "Mostly clear, with a low around 46."
+      "detailed_forecast": "Mostly clear, with a low around 46. North northeast wind around 2 mph."
     },
     {
       "name": "Saturday",
@@ -131,6 +122,15 @@
       "precipitation_probability_pct": 5,
       "short_forecast": "Partly Cloudy",
       "detailed_forecast": "Partly cloudy, with a low around 49."
+    },
+    {
+      "name": "Veterans Day",
+      "start_time": "2026-11-11T06:00:00-08:00",
+      "end_time": "2026-11-11T18:00:00-08:00",
+      "temperature_f": 69,
+      "precipitation_probability_pct": 31,
+      "short_forecast": "Mostly Sunny then Chance Light Rain",
+      "detailed_forecast": "A chance of rain between 4pm and 5pm. Mostly sunny, with a high near 69."
     }
   ]
 }
