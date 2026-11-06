@@ -1,25 +1,25 @@
 {
-  "generated_at": "2026-11-06T07:21:58.576083+00:00",
-  "report_date": "2026-11-04",
+  "generated_at": "2026-11-06T19:40:07.831071+00:00",
+  "report_date": "2026-11-05",
   "source_url": "https://www.spk-wc.usace.army.mil/fcgi-bin/midnight.py?days=0&report=FCR",
   "source": "USACE Sacramento District Flood Control Requirements",
   "interpretation": "Top of conservation is a maximum operating target, not total physical empty capacity.",
   "reservoirs": {
     "Shasta": {
       "gross_capacity_af": 4552100,
-      "top_conservation_af": 3806198,
-      "actual_storage_af": 2260161,
-      "above_target_af": -1546037,
-      "room_to_target_af": 1546037,
+      "top_conservation_af": 3784887,
+      "actual_storage_af": 2257723,
+      "above_target_af": -1527164,
+      "room_to_target_af": 1527164,
       "encroachment_af": 0,
       "status": "ok"
     },
     "Oroville": {
       "gross_capacity_af": 3425000,
       "top_conservation_af": 3050000,
-      "actual_storage_af": 1458077,
-      "above_target_af": -1591923,
-      "room_to_target_af": 1591923,
+      "actual_storage_af": 1455250,
+      "above_target_af": -1594750,
+      "room_to_target_af": 1594750,
       "encroachment_af": 0,
       "status": "ok"
     },
