@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-06T19:40:03.635402+00:00",
+  "generated_at": "2026-11-07T05:57:16.287180+00:00",
   "source": "California Data Exchange Center (CDEC), daily sensor 15",
   "reservoirs": [
     {
@@ -9,12 +9,8 @@
       "storage_af": 2257723.0,
       "change_1d_af": -2438,
       "change_7d_af": -22116,
-      "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=SHA&SensorNums=15&dur_code=D&Start=2026-10-24&End=2026-11-07",
+      "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=SHA&SensorNums=15&dur_code=D&Start=2026-10-25&End=2026-11-08",
       "history": [
-        {
-          "observed_at": "20261024 0000",
-          "storage_af": 2312221.0
-        },
         {
           "observed_at": "20261025 0000",
           "storage_af": 2305536.0
@@ -75,12 +71,8 @@
       "storage_af": 1455250.0,
       "change_1d_af": -2827,
       "change_7d_af": -17460,
-      "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=ORO&SensorNums=15&dur_code=D&Start=2026-10-24&End=2026-11-07",
+      "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=ORO&SensorNums=15&dur_code=D&Start=2026-10-25&End=2026-11-08",
       "history": [
-        {
-          "observed_at": "20261024 0000",
-          "storage_af": 1484223.0
-        },
         {
           "observed_at": "20261025 0000",
           "storage_af": 1479456.0
@@ -137,12 +129,8 @@
       "storage_af": 367386.0,
       "change_1d_af": -1242,
       "change_7d_af": -7403,
-      "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=FOL&SensorNums=15&dur_code=D&Start=2026-10-24&End=2026-11-07",
+      "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=FOL&SensorNums=15&dur_code=D&Start=2026-10-25&End=2026-11-08",
       "history": [
-        {
-          "observed_at": "20261024 0000",
-          "storage_af": 382949.0
-        },
         {
           "observed_at": "20261025 0000",
           "storage_af": 381814.0
