@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-12T07:41:16.999961+00:00",
+  "generated_at": "2026-11-12T20:25:02.211674+00:00",
   "source": "California Data Exchange Center (CDEC) daily readings",
   "stations": [
     {
@@ -9,8 +9,8 @@
         "status": "ok",
         "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=SHA&SensorNums=76&dur_code=D&Start=2026-10-29&End=2026-11-13",
         "latest": {
-          "observed_at": "20261110 0000",
-          "value_cfs": 3968.0
+          "observed_at": "20261111 0000",
+          "value_cfs": 3618.0
         },
         "history": [
           {
@@ -64,6 +64,10 @@
           {
             "observed_at": "20261110 0000",
             "value_cfs": 3968.0
+          },
+          {
+            "observed_at": "20261111 0000",
+            "value_cfs": 3618.0
           }
         ]
       },
@@ -71,8 +75,8 @@
         "status": "ok",
         "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=SHA&SensorNums=23&dur_code=D&Start=2026-10-29&End=2026-11-13",
         "latest": {
-          "observed_at": "20261110 0000",
-          "value_cfs": 4493.0
+          "observed_at": "20261111 0000",
+          "value_cfs": 4569.0
         },
         "history": [
           {
@@ -126,6 +130,10 @@
           {
             "observed_at": "20261110 0000",
             "value_cfs": 4493.0
+          },
+          {
+            "observed_at": "20261111 0000",
+            "value_cfs": 4569.0
           }
         ]
       }
@@ -137,8 +145,8 @@
         "status": "ok",
         "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=ORO&SensorNums=76&dur_code=D&Start=2026-10-29&End=2026-11-13",
         "latest": {
-          "observed_at": "20261110 0000",
-          "value_cfs": 2268.0
+          "observed_at": "20261111 0000",
+          "value_cfs": 2478.0
         },
         "history": [
           {
@@ -192,6 +200,10 @@
           {
             "observed_at": "20261110 0000",
             "value_cfs": 2268.0
+          },
+          {
+            "observed_at": "20261111 0000",
+            "value_cfs": 2478.0
           }
         ]
       },
@@ -199,8 +211,8 @@
         "status": "ok",
         "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=ORO&SensorNums=23&dur_code=D&Start=2026-10-29&End=2026-11-13",
         "latest": {
-          "observed_at": "20261110 0000",
-          "value_cfs": 4117.0
+          "observed_at": "20261111 0000",
+          "value_cfs": 3755.0
         },
         "history": [
           {
@@ -254,6 +266,10 @@
           {
             "observed_at": "20261110 0000",
             "value_cfs": 4117.0
+          },
+          {
+            "observed_at": "20261111 0000",
+            "value_cfs": 3755.0
           }
         ]
       }
@@ -265,8 +281,8 @@
         "status": "ok",
         "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=FOL&SensorNums=76&dur_code=D&Start=2026-10-29&End=2026-11-13",
         "latest": {
-          "observed_at": "20261110 0000",
-          "value_cfs": 854.0
+          "observed_at": "20261111 0000",
+          "value_cfs": 864.0
         },
         "history": [
           {
@@ -320,6 +336,10 @@
           {
             "observed_at": "20261110 0000",
             "value_cfs": 854.0
+          },
+          {
+            "observed_at": "20261111 0000",
+            "value_cfs": 864.0
           }
         ]
       },
@@ -327,8 +347,8 @@
         "status": "ok",
         "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=FOL&SensorNums=23&dur_code=D&Start=2026-10-29&End=2026-11-13",
         "latest": {
-          "observed_at": "20261110 0000",
-          "value_cfs": 1264.0
+          "observed_at": "20261111 0000",
+          "value_cfs": 1437.0
         },
         "history": [
           {
@@ -382,6 +402,10 @@
           {
             "observed_at": "20261110 0000",
             "value_cfs": 1264.0
+          },
+          {
+            "observed_at": "20261111 0000",
+            "value_cfs": 1437.0
           }
         ]
       }
