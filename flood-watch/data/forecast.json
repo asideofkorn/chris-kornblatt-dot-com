@@ -1,31 +1,22 @@
 {
-  "generated_at": "2026-11-14T06:58:46.099824+00:00",
-  "issued_at": "2026-11-14T06:46:44+00:00",
-  "updated_at": "2026-11-14T06:31:46+00:00",
+  "generated_at": "2026-11-14T18:28:14.631282+00:00",
+  "issued_at": "2026-11-14T14:36:40+00:00",
+  "updated_at": "2026-11-14T09:31:27+00:00",
   "location": "Sacramento, CA (representative point; not statewide)",
   "source": "National Weather Service",
   "source_url": "https://api.weather.gov/gridpoints/STO/41,68/forecast",
   "periods": [
     {
-      "name": "Tonight",
-      "start_time": "2026-11-13T22:00:00-08:00",
-      "end_time": "2026-11-14T06:00:00-08:00",
-      "temperature_f": 46,
-      "precipitation_probability_pct": 4,
-      "short_forecast": "Partly Cloudy",
-      "detailed_forecast": "Partly cloudy, with a low around 46. South southeast wind around 5 mph."
-    },
-    {
-      "name": "Saturday",
+      "name": "Today",
       "start_time": "2026-11-14T06:00:00-08:00",
       "end_time": "2026-11-14T18:00:00-08:00",
       "temperature_f": 64,
       "precipitation_probability_pct": 1,
-      "short_forecast": "Patchy Fog then Mostly Sunny",
-      "detailed_forecast": "Patchy fog between 9am and 10am. Mostly sunny. High near 64, with temperatures falling to around 61 in the afternoon. South wind around 3 mph."
+      "short_forecast": "Areas Of Fog then Mostly Sunny",
+      "detailed_forecast": "Areas of fog before 9am. Mostly sunny. High near 64, with temperatures falling to around 61 in the afternoon. South wind around 3 mph."
     },
     {
-      "name": "Saturday Night",
+      "name": "Tonight",
       "start_time": "2026-11-14T18:00:00-08:00",
       "end_time": "2026-11-15T06:00:00-08:00",
       "temperature_f": 48,
@@ -39,8 +30,8 @@
       "end_time": "2026-11-15T18:00:00-08:00",
       "temperature_f": 62,
       "precipitation_probability_pct": 96,
-      "short_forecast": "Cloudy then Rain Showers",
-      "detailed_forecast": "Rain showers after noon. Cloudy, with a high near 62. South southeast wind 6 to 10 mph, with gusts as high as 24 mph. Chance of precipitation is 100%. New rainfall amounts between a quarter and half of an inch possible."
+      "short_forecast": "Cloudy then Light Rain",
+      "detailed_forecast": "Rain after noon. Cloudy. High near 62, with temperatures falling to around 58 in the afternoon. South southeast wind 6 to 10 mph, with gusts as high as 24 mph. Chance of precipitation is 100%. New rainfall amounts between a quarter and half of an inch possible."
     },
     {
       "name": "Sunday Night",
@@ -48,8 +39,8 @@
       "end_time": "2026-11-16T06:00:00-08:00",
       "temperature_f": 47,
       "precipitation_probability_pct": 96,
-      "short_forecast": "Rain Showers",
-      "detailed_forecast": "Rain showers before 4am. Mostly cloudy, with a low around 47. South wind 2 to 6 mph. Chance of precipitation is 100%."
+      "short_forecast": "Light Rain",
+      "detailed_forecast": "Rain before 4am. Mostly cloudy, with a low around 47. South wind 2 to 6 mph. Chance of precipitation is 100%. New rainfall amounts between a quarter and half of an inch possible."
     },
     {
       "name": "Monday",
@@ -58,7 +49,7 @@
       "temperature_f": 60,
       "precipitation_probability_pct": 11,
       "short_forecast": "Partly Sunny",
-      "detailed_forecast": "Partly sunny, with a high near 60."
+      "detailed_forecast": "Partly sunny, with a high near 60. South southwest wind around 3 mph."
     },
     {
       "name": "Monday Night",
@@ -131,6 +122,15 @@
       "precipitation_probability_pct": 2,
       "short_forecast": "Mostly Sunny",
       "detailed_forecast": "Mostly sunny, with a high near 57."
+    },
+    {
+      "name": "Friday Night",
+      "start_time": "2026-11-20T18:00:00-08:00",
+      "end_time": "2026-11-21T06:00:00-08:00",
+      "temperature_f": 37,
+      "precipitation_probability_pct": 8,
+      "short_forecast": "Partly Cloudy",
+      "detailed_forecast": "Partly cloudy, with a low around 37."
     }
   ]
 }
