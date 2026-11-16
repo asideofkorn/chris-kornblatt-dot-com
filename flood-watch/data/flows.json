@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-15T19:05:12.324506+00:00",
+  "generated_at": "2026-11-16T07:13:29.008526+00:00",
   "source": "California Data Exchange Center (CDEC) daily readings",
   "stations": [
     {
@@ -7,16 +7,12 @@
       "name": "Shasta Lake",
       "inflow_cfs": {
         "status": "ok",
-        "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=SHA&SensorNums=76&dur_code=D&Start=2026-11-01&End=2026-11-16",
+        "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=SHA&SensorNums=76&dur_code=D&Start=2026-11-02&End=2026-11-17",
         "latest": {
           "observed_at": "20261114 0000",
           "value_cfs": 4384.0
         },
         "history": [
-          {
-            "observed_at": "20261101 0000",
-            "value_cfs": 2194.0
-          },
           {
             "observed_at": "20261102 0000",
             "value_cfs": 3437.0
@@ -73,16 +69,12 @@
       },
       "outflow_cfs": {
         "status": "ok",
-        "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=SHA&SensorNums=23&dur_code=D&Start=2026-11-01&End=2026-11-16",
+        "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=SHA&SensorNums=23&dur_code=D&Start=2026-11-02&End=2026-11-17",
         "latest": {
           "observed_at": "20261114 0000",
           "value_cfs": 5010.0
         },
         "history": [
-          {
-            "observed_at": "20261101 0000",
-            "value_cfs": 4726.0
-          },
           {
             "observed_at": "20261102 0000",
             "value_cfs": 4504.0
@@ -143,16 +135,12 @@
       "name": "Lake Oroville",
       "inflow_cfs": {
         "status": "ok",
-        "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=ORO&SensorNums=76&dur_code=D&Start=2026-11-01&End=2026-11-16",
+        "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=ORO&SensorNums=76&dur_code=D&Start=2026-11-02&End=2026-11-17",
         "latest": {
           "observed_at": "20261114 0000",
           "value_cfs": 2778.0
         },
         "history": [
-          {
-            "observed_at": "20261101 0000",
-            "value_cfs": 2221.0
-          },
           {
             "observed_at": "20261102 0000",
             "value_cfs": 2206.0
@@ -209,16 +197,12 @@
       },
       "outflow_cfs": {
         "status": "ok",
-        "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=ORO&SensorNums=23&dur_code=D&Start=2026-11-01&End=2026-11-16",
+        "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=ORO&SensorNums=23&dur_code=D&Start=2026-11-02&End=2026-11-17",
         "latest": {
           "observed_at": "20261114 0000",
           "value_cfs": 3003.0
         },
         "history": [
-          {
-            "observed_at": "20261101 0000",
-            "value_cfs": 3404.0
-          },
           {
             "observed_at": "20261102 0000",
             "value_cfs": 3469.0
@@ -279,16 +263,12 @@
       "name": "Folsom Lake",
       "inflow_cfs": {
         "status": "ok",
-        "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=FOL&SensorNums=76&dur_code=D&Start=2026-11-01&End=2026-11-16",
+        "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=FOL&SensorNums=76&dur_code=D&Start=2026-11-02&End=2026-11-17",
         "latest": {
           "observed_at": "20261114 0000",
           "value_cfs": 1658.0
         },
         "history": [
-          {
-            "observed_at": "20261101 0000",
-            "value_cfs": 960.0
-          },
           {
             "observed_at": "20261102 0000",
             "value_cfs": 747.0
@@ -345,16 +325,12 @@
       },
       "outflow_cfs": {
         "status": "ok",
-        "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=FOL&SensorNums=23&dur_code=D&Start=2026-11-01&End=2026-11-16",
+        "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=FOL&SensorNums=23&dur_code=D&Start=2026-11-02&End=2026-11-17",
         "latest": {
           "observed_at": "20261114 0000",
           "value_cfs": 1291.0
         },
         "history": [
-          {
-            "observed_at": "20261101 0000",
-            "value_cfs": 1298.0
-          },
           {
             "observed_at": "20261102 0000",
             "value_cfs": 1416.0
