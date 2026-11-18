@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-11-18T07:54:53.409974+00:00",
+  "generated_at": "2026-11-18T20:30:00.769990+00:00",
   "source": "California Data Exchange Center (CDEC), daily sensor 15",
   "reservoirs": [
     {
       "station_id": "SHA",
       "name": "Shasta Lake",
-      "observed_at": "20261116 0000",
-      "storage_af": 2249198.0,
-      "change_1d_af": 1769,
-      "change_7d_af": -260,
+      "observed_at": "20261117 0000",
+      "storage_af": 2247634.0,
+      "change_1d_af": -1564,
+      "change_7d_af": -614,
       "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=SHA&SensorNums=15&dur_code=D&Start=2026-11-05&End=2026-11-19",
       "history": [
         {
@@ -58,19 +58,23 @@
         {
           "observed_at": "20261116 0000",
           "storage_af": 2249198.0
+        },
+        {
+          "observed_at": "20261117 0000",
+          "storage_af": 2247634.0
         }
       ],
       "capacity_af": 4552000,
-      "percent_full": 49.41,
+      "percent_full": 49.38,
       "status": "ok"
     },
     {
       "station_id": "ORO",
       "name": "Lake Oroville",
-      "observed_at": "20261116 0000",
-      "storage_af": 1436149.0,
-      "change_1d_af": 2549,
-      "change_7d_af": -7056,
+      "observed_at": "20261117 0000",
+      "storage_af": 1436574.0,
+      "change_1d_af": 425,
+      "change_7d_af": -2889,
       "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=ORO&SensorNums=15&dur_code=D&Start=2026-11-05&End=2026-11-19",
       "history": [
         {
@@ -120,19 +124,23 @@
         {
           "observed_at": "20261116 0000",
           "storage_af": 1436149.0
+        },
+        {
+          "observed_at": "20261117 0000",
+          "storage_af": 1436574.0
         }
       ],
       "capacity_af": 3424753,
-      "percent_full": 41.93,
+      "percent_full": 41.95,
       "status": "ok"
     },
     {
       "station_id": "FOL",
       "name": "Folsom Lake",
-      "observed_at": "20261116 0000",
-      "storage_af": 362400.0,
-      "change_1d_af": 388,
-      "change_7d_af": -1615,
+      "observed_at": "20261117 0000",
+      "storage_af": 363046.0,
+      "change_1d_af": 646,
+      "change_7d_af": -129,
       "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=FOL&SensorNums=15&dur_code=D&Start=2026-11-05&End=2026-11-19",
       "history": [
         {
@@ -182,10 +190,14 @@
         {
           "observed_at": "20261116 0000",
           "storage_af": 362400.0
+        },
+        {
+          "observed_at": "20261117 0000",
+          "storage_af": 363046.0
         }
       ],
       "capacity_af": 977000,
-      "percent_full": 37.09,
+      "percent_full": 37.16,
       "status": "ok"
     }
   ]
