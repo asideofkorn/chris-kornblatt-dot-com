@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-18T20:30:00.769990+00:00",
+  "generated_at": "2026-11-18T20:52:26.050198+00:00",
   "source": "California Data Exchange Center (CDEC), daily sensor 15",
   "reservoirs": [
     {
@@ -71,68 +71,8 @@
     {
       "station_id": "ORO",
       "name": "Lake Oroville",
-      "observed_at": "20261117 0000",
-      "storage_af": 1436574.0,
-      "change_1d_af": 425,
-      "change_7d_af": -2889,
-      "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=ORO&SensorNums=15&dur_code=D&Start=2026-11-05&End=2026-11-19",
-      "history": [
-        {
-          "observed_at": "20261105 0000",
-          "storage_af": 1455250.0
-        },
-        {
-          "observed_at": "20261106 0000",
-          "storage_af": 1452167.0
-        },
-        {
-          "observed_at": "20261107 0000",
-          "storage_af": 1449090.0
-        },
-        {
-          "observed_at": "20261108 0000",
-          "storage_af": 1446532.0
-        },
-        {
-          "observed_at": "20261109 0000",
-          "storage_af": 1443205.0
-        },
-        {
-          "observed_at": "20261110 0000",
-          "storage_af": 1439463.0
-        },
-        {
-          "observed_at": "20261111 0000",
-          "storage_af": 1436914.0
-        },
-        {
-          "observed_at": "20261112 0000",
-          "storage_af": 1434534.0
-        },
-        {
-          "observed_at": "20261113 0000",
-          "storage_af": 1433855.0
-        },
-        {
-          "observed_at": "20261114 0000",
-          "storage_af": 1433431.0
-        },
-        {
-          "observed_at": "20261115 0000",
-          "storage_af": 1433600.0
-        },
-        {
-          "observed_at": "20261116 0000",
-          "storage_af": 1436149.0
-        },
-        {
-          "observed_at": "20261117 0000",
-          "storage_af": 1436574.0
-        }
-      ],
-      "capacity_af": 3424753,
-      "percent_full": 41.95,
-      "status": "ok"
+      "status": "unavailable",
+      "error": "Remote end closed connection without response"
     },
     {
       "station_id": "FOL",
