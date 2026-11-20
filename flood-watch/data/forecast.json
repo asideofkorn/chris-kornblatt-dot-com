@@ -1,80 +1,71 @@
 {
-  "generated_at": "2026-11-20T07:42:52.646489+00:00",
-  "issued_at": "2026-11-20T07:00:46+00:00",
-  "updated_at": "2026-11-20T06:31:36+00:00",
+  "generated_at": "2026-11-20T20:42:15.051716+00:00",
+  "issued_at": "2026-11-20T18:55:44+00:00",
+  "updated_at": "2026-11-20T18:31:49+00:00",
   "location": "Sacramento, CA (representative point; not statewide)",
   "source": "National Weather Service",
   "source_url": "https://api.weather.gov/gridpoints/STO/41,68/forecast",
   "periods": [
     {
-      "name": "Tonight",
-      "start_time": "2026-11-19T23:00:00-08:00",
-      "end_time": "2026-11-20T06:00:00-08:00",
-      "temperature_f": 42,
-      "precipitation_probability_pct": 44,
-      "short_forecast": "Mostly Cloudy then Chance Rain Showers",
-      "detailed_forecast": "A chance of rain showers after 4am. Mostly cloudy, with a low around 42. South southeast wind around 7 mph. Chance of precipitation is 40%."
-    },
-    {
-      "name": "Friday",
-      "start_time": "2026-11-20T06:00:00-08:00",
+      "name": "Today",
+      "start_time": "2026-11-20T10:00:00-08:00",
       "end_time": "2026-11-20T18:00:00-08:00",
       "temperature_f": 55,
-      "precipitation_probability_pct": 38,
-      "short_forecast": "Chance Rain Showers then Mostly Sunny",
-      "detailed_forecast": "A chance of rain showers before 10am. Mostly sunny. High near 55, with temperatures falling to around 50 in the afternoon. East wind around 3 mph. Chance of precipitation is 40%."
+      "precipitation_probability_pct": 21,
+      "short_forecast": "Slight Chance Light Rain then Mostly Sunny",
+      "detailed_forecast": "A slight chance of rain before 11am. Mostly sunny. High near 55, with temperatures falling to around 50 in the afternoon. East northeast wind around 3 mph. Chance of precipitation is 20%."
     },
     {
-      "name": "Friday Night",
+      "name": "Tonight",
       "start_time": "2026-11-20T18:00:00-08:00",
       "end_time": "2026-11-21T06:00:00-08:00",
-      "temperature_f": 37,
+      "temperature_f": 38,
       "precipitation_probability_pct": 0,
-      "short_forecast": "Patchy Fog",
-      "detailed_forecast": "Patchy fog after 9pm. Mostly clear, with a low around 37. North northwest wind around 2 mph."
+      "short_forecast": "Mostly Clear",
+      "detailed_forecast": "Mostly clear, with a low around 38. North northeast wind around 2 mph."
     },
     {
       "name": "Saturday",
       "start_time": "2026-11-21T06:00:00-08:00",
       "end_time": "2026-11-21T18:00:00-08:00",
-      "temperature_f": 52,
-      "precipitation_probability_pct": 58,
-      "short_forecast": "Patchy Fog then Light Rain Likely",
-      "detailed_forecast": "Patchy fog before 7am, then patchy frost between 7am and 8am, then rain likely. Mostly cloudy, with a high near 52. East southeast wind 1 to 5 mph. Chance of precipitation is 60%. New rainfall amounts less than a tenth of an inch possible."
+      "temperature_f": 53,
+      "precipitation_probability_pct": 24,
+      "short_forecast": "Areas Of Fog then Slight Chance Light Rain",
+      "detailed_forecast": "Areas of fog between 7am and 8am, then a slight chance of rain. Mostly cloudy. High near 53, with temperatures falling to around 50 in the afternoon. South southeast wind 1 to 5 mph. Chance of precipitation is 20%. New rainfall amounts less than a tenth of an inch possible."
     },
     {
       "name": "Saturday Night",
       "start_time": "2026-11-21T18:00:00-08:00",
       "end_time": "2026-11-22T06:00:00-08:00",
-      "temperature_f": 44,
-      "precipitation_probability_pct": 72,
+      "temperature_f": 45,
+      "precipitation_probability_pct": 69,
       "short_forecast": "Light Rain Likely",
-      "detailed_forecast": "Rain likely. Cloudy, with a low around 44. East southeast wind around 3 mph. Chance of precipitation is 70%."
+      "detailed_forecast": "Rain likely. Cloudy, with a low around 45. East wind around 3 mph. Chance of precipitation is 70%. New rainfall amounts less than a tenth of an inch possible."
     },
     {
       "name": "Sunday",
       "start_time": "2026-11-22T06:00:00-08:00",
       "end_time": "2026-11-22T18:00:00-08:00",
       "temperature_f": 52,
-      "precipitation_probability_pct": 47,
+      "precipitation_probability_pct": 46,
       "short_forecast": "Chance Light Rain",
-      "detailed_forecast": "A chance of rain before 4pm. Mostly cloudy, with a high near 52. Chance of precipitation is 50%."
+      "detailed_forecast": "A chance of rain. Cloudy, with a high near 52. North northeast wind around 3 mph. Chance of precipitation is 50%."
     },
     {
       "name": "Sunday Night",
       "start_time": "2026-11-22T18:00:00-08:00",
       "end_time": "2026-11-23T06:00:00-08:00",
-      "temperature_f": 39,
-      "precipitation_probability_pct": 12,
-      "short_forecast": "Patchy Fog",
-      "detailed_forecast": "Patchy fog between 7pm and 4am. Mostly cloudy, with a low around 39."
+      "temperature_f": 41,
+      "precipitation_probability_pct": 19,
+      "short_forecast": "Slight Chance Light Rain then Mostly Cloudy",
+      "detailed_forecast": "A slight chance of rain before 10pm. Mostly cloudy, with a low around 41. Chance of precipitation is 20%."
     },
     {
       "name": "Monday",
       "start_time": "2026-11-23T06:00:00-08:00",
       "end_time": "2026-11-23T18:00:00-08:00",
       "temperature_f": 55,
-      "precipitation_probability_pct": 2,
+      "precipitation_probability_pct": 1,
       "short_forecast": "Partly Sunny",
       "detailed_forecast": "Partly sunny, with a high near 55."
     },
@@ -83,34 +74,34 @@
       "start_time": "2026-11-23T18:00:00-08:00",
       "end_time": "2026-11-24T06:00:00-08:00",
       "temperature_f": 43,
-      "precipitation_probability_pct": 15,
-      "short_forecast": "Mostly Cloudy then Slight Chance Light Rain",
-      "detailed_forecast": "A slight chance of rain after 4am. Mostly cloudy, with a low around 43."
+      "precipitation_probability_pct": 5,
+      "short_forecast": "Mostly Cloudy",
+      "detailed_forecast": "Mostly cloudy, with a low around 43."
     },
     {
       "name": "Tuesday",
       "start_time": "2026-11-24T06:00:00-08:00",
       "end_time": "2026-11-24T18:00:00-08:00",
-      "temperature_f": 56,
-      "precipitation_probability_pct": 75,
-      "short_forecast": "Light Rain",
-      "detailed_forecast": "Rain. Mostly cloudy, with a high near 56."
+      "temperature_f": 57,
+      "precipitation_probability_pct": 58,
+      "short_forecast": "Light Rain Likely",
+      "detailed_forecast": "Rain likely after 10am. Mostly cloudy, with a high near 57."
     },
     {
       "name": "Tuesday Night",
       "start_time": "2026-11-24T18:00:00-08:00",
       "end_time": "2026-11-25T06:00:00-08:00",
-      "temperature_f": 47,
-      "precipitation_probability_pct": 79,
-      "short_forecast": "Light Rain",
-      "detailed_forecast": "Rain. Mostly cloudy, with a low around 47."
+      "temperature_f": 48,
+      "precipitation_probability_pct": 74,
+      "short_forecast": "Light Rain Likely",
+      "detailed_forecast": "Rain likely. Cloudy, with a low around 48."
     },
     {
       "name": "Wednesday",
       "start_time": "2026-11-25T06:00:00-08:00",
       "end_time": "2026-11-25T18:00:00-08:00",
       "temperature_f": 59,
-      "precipitation_probability_pct": 56,
+      "precipitation_probability_pct": 74,
       "short_forecast": "Light Rain Likely",
       "detailed_forecast": "Rain likely. Mostly cloudy, with a high near 59."
     },
@@ -119,18 +110,27 @@
       "start_time": "2026-11-25T18:00:00-08:00",
       "end_time": "2026-11-26T06:00:00-08:00",
       "temperature_f": 46,
-      "precipitation_probability_pct": 35,
+      "precipitation_probability_pct": 37,
       "short_forecast": "Chance Light Rain",
-      "detailed_forecast": "A chance of rain. Mostly cloudy, with a low around 46."
+      "detailed_forecast": "A chance of rain before 4am. Mostly cloudy, with a low around 46."
     },
     {
       "name": "Thanksgiving Day",
       "start_time": "2026-11-26T06:00:00-08:00",
       "end_time": "2026-11-26T18:00:00-08:00",
       "temperature_f": 60,
-      "precipitation_probability_pct": 15,
-      "short_forecast": "Slight Chance Light Rain then Partly Sunny",
-      "detailed_forecast": "A slight chance of rain before 10am. Partly sunny, with a high near 60."
+      "precipitation_probability_pct": 7,
+      "short_forecast": "Mostly Sunny",
+      "detailed_forecast": "Mostly sunny, with a high near 60."
+    },
+    {
+      "name": "Thursday Night",
+      "start_time": "2026-11-26T18:00:00-08:00",
+      "end_time": "2026-11-27T06:00:00-08:00",
+      "temperature_f": 45,
+      "precipitation_probability_pct": 2,
+      "short_forecast": "Partly Cloudy",
+      "detailed_forecast": "Partly cloudy, with a low around 45."
     }
   ]
 }
