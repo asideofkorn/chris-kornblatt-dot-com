@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-24T10:22:51.966937+00:00",
+  "generated_at": "2026-11-24T22:44:14.838364+00:00",
   "report_date": "2026-11-23",
   "source_url": "https://www.spk-wc.usace.army.mil/fcgi-bin/midnight.py?days=0&report=FCR",
   "source": "USACE Sacramento District Flood Control Requirements",
@@ -8,9 +8,9 @@
     "Shasta": {
       "gross_capacity_af": 4552100,
       "top_conservation_af": 3401280,
-      "actual_storage_af": 2275571,
-      "above_target_af": -1125709,
-      "room_to_target_af": 1125709,
+      "actual_storage_af": 2275646,
+      "above_target_af": -1125634,
+      "room_to_target_af": 1125634,
       "encroachment_af": 0,
       "status": "ok"
     },
