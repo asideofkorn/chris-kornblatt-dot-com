@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-11-24T00:19:29.062708+00:00",
+  "generated_at": "2026-11-24T09:53:11.002186+00:00",
   "source": "California Data Exchange Center (CDEC), daily sensor 15",
   "reservoirs": [
     {
       "station_id": "SHA",
       "name": "Shasta Lake",
-      "observed_at": "20261122 0000",
-      "storage_af": 2274279.0,
-      "change_1d_af": 244,
-      "change_7d_af": 26850,
+      "observed_at": "20261123 0000",
+      "storage_af": 2275571.0,
+      "change_1d_af": 1292,
+      "change_7d_af": 26373,
       "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=SHA&SensorNums=15&dur_code=D&Start=2026-11-11&End=2026-11-25",
       "history": [
         {
@@ -58,10 +58,14 @@
         {
           "observed_at": "20261122 0000",
           "storage_af": 2274279.0
+        },
+        {
+          "observed_at": "20261123 0000",
+          "storage_af": 2275571.0
         }
       ],
       "capacity_af": 4552000,
-      "percent_full": 49.96,
+      "percent_full": 49.99,
       "status": "ok"
     },
     {
@@ -129,10 +133,10 @@
     {
       "station_id": "FOL",
       "name": "Folsom Lake",
-      "observed_at": "20261122 0000",
-      "storage_af": 373402.0,
-      "change_1d_af": 1378,
-      "change_7d_af": 11390,
+      "observed_at": "20261123 0000",
+      "storage_af": 374128.0,
+      "change_1d_af": 726,
+      "change_7d_af": 11728,
       "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=FOL&SensorNums=15&dur_code=D&Start=2026-11-11&End=2026-11-25",
       "history": [
         {
@@ -182,10 +186,14 @@
         {
           "observed_at": "20261122 0000",
           "storage_af": 373402.0
+        },
+        {
+          "observed_at": "20261123 0000",
+          "storage_af": 374128.0
         }
       ],
       "capacity_af": 977000,
-      "percent_full": 38.22,
+      "percent_full": 38.29,
       "status": "ok"
     }
   ]
