@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-25T09:05:15.751706+00:00",
+  "generated_at": "2026-11-25T21:57:33.357879+00:00",
   "source": "California Data Exchange Center (CDEC) daily readings",
   "stations": [
     {
@@ -146,7 +146,7 @@
         "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=ORO&SensorNums=76&dur_code=D&Start=2026-11-11&End=2026-11-26",
         "latest": {
           "observed_at": "20261124 0000",
-          "value_cfs": 2823.0
+          "value_cfs": 3052.0
         },
         "history": [
           {
@@ -203,7 +203,7 @@
           },
           {
             "observed_at": "20261124 0000",
-            "value_cfs": 2823.0
+            "value_cfs": 3052.0
           }
         ]
       },
@@ -212,7 +212,7 @@
         "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=ORO&SensorNums=23&dur_code=D&Start=2026-11-11&End=2026-11-26",
         "latest": {
           "observed_at": "20261124 0000",
-          "value_cfs": 2522.0
+          "value_cfs": 2093.0
         },
         "history": [
           {
@@ -269,7 +269,7 @@
           },
           {
             "observed_at": "20261124 0000",
-            "value_cfs": 2522.0
+            "value_cfs": 2093.0
           }
         ]
       }
@@ -282,7 +282,7 @@
         "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=FOL&SensorNums=76&dur_code=D&Start=2026-11-11&End=2026-11-26",
         "latest": {
           "observed_at": "20261124 0000",
-          "value_cfs": 1588.0
+          "value_cfs": 1586.0
         },
         "history": [
           {
@@ -339,7 +339,7 @@
           },
           {
             "observed_at": "20261124 0000",
-            "value_cfs": 1588.0
+            "value_cfs": 1586.0
           }
         ]
       },
@@ -348,7 +348,7 @@
         "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=FOL&SensorNums=23&dur_code=D&Start=2026-11-11&End=2026-11-26",
         "latest": {
           "observed_at": "20261124 0000",
-          "value_cfs": 1317.0
+          "value_cfs": 1315.0
         },
         "history": [
           {
@@ -405,7 +405,7 @@
           },
           {
             "observed_at": "20261124 0000",
-            "value_cfs": 1317.0
+            "value_cfs": 1315.0
           }
         ]
       }
