@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-11-27T09:01:43.222149+00:00",
+  "generated_at": "2026-11-27T21:16:26.950830+00:00",
   "source": "California Data Exchange Center (CDEC), daily sensor 15",
   "reservoirs": [
     {
       "station_id": "SHA",
       "name": "Shasta Lake",
       "observed_at": "20261126 0000",
-      "storage_af": 2280251.0,
-      "change_1d_af": -56,
-      "change_7d_af": 6365,
+      "storage_af": 2280195.0,
+      "change_1d_af": -112,
+      "change_7d_af": 6309,
       "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=SHA&SensorNums=15&dur_code=D&Start=2026-11-14&End=2026-11-28",
       "history": [
         {
@@ -61,7 +61,7 @@
         },
         {
           "observed_at": "20261126 0000",
-          "storage_af": 2280251.0
+          "storage_af": 2280195.0
         }
       ],
       "capacity_af": 4552000,
@@ -71,10 +71,10 @@
     {
       "station_id": "ORO",
       "name": "Lake Oroville",
-      "observed_at": "20261125 0000",
-      "storage_af": 1451653.0,
-      "change_1d_af": 1283,
-      "change_7d_af": 13210,
+      "observed_at": "20261126 0000",
+      "storage_af": 1452852.0,
+      "change_1d_af": 1199,
+      "change_7d_af": 8709,
       "source_url": "https://cdec.water.ca.gov/dynamicapp/req/CSVDataServlet?Stations=ORO&SensorNums=15&dur_code=D&Start=2026-11-14&End=2026-11-28",
       "history": [
         {
@@ -124,10 +124,14 @@
         {
           "observed_at": "20261125 0000",
           "storage_af": 1451653.0
+        },
+        {
+          "observed_at": "20261126 0000",
+          "storage_af": 1452852.0
         }
       ],
       "capacity_af": 3424753,
-      "percent_full": 42.39,
+      "percent_full": 42.42,
       "status": "ok"
     },
     {
